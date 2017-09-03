@@ -99,3 +99,77 @@ func TestHTTPClientDeleteSuccess(t *testing.T) {
 	assert.Equal(t, http.StatusOK, response.StatusCode())
 	assert.Equal(t, "{ \"response\": \"ok\" }", string(response.Body()))
 }
+
+func TestHTTPClientPutSuccess(t *testing.T) {
+	config := Config{
+		timeoutInSeconds: 10,
+	}
+
+	client := NewHTTPClient(config)
+
+	requestBodyString := `{ "name": "heimdall" }`
+
+	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPut {
+			t.Errorf("Not a PUT request")
+		}
+
+		rBody, err := ioutil.ReadAll(r.Body)
+		require.NoError(t, err, "should not have failed to extract request body")
+
+		if string(rBody) != requestBodyString {
+			t.Errorf("PUT request has wrong request body")
+		}
+
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{ "response": "ok" }`))
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+	defer server.Close()
+
+	requestBody := bytes.NewReader([]byte(requestBodyString))
+
+	response, err := client.Put(server.URL, requestBody)
+	require.NoError(t, err, "should not have failed to make a PUT request")
+
+	assert.Equal(t, http.StatusOK, response.StatusCode())
+	assert.Equal(t, "{ \"response\": \"ok\" }", string(response.Body()))
+}
+
+func TestHTTPClientPatchSuccess(t *testing.T) {
+	config := Config{
+		timeoutInSeconds: 10,
+	}
+
+	client := NewHTTPClient(config)
+
+	requestBodyString := `{ "name": "heimdall" }`
+
+	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPatch {
+			t.Errorf("Not a PATCH request")
+		}
+
+		rBody, err := ioutil.ReadAll(r.Body)
+		require.NoError(t, err, "should not have failed to extract request body")
+
+		if string(rBody) != requestBodyString {
+			t.Errorf("PATCH request has wrong request body")
+		}
+
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{ "response": "ok" }`))
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+	defer server.Close()
+
+	requestBody := bytes.NewReader([]byte(requestBodyString))
+
+	response, err := client.Patch(server.URL, requestBody)
+	require.NoError(t, err, "should not have failed to make a PATCH request")
+
+	assert.Equal(t, http.StatusOK, response.StatusCode())
+	assert.Equal(t, "{ \"response\": \"ok\" }", string(response.Body()))
+}

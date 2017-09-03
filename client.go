@@ -13,6 +13,8 @@ import (
 type Client interface {
 	Get(url string) (Response, error)
 	Post(url string, body io.Reader) (Response, error)
+	Put(url string, body io.Reader) (Response, error)
+	Patch(url string, body io.Reader) (Response, error)
 	Delete(url string) (Response, error)
 }
 
@@ -51,6 +53,30 @@ func (c *httpClient) Post(url string, body io.Reader) (Response, error) {
 	request, err := http.NewRequest(http.MethodPost, url, body)
 	if err != nil {
 		return response, errors.Wrap(err, "POST - request creation failed")
+	}
+
+	return c.do(request)
+}
+
+// Put makes a HTTP PUT request to provided URL and requestBody
+func (c *httpClient) Put(url string, body io.Reader) (Response, error) {
+	response := Response{}
+
+	request, err := http.NewRequest(http.MethodPut, url, body)
+	if err != nil {
+		return response, errors.Wrap(err, "PUT - request creation failed")
+	}
+
+	return c.do(request)
+}
+
+// Patch makes a HTTP PATCH request to provided URL and requestBody
+func (c *httpClient) Patch(url string, body io.Reader) (Response, error) {
+	response := Response{}
+
+	request, err := http.NewRequest(http.MethodPatch, url, body)
+	if err != nil {
+		return response, errors.Wrap(err, "PATCH - request creation failed")
 	}
 
 	return c.do(request)
