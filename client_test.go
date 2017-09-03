@@ -12,11 +12,7 @@ import (
 )
 
 func TestHTTPClientGetSuccess(t *testing.T) {
-	config := Config{
-		timeoutInSeconds: 10,
-	}
-
-	client := NewHTTPClient(config)
+	client := NewHTTPClient(10)
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
@@ -38,11 +34,7 @@ func TestHTTPClientGetSuccess(t *testing.T) {
 }
 
 func TestHTTPClientPostSuccess(t *testing.T) {
-	config := Config{
-		timeoutInSeconds: 10,
-	}
-
-	client := NewHTTPClient(config)
+	client := NewHTTPClient(10)
 
 	requestBodyString := `{ "name": "heimdall" }`
 
@@ -75,11 +67,7 @@ func TestHTTPClientPostSuccess(t *testing.T) {
 }
 
 func TestHTTPClientDeleteSuccess(t *testing.T) {
-	config := Config{
-		timeoutInSeconds: 10,
-	}
-
-	client := NewHTTPClient(config)
+	client := NewHTTPClient(10)
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodDelete {
@@ -101,11 +89,7 @@ func TestHTTPClientDeleteSuccess(t *testing.T) {
 }
 
 func TestHTTPClientPutSuccess(t *testing.T) {
-	config := Config{
-		timeoutInSeconds: 10,
-	}
-
-	client := NewHTTPClient(config)
+	client := NewHTTPClient(10)
 
 	requestBodyString := `{ "name": "heimdall" }`
 
@@ -138,11 +122,7 @@ func TestHTTPClientPutSuccess(t *testing.T) {
 }
 
 func TestHTTPClientPatchSuccess(t *testing.T) {
-	config := Config{
-		timeoutInSeconds: 10,
-	}
-
-	client := NewHTTPClient(config)
+	client := NewHTTPClient(10)
 
 	requestBodyString := `{ "name": "heimdall" }`
 

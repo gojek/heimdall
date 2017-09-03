@@ -9,6 +9,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+const defaultRetryCount int = 0
+
 // Client Is a generic client interface
 type Client interface {
 	Get(url string) (Response, error)
@@ -20,18 +22,32 @@ type Client interface {
 
 type httpClient struct {
 	client *http.Client
+
+	retryCount int
+	retrier    Retriable
 }
 
 // NewHTTPClient returns a new instance of HTTPClient
-func NewHTTPClient(config Config) Client {
-	timeout := config.timeoutInSeconds
-
-	httpTimeout := time.Duration(timeout) * time.Second
+func NewHTTPClient(timeoutInSeconds int) Client {
+	httpTimeout := time.Duration(timeoutInSeconds) * time.Second
 	return &httpClient{
 		client: &http.Client{
 			Timeout: httpTimeout,
 		},
+
+		retryCount: defaultRetryCount,
+		retrier:    NewNoRetrier(),
 	}
+}
+
+// SetRetryCount sets the retry count for the httpClient
+func (c *httpClient) SetRetryCount(count int) {
+	c.retryCount = count
+}
+
+// SetRetrier sets the strategy for retrying
+func (c *httpClient) SetRetrier(retrier Retriable) {
+	c.retrier = retrier
 }
 
 // Get makes a HTTP GET request to provided URL
@@ -96,27 +112,33 @@ func (c *httpClient) Delete(url string) (Response, error) {
 
 func (c *httpClient) do(request *http.Request) (Response, error) {
 	hr := Response{}
-	var err error
 
 	request.Close = true
 
-	response, err := c.client.Do(request)
-	if err != nil {
-		return hr, err
-	}
+	for i := 0; i <= c.retryCount; i++ {
 
-	defer response.Body.Close()
-
-	var responseBytes []byte
-	if response.Body != nil {
-		responseBytes, err = ioutil.ReadAll(response.Body)
+		response, err := c.client.Do(request)
 		if err != nil {
-			return hr, err
+			backoffTime := c.retrier.NextInterval(i)
+			time.Sleep(backoffTime)
+			continue
 		}
+
+		defer response.Body.Close()
+
+		var responseBytes []byte
+		if response.Body != nil {
+			responseBytes, err = ioutil.ReadAll(response.Body)
+			if err != nil {
+				backoffTime := c.retrier.NextInterval(i)
+				time.Sleep(backoffTime)
+				continue
+			}
+		}
+
+		hr.body = responseBytes
+		hr.statusCode = response.StatusCode
 	}
 
-	hr.body = responseBytes
-	hr.statusCode = response.StatusCode
-
-	return hr, err
+	return hr, nil
 }
