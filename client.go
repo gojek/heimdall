@@ -1,6 +1,7 @@
 package heimdall
 
 import (
+	"io"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -11,6 +12,7 @@ import (
 // Client Is a generic client interface
 type Client interface {
 	Get(url string) (Response, error)
+	Post(url string, body io.Reader) (Response, error)
 }
 
 type httpClient struct {
@@ -29,13 +31,25 @@ func NewHTTPClient(config Config) Client {
 	}
 }
 
-// Get makes a HTTP get request to provided URL
+// Get makes a HTTP GET request to provided URL
 func (c *httpClient) Get(url string) (Response, error) {
 	response := Response{}
 
 	request, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return response, errors.Wrap(err, "GET - request creation failed")
+	}
+
+	return c.do(request)
+}
+
+// Post makes a HTTP POST request to provided URL and requestBody
+func (c *httpClient) Post(url string, body io.Reader) (Response, error) {
+	response := Response{}
+
+	request, err := http.NewRequest(http.MethodPost, url, body)
+	if err != nil {
+		return response, errors.Wrap(err, "POST - request creation failed")
 	}
 
 	return c.do(request)
