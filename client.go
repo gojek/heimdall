@@ -8,26 +8,26 @@ import (
 	"github.com/pkg/errors"
 )
 
-type HTTPClient interface {
+type Client interface {
 	Get(url string) (HeimdallResponse, error)
 }
 
-type Client struct {
+type HTTPClient struct {
 	client *http.Client
 }
 
-func NewClient(config Config) *Client {
+func NewHTTPClient(config Config) *HTTPClient {
 	timeout := config.timeoutInSeconds
 
 	httpTimeout := time.Duration(timeout) * time.Second
-	return &Client{
+	return &HTTPClient{
 		client: &http.Client{
 			Timeout: httpTimeout,
 		},
 	}
 }
 
-func (c *Client) Get(url string) (HeimdallResponse, error) {
+func (c *HTTPClient) Get(url string) (HeimdallResponse, error) {
 	response := HeimdallResponse{}
 
 	request, err := http.NewRequest(http.MethodGet, url, nil)
@@ -38,7 +38,7 @@ func (c *Client) Get(url string) (HeimdallResponse, error) {
 	return c.do(request)
 }
 
-func (c *Client) do(request *http.Request) (HeimdallResponse, error) {
+func (c *HTTPClient) do(request *http.Request) (HeimdallResponse, error) {
 	hr := HeimdallResponse{}
 	var err error
 
