@@ -153,3 +153,29 @@ func TestHTTPClientPatchSuccess(t *testing.T) {
 	assert.Equal(t, http.StatusOK, response.StatusCode())
 	assert.Equal(t, "{ \"response\": \"ok\" }", string(response.Body()))
 }
+
+func TestHTTPClientRetriesOnFailure(t *testing.T) {
+	client := NewHTTPClient(10)
+
+	count := 0
+
+	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{ "response": "something went wrong" }`))
+		count = count + 1
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+	defer server.Close()
+
+	client.SetRetryCount(3)
+	client.SetRetrier(NewRetrier(NewConstantBackoff(1)))
+
+	response, err := client.Get(server.URL)
+	require.NoError(t, err, "should not have failed to make a GET request")
+
+	assert.Equal(t, 4, count)
+
+	assert.Equal(t, http.StatusInternalServerError, response.StatusCode())
+	assert.Equal(t, "{ \"response\": \"something went wrong\" }", string(response.Body()))
+}

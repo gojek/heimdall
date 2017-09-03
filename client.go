@@ -18,6 +18,9 @@ type Client interface {
 	Put(url string, body io.Reader) (Response, error)
 	Patch(url string, body io.Reader) (Response, error)
 	Delete(url string) (Response, error)
+
+	SetRetryCount(count int)
+	SetRetrier(retrier Retriable)
 }
 
 type httpClient struct {
@@ -116,7 +119,7 @@ func (c *httpClient) do(request *http.Request) (Response, error) {
 	request.Close = true
 
 	for i := 0; i <= c.retryCount; i++ {
-
+		var err error
 		response, err := c.client.Do(request)
 		if err != nil {
 			backoffTime := c.retrier.NextInterval(i)
@@ -126,9 +129,8 @@ func (c *httpClient) do(request *http.Request) (Response, error) {
 
 		defer response.Body.Close()
 
-		var responseBytes []byte
 		if response.Body != nil {
-			responseBytes, err = ioutil.ReadAll(response.Body)
+			hr.body, err = ioutil.ReadAll(response.Body)
 			if err != nil {
 				backoffTime := c.retrier.NextInterval(i)
 				time.Sleep(backoffTime)
@@ -136,8 +138,15 @@ func (c *httpClient) do(request *http.Request) (Response, error) {
 			}
 		}
 
-		hr.body = responseBytes
 		hr.statusCode = response.StatusCode
+
+		if response.StatusCode >= http.StatusInternalServerError {
+			backoffTime := c.retrier.NextInterval(i)
+			time.Sleep(backoffTime)
+			continue
+		}
+
+		break
 	}
 
 	return hr, nil
