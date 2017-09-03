@@ -1,4 +1,5 @@
 ## Heimdall
+![Heimdall](https://i.stack.imgur.com/3eLbk.png)
 ### Yet another HTTP Client 
 
 #### Supports Synchronous in-memory retries
