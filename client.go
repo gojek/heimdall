@@ -12,22 +12,22 @@ type Client interface {
 	Get(url string) (HeimdallResponse, error)
 }
 
-type HTTPClient struct {
+type httpClient struct {
 	client *http.Client
 }
 
-func NewHTTPClient(config Config) *HTTPClient {
+func NewHTTPClient(config Config) Client {
 	timeout := config.timeoutInSeconds
 
 	httpTimeout := time.Duration(timeout) * time.Second
-	return &HTTPClient{
+	return &httpClient{
 		client: &http.Client{
 			Timeout: httpTimeout,
 		},
 	}
 }
 
-func (c *HTTPClient) Get(url string) (HeimdallResponse, error) {
+func (c *httpClient) Get(url string) (HeimdallResponse, error) {
 	response := HeimdallResponse{}
 
 	request, err := http.NewRequest(http.MethodGet, url, nil)
@@ -38,7 +38,7 @@ func (c *HTTPClient) Get(url string) (HeimdallResponse, error) {
 	return c.do(request)
 }
 
-func (c *HTTPClient) do(request *http.Request) (HeimdallResponse, error) {
+func (c *httpClient) do(request *http.Request) (HeimdallResponse, error) {
 	hr := HeimdallResponse{}
 	var err error
 
