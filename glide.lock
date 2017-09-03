@@ -1,0 +1,24 @@
+hash: 9262f89b93320bcb6b51f841eeccb47aac3a3e23e71051351ab6255153040cf7
+updated: 2017-09-03T12:17:31.97299644+07:00
+imports:
+- name: github.com/afex/hystrix-go
+  version: 39520ddd07a9d9a071d615f7476798659f5a3b89
+  subpackages:
+  - hystrix
+  - hystrix/metric_collector
+  - hystrix/rolling
+- name: github.com/certifi/gocertifi
+  version: 03be5e6bb9874570ea7fb0961225d193cbc374c5
+- name: github.com/getsentry/raven-go
+  version: 3f7439d3e74d88e21d196ba20eb61a5a958bc118
+- name: github.com/newrelic/go-agent
+  version: 29ec3cd1bb2f21d21d36da37dae52695cb2c3a17
+  subpackages:
+  - internal
+  - internal/jsonx
+  - internal/logger
+  - internal/sysinfo
+  - internal/utilization
+- name: github.com/pkg/errors
+  version: 645ef00459ed84a119197bfb8d8205042c6df63d
+testImports: []

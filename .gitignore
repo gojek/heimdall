@@ -1,0 +1,6 @@
+vendor/
+out/
+*.log
+.idea/
+*.out
+.DS_Store

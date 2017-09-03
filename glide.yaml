@@ -1,0 +1,7 @@
+package: source.golabs.io/core/heimdall
+import:
+- package: github.com/afex/hystrix-go
+  subpackages:
+  - hystrix
+- package: github.com/pkg/errors
+  version: ^0.8.0
