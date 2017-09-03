@@ -17,7 +17,7 @@ update-deps:
 
 compile:
 	mkdir -p out/
-	go build -race ./...
+	go build -race $(GLIDE_NOVENDOR)
 
 build: build-deps compile fmt vet lint
 
@@ -28,13 +28,13 @@ vet:
 	go vet $(GLIDE_NOVENDOR)
 
 lint:
-	@for p in $(UNIT_TEST_PACKAGES); do \
+	@for p in $(GLIDE_NOVENDOR); do \
 		echo "==> Linting $$p"; \
 		golint -set_exit_status $$p; \
 	done
 
-test:
-	ENVIRONMENT=test go test -race $(UNIT_TEST_PACKAGES)
+test: build-deps fmt vet build
+	ENVIRONMENT=test go test -race $(GLIDE_NOVENDOR)
 
 test-cover-html:
 	@echo "mode: count" > coverage-all.out

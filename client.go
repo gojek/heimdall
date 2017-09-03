@@ -8,14 +8,16 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Client Is a generic client interface
 type Client interface {
-	Get(url string) (HeimdallResponse, error)
+	Get(url string) (Response, error)
 }
 
 type httpClient struct {
 	client *http.Client
 }
 
+// NewHTTPClient returns a new instance of HTTPClient
 func NewHTTPClient(config Config) Client {
 	timeout := config.timeoutInSeconds
 
@@ -27,8 +29,9 @@ func NewHTTPClient(config Config) Client {
 	}
 }
 
-func (c *httpClient) Get(url string) (HeimdallResponse, error) {
-	response := HeimdallResponse{}
+// Get makes a HTTP get request to provided URL
+func (c *httpClient) Get(url string) (Response, error) {
+	response := Response{}
 
 	request, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -38,8 +41,8 @@ func (c *httpClient) Get(url string) (HeimdallResponse, error) {
 	return c.do(request)
 }
 
-func (c *httpClient) do(request *http.Request) (HeimdallResponse, error) {
-	hr := HeimdallResponse{}
+func (c *httpClient) do(request *http.Request) (Response, error) {
+	hr := Response{}
 	var err error
 
 	request.Close = true

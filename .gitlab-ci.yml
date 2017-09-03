@@ -13,4 +13,4 @@ test:
   script:
     - cd "${GOPATH}/src/${CI_PROJECT_NAME}"
     - export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
-    - make 
+    - make test
