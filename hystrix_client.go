@@ -115,8 +115,8 @@ func (hhc *hystrixHTTPClient) do(request *http.Request) (Response, error) {
 
 	request.Close = true
 
+	var err error
 	for i := 0; i <= hhc.retryCount; i++ {
-		var err error
 
 		err = hystrix.Do(hhc.hystrixCommandName, func() error {
 			response, err := hhc.client.Do(request)
@@ -153,5 +153,5 @@ func (hhc *hystrixHTTPClient) do(request *http.Request) (Response, error) {
 		break
 	}
 
-	return hr, nil
+	return hr, err
 }

@@ -10,6 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"strings"
 )
 
 func TestHystrixHTTPClientGetSuccess(t *testing.T) {
@@ -216,10 +217,24 @@ func TestHystrixHTTPClientRetriesOnFailure(t *testing.T) {
 	client.SetRetrier(NewRetrier(NewConstantBackoff(1)))
 
 	response, err := client.Get(server.URL)
-	require.NoError(t, err, "should not have failed to make a GET request")
+	require.Error(t, err)
 
 	assert.Equal(t, 4, count)
 
 	assert.Equal(t, http.StatusInternalServerError, response.StatusCode())
 	assert.Equal(t, "{ \"response\": \"something went wrong\" }", string(response.Body()))
+}
+
+func TestHystrixHTTPClientReturnsFallbackFailure(t *testing.T) {
+	hystrixCommandConfig := hystrix.CommandConfig{
+		Timeout:                10,
+		MaxConcurrentRequests:  100,
+		ErrorPercentThreshold:  10,
+		SleepWindow:            100,
+		RequestVolumeThreshold: 10,
+	}
+	client := NewHystrixHTTPClient(10, hystrixCommandConfig)
+
+	_, err := client.Get("http://localhost")
+	assert.True(t, strings.Contains(err.Error(), "fallback failed"))
 }
