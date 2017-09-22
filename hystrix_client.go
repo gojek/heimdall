@@ -25,15 +25,15 @@ type hystrixHTTPClient struct {
 }
 
 // NewHystrixHTTPClient returns a new instance of HystrixHTTPClient
-func NewHystrixHTTPClient(httpClient *http.Client, hystrixCommandName string, hystrixCommandConfig hystrix.CommandConfig) Client {
-	hystrix.ConfigureCommand(hystrixCommandName, hystrixCommandConfig)
+func NewHystrixHTTPClient(httpClient *http.Client, hystrixConfig *HystrixConfig) Client {
+	hystrix.ConfigureCommand(hystrixConfig.commandName, *hystrixConfig.commandConfig)
 
 	return &hystrixHTTPClient{
 		client: httpClient,
 
 		retryCount:         defaultHystrixRetryCount,
 		retrier:            NewNoRetrier(),
-		hystrixCommandName: hystrixCommandName,
+		hystrixCommandName: hystrixConfig.commandName,
 	}
 }
 

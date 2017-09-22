@@ -14,7 +14,7 @@ import (
 )
 
 func TestHystrixHTTPClientGetSuccess(t *testing.T) {
-	hystrixCommandConfig := hystrix.CommandConfig{
+	hystrixCommandConfig := &hystrix.CommandConfig{
 		Timeout:                10,
 		MaxConcurrentRequests:  100,
 		ErrorPercentThreshold:  10,
@@ -22,7 +22,10 @@ func TestHystrixHTTPClientGetSuccess(t *testing.T) {
 		RequestVolumeThreshold: 10,
 	}
 
-	client := NewHystrixHTTPClient(&http.Client{}, "some_command_name", hystrixCommandConfig)
+	client := NewHystrixHTTPClient(&http.Client{}, &HystrixConfig{
+		commandName:   "some_command_name",
+		commandConfig: hystrixCommandConfig,
+	})
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
@@ -44,14 +47,18 @@ func TestHystrixHTTPClientGetSuccess(t *testing.T) {
 }
 
 func TestHystrixHTTPClientPostSuccess(t *testing.T) {
-	hystrixCommandConfig := hystrix.CommandConfig{
+	hystrixCommandConfig := &hystrix.CommandConfig{
 		Timeout:                10,
 		MaxConcurrentRequests:  100,
 		ErrorPercentThreshold:  10,
 		SleepWindow:            100,
 		RequestVolumeThreshold: 10,
 	}
-	client := NewHystrixHTTPClient(&http.Client{}, "some_command_name", hystrixCommandConfig)
+
+	client := NewHystrixHTTPClient(&http.Client{}, &HystrixConfig{
+		commandName:   "some_command_name",
+		commandConfig: hystrixCommandConfig,
+	})
 
 	requestBodyString := `{ "name": "heimdall" }`
 
@@ -84,14 +91,18 @@ func TestHystrixHTTPClientPostSuccess(t *testing.T) {
 }
 
 func TestHystrixHTTPClientDeleteSuccess(t *testing.T) {
-	hystrixCommandConfig := hystrix.CommandConfig{
+	hystrixCommandConfig := &hystrix.CommandConfig{
 		Timeout:                10,
 		MaxConcurrentRequests:  100,
 		ErrorPercentThreshold:  10,
 		SleepWindow:            100,
 		RequestVolumeThreshold: 10,
 	}
-	client := NewHystrixHTTPClient(&http.Client{}, "some_command_name", hystrixCommandConfig)
+
+	client := NewHystrixHTTPClient(&http.Client{}, &HystrixConfig{
+		commandName:   "some_command_name",
+		commandConfig: hystrixCommandConfig,
+	})
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodDelete {
@@ -113,14 +124,18 @@ func TestHystrixHTTPClientDeleteSuccess(t *testing.T) {
 }
 
 func TestHystrixHTTPClientPutSuccess(t *testing.T) {
-	hystrixCommandConfig := hystrix.CommandConfig{
+	hystrixCommandConfig := &hystrix.CommandConfig{
 		Timeout:                10,
 		MaxConcurrentRequests:  100,
 		ErrorPercentThreshold:  10,
 		SleepWindow:            100,
 		RequestVolumeThreshold: 10,
 	}
-	client := NewHystrixHTTPClient(&http.Client{}, "some_command_name", hystrixCommandConfig)
+
+	client := NewHystrixHTTPClient(&http.Client{}, &HystrixConfig{
+		commandName:   "some_command_name",
+		commandConfig: hystrixCommandConfig,
+	})
 
 	requestBodyString := `{ "name": "heimdall" }`
 
@@ -153,14 +168,18 @@ func TestHystrixHTTPClientPutSuccess(t *testing.T) {
 }
 
 func TestHystrixHTTPClientPatchSuccess(t *testing.T) {
-	hystrixCommandConfig := hystrix.CommandConfig{
+	hystrixCommandConfig := &hystrix.CommandConfig{
 		Timeout:                10,
 		MaxConcurrentRequests:  100,
 		ErrorPercentThreshold:  10,
 		SleepWindow:            100,
 		RequestVolumeThreshold: 10,
 	}
-	client := NewHystrixHTTPClient(&http.Client{}, "some_command_name", hystrixCommandConfig)
+
+	client := NewHystrixHTTPClient(&http.Client{}, &HystrixConfig{
+		commandName:   "some_command_name",
+		commandConfig: hystrixCommandConfig,
+	})
 
 	requestBodyString := `{ "name": "heimdall" }`
 
@@ -193,14 +212,18 @@ func TestHystrixHTTPClientPatchSuccess(t *testing.T) {
 }
 
 func TestHystrixHTTPClientRetriesOnFailure(t *testing.T) {
-	hystrixCommandConfig := hystrix.CommandConfig{
+	hystrixCommandConfig := &hystrix.CommandConfig{
 		Timeout:                10,
 		MaxConcurrentRequests:  100,
 		ErrorPercentThreshold:  10,
 		SleepWindow:            100,
 		RequestVolumeThreshold: 10,
 	}
-	client := NewHystrixHTTPClient(&http.Client{}, "some_command_name", hystrixCommandConfig)
+
+	client := NewHystrixHTTPClient(&http.Client{}, &HystrixConfig{
+		commandName:   "some_command_name",
+		commandConfig: hystrixCommandConfig,
+	})
 
 	count := 0
 
@@ -226,14 +249,18 @@ func TestHystrixHTTPClientRetriesOnFailure(t *testing.T) {
 }
 
 func TestHystrixHTTPClientReturnsFallbackFailure(t *testing.T) {
-	hystrixCommandConfig := hystrix.CommandConfig{
+	hystrixCommandConfig := &hystrix.CommandConfig{
 		Timeout:                10,
 		MaxConcurrentRequests:  100,
 		ErrorPercentThreshold:  10,
 		SleepWindow:            100,
 		RequestVolumeThreshold: 10,
 	}
-	client := NewHystrixHTTPClient(&http.Client{}, "some_command_name", hystrixCommandConfig)
+
+	client := NewHystrixHTTPClient(&http.Client{}, &HystrixConfig{
+		commandName:   "some_command_name",
+		commandConfig: hystrixCommandConfig,
+	})
 
 	_, err := client.Get("http://localhost")
 	assert.True(t, strings.Contains(err.Error(), "fallback failed"))
