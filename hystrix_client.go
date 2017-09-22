@@ -25,18 +25,15 @@ type hystrixHTTPClient struct {
 }
 
 // NewHystrixHTTPClient returns a new instance of HystrixHTTPClient
-func NewHystrixHTTPClient(timeoutInSeconds int, hystrixCommandConfig hystrix.CommandConfig) Client {
-	httpTimeout := time.Duration(timeoutInSeconds) * time.Second
+func NewHystrixHTTPClient(httpClient *http.Client, hystrixCommandName string, hystrixCommandConfig hystrix.CommandConfig) Client {
+	hystrix.ConfigureCommand(hystrixCommandName, hystrixCommandConfig)
+
 	return &hystrixHTTPClient{
-		client: &http.Client{
-			Timeout: httpTimeout,
-		},
+		client: httpClient,
 
-		retryCount: defaultHystrixRetryCount,
-		retrier:    NewNoRetrier(),
-
-		hystrixCommandName:   "default",
-		hystrixCommandConfig: hystrixCommandConfig,
+		retryCount:         defaultHystrixRetryCount,
+		retrier:            NewNoRetrier(),
+		hystrixCommandName: hystrixCommandName,
 	}
 }
 
