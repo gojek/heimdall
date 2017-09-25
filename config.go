@@ -1,6 +1,8 @@
 package heimdall
 
-import "github.com/afex/hystrix-go/hystrix"
+import (
+	"github.com/afex/hystrix-go/hystrix"
+)
 
 // HystrixConfig is used to pass configurations for Hystrix
 type HystrixConfig struct {

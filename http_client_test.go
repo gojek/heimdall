@@ -26,7 +26,7 @@ func TestHTTPClientGetSuccess(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
 	defer server.Close()
 
-	response, err := client.Get(server.URL)
+	response, err := client.Get(server.URL, http.Header{})
 	require.NoError(t, err, "should not have failed to make a GET request")
 
 	assert.Equal(t, http.StatusOK, response.StatusCode())
@@ -59,7 +59,7 @@ func TestHTTPClientPostSuccess(t *testing.T) {
 
 	requestBody := bytes.NewReader([]byte(requestBodyString))
 
-	response, err := client.Post(server.URL, requestBody)
+	response, err := client.Post(server.URL, requestBody, http.Header{})
 	require.NoError(t, err, "should not have failed to make a POST request")
 
 	assert.Equal(t, http.StatusOK, response.StatusCode())
@@ -81,7 +81,7 @@ func TestHTTPClientDeleteSuccess(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
 	defer server.Close()
 
-	response, err := client.Delete(server.URL)
+	response, err := client.Delete(server.URL, http.Header{})
 	require.NoError(t, err, "should not have failed to make a DELETE request")
 
 	assert.Equal(t, http.StatusOK, response.StatusCode())
@@ -114,7 +114,7 @@ func TestHTTPClientPutSuccess(t *testing.T) {
 
 	requestBody := bytes.NewReader([]byte(requestBodyString))
 
-	response, err := client.Put(server.URL, requestBody)
+	response, err := client.Put(server.URL, requestBody, http.Header{})
 	require.NoError(t, err, "should not have failed to make a PUT request")
 
 	assert.Equal(t, http.StatusOK, response.StatusCode())
@@ -147,7 +147,7 @@ func TestHTTPClientPatchSuccess(t *testing.T) {
 
 	requestBody := bytes.NewReader([]byte(requestBodyString))
 
-	response, err := client.Patch(server.URL, requestBody)
+	response, err := client.Patch(server.URL, requestBody, http.Header{})
 	require.NoError(t, err, "should not have failed to make a PATCH request")
 
 	assert.Equal(t, http.StatusOK, response.StatusCode())
@@ -171,7 +171,7 @@ func TestHTTPClientRetriesOnFailure(t *testing.T) {
 	client.SetRetryCount(3)
 	client.SetRetrier(NewRetrier(NewConstantBackoff(1)))
 
-	response, err := client.Get(server.URL)
+	response, err := client.Get(server.URL, http.Header{})
 	require.NoError(t, err, "should not have failed to make a GET request")
 
 	assert.Equal(t, 4, count)

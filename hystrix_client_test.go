@@ -39,7 +39,7 @@ func TestHystrixHTTPClientGetSuccess(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
 	defer server.Close()
 
-	response, err := client.Get(server.URL)
+	response, err := client.Get(server.URL, http.Header{})
 	require.NoError(t, err, "should not have failed to make a GET request")
 
 	assert.Equal(t, http.StatusOK, response.StatusCode())
@@ -83,7 +83,7 @@ func TestHystrixHTTPClientPostSuccess(t *testing.T) {
 
 	requestBody := bytes.NewReader([]byte(requestBodyString))
 
-	response, err := client.Post(server.URL, requestBody)
+	response, err := client.Post(server.URL, requestBody, http.Header{})
 	require.NoError(t, err, "should not have failed to make a POST request")
 
 	assert.Equal(t, http.StatusOK, response.StatusCode())
@@ -116,7 +116,7 @@ func TestHystrixHTTPClientDeleteSuccess(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
 	defer server.Close()
 
-	response, err := client.Delete(server.URL)
+	response, err := client.Delete(server.URL, http.Header{})
 	require.NoError(t, err, "should not have failed to make a DELETE request")
 
 	assert.Equal(t, http.StatusOK, response.StatusCode())
@@ -160,7 +160,7 @@ func TestHystrixHTTPClientPutSuccess(t *testing.T) {
 
 	requestBody := bytes.NewReader([]byte(requestBodyString))
 
-	response, err := client.Put(server.URL, requestBody)
+	response, err := client.Put(server.URL, requestBody, http.Header{})
 	require.NoError(t, err, "should not have failed to make a PUT request")
 
 	assert.Equal(t, http.StatusOK, response.StatusCode())
@@ -204,7 +204,7 @@ func TestHystrixHTTPClientPatchSuccess(t *testing.T) {
 
 	requestBody := bytes.NewReader([]byte(requestBodyString))
 
-	response, err := client.Patch(server.URL, requestBody)
+	response, err := client.Patch(server.URL, requestBody, http.Header{})
 	require.NoError(t, err, "should not have failed to make a PATCH request")
 
 	assert.Equal(t, http.StatusOK, response.StatusCode())
@@ -239,7 +239,7 @@ func TestHystrixHTTPClientRetriesOnFailure(t *testing.T) {
 	client.SetRetryCount(3)
 	client.SetRetrier(NewRetrier(NewConstantBackoff(1)))
 
-	response, err := client.Get(server.URL)
+	response, err := client.Get(server.URL, http.Header{})
 	require.Error(t, err)
 
 	assert.Equal(t, 4, count)
@@ -262,6 +262,6 @@ func TestHystrixHTTPClientReturnsFallbackFailure(t *testing.T) {
 		commandConfig: hystrixCommandConfig,
 	})
 
-	_, err := client.Get("http://localhost")
+	_, err := client.Get("http://localhost", http.Header{})
 	assert.True(t, strings.Contains(err.Error(), "fallback failed"))
 }
