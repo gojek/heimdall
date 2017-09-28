@@ -25,8 +25,8 @@ type hystrixHTTPClient struct {
 }
 
 // NewHystrixHTTPClient returns a new instance of HystrixHTTPClient
-func NewHystrixHTTPClient(httpClient *http.Client, hystrixConfig *HystrixConfig) Client {
-	hystrix.ConfigureCommand(hystrixConfig.commandName, *hystrixConfig.commandConfig)
+func NewHystrixHTTPClient(httpClient *http.Client, hystrixConfig HystrixConfig) Client {
+	hystrix.ConfigureCommand(hystrixConfig.commandName, hystrixConfig.commandConfig)
 
 	return &hystrixHTTPClient{
 		client: httpClient,
@@ -56,9 +56,7 @@ func (hhc *hystrixHTTPClient) Get(url string, headers http.Header) (Response, er
 		return response, errors.Wrap(err, "GET - request creation failed")
 	}
 
-	for header, value := range headers {
-		request.Header.Set(header, value[0])
-	}
+	request.Header = headers
 
 	return hhc.do(request)
 }
@@ -72,9 +70,7 @@ func (hhc *hystrixHTTPClient) Post(url string, body io.Reader, headers http.Head
 		return response, errors.Wrap(err, "POST - request creation failed")
 	}
 
-	for header, value := range headers {
-		request.Header.Set(header, value[0])
-	}
+	request.Header = headers
 
 	return hhc.do(request)
 }
@@ -88,9 +84,7 @@ func (hhc *hystrixHTTPClient) Put(url string, body io.Reader, headers http.Heade
 		return response, errors.Wrap(err, "PUT - request creation failed")
 	}
 
-	for header, value := range headers {
-		request.Header.Set(header, value[0])
-	}
+	request.Header = headers
 
 	return hhc.do(request)
 }
@@ -104,9 +98,7 @@ func (hhc *hystrixHTTPClient) Patch(url string, body io.Reader, headers http.Hea
 		return response, errors.Wrap(err, "PATCH - request creation failed")
 	}
 
-	for header, value := range headers {
-		request.Header.Set(header, value[0])
-	}
+	request.Header = headers
 
 	return hhc.do(request)
 }
@@ -120,9 +112,7 @@ func (hhc *hystrixHTTPClient) Delete(url string, headers http.Header) (Response,
 		return response, errors.Wrap(err, "DELETE - request creation failed")
 	}
 
-	for header, value := range headers {
-		request.Header.Set(header, value[0])
-	}
+	request.Header = headers
 
 	return hhc.do(request)
 }

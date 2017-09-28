@@ -7,11 +7,11 @@ import (
 // HystrixConfig is used to pass configurations for Hystrix
 type HystrixConfig struct {
 	commandName   string
-	commandConfig *hystrix.CommandConfig
+	commandConfig hystrix.CommandConfig
 }
 
-// HystrixConfiguration takes the hystrix config values
-type HystrixConfiguration struct {
+// HystrixCommandConfig takes the hystrix config values
+type HystrixCommandConfig struct {
 	Timeout                int
 	MaxConcurrentRequests  int
 	RequestVolumeThreshold int
@@ -20,10 +20,10 @@ type HystrixConfiguration struct {
 }
 
 // NewHystrixConfig should be used to give hystrix commandName and config
-func NewHystrixConfig(commandName string, commandConfig HystrixConfiguration) *HystrixConfig {
+func NewHystrixConfig(commandName string, commandConfig HystrixCommandConfig) *HystrixConfig {
 	return &HystrixConfig{
 		commandName: commandName,
-		commandConfig: &hystrix.CommandConfig{
+		commandConfig: hystrix.CommandConfig{
 			Timeout:                commandConfig.Timeout,
 			MaxConcurrentRequests:  commandConfig.MaxConcurrentRequests,
 			RequestVolumeThreshold: commandConfig.RequestVolumeThreshold,
