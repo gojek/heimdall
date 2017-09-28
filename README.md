@@ -9,7 +9,7 @@ How to use this library:
 - Add this library as a dependency to your glide.yaml file, and preferably fix a version.
 - Use
 ```
-func NewHystrixHTTPClient(httpClient *http.Client, hystrixConfig *HystrixConfig) Client
+func NewHystrixHTTPClient(httpClient *http.Client, hystrixConfig HystrixConfig) Client
 ```
 
 to create a new http client with hystrix.
