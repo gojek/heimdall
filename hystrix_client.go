@@ -17,26 +17,22 @@ const defaultHystrixRetryCount int = 0
 type hystrixHTTPClient struct {
 	client *http.Client
 
-	hystrixCommandName   string
-	hystrixCommandConfig hystrix.CommandConfig
+	hystrixCommandName string
 
 	retryCount int
 	retrier    Retriable
 }
 
 // NewHystrixHTTPClient returns a new instance of HystrixHTTPClient
-func NewHystrixHTTPClient(timeoutInSeconds int, hystrixCommandConfig hystrix.CommandConfig) Client {
-	httpTimeout := time.Duration(timeoutInSeconds) * time.Second
+func NewHystrixHTTPClient(httpClient *http.Client, hystrixConfig HystrixConfig) Client {
+	hystrix.ConfigureCommand(hystrixConfig.commandName, hystrixConfig.commandConfig)
+
 	return &hystrixHTTPClient{
-		client: &http.Client{
-			Timeout: httpTimeout,
-		},
+		client: httpClient,
 
-		retryCount: defaultHystrixRetryCount,
-		retrier:    NewNoRetrier(),
-
-		hystrixCommandName:   "default",
-		hystrixCommandConfig: hystrixCommandConfig,
+		retryCount:         defaultHystrixRetryCount,
+		retrier:            NewNoRetrier(),
+		hystrixCommandName: hystrixConfig.commandName,
 	}
 }
 
@@ -51,7 +47,7 @@ func (hhc *hystrixHTTPClient) SetRetrier(retrier Retriable) {
 }
 
 // Get makes a HTTP GET request to provided URL
-func (hhc *hystrixHTTPClient) Get(url string) (Response, error) {
+func (hhc *hystrixHTTPClient) Get(url string, headers http.Header) (Response, error) {
 	response := Response{}
 
 	request, err := http.NewRequest(http.MethodGet, url, nil)
@@ -59,11 +55,13 @@ func (hhc *hystrixHTTPClient) Get(url string) (Response, error) {
 		return response, errors.Wrap(err, "GET - request creation failed")
 	}
 
+	request.Header = headers
+
 	return hhc.do(request)
 }
 
 // Post makes a HTTP POST request to provided URL and requestBody
-func (hhc *hystrixHTTPClient) Post(url string, body io.Reader) (Response, error) {
+func (hhc *hystrixHTTPClient) Post(url string, body io.Reader, headers http.Header) (Response, error) {
 	response := Response{}
 
 	request, err := http.NewRequest(http.MethodPost, url, body)
@@ -71,11 +69,13 @@ func (hhc *hystrixHTTPClient) Post(url string, body io.Reader) (Response, error)
 		return response, errors.Wrap(err, "POST - request creation failed")
 	}
 
+	request.Header = headers
+
 	return hhc.do(request)
 }
 
 // Put makes a HTTP PUT request to provided URL and requestBody
-func (hhc *hystrixHTTPClient) Put(url string, body io.Reader) (Response, error) {
+func (hhc *hystrixHTTPClient) Put(url string, body io.Reader, headers http.Header) (Response, error) {
 	response := Response{}
 
 	request, err := http.NewRequest(http.MethodPut, url, body)
@@ -83,11 +83,13 @@ func (hhc *hystrixHTTPClient) Put(url string, body io.Reader) (Response, error) 
 		return response, errors.Wrap(err, "PUT - request creation failed")
 	}
 
+	request.Header = headers
+
 	return hhc.do(request)
 }
 
 // Patch makes a HTTP PATCH request to provided URL and requestBody
-func (hhc *hystrixHTTPClient) Patch(url string, body io.Reader) (Response, error) {
+func (hhc *hystrixHTTPClient) Patch(url string, body io.Reader, headers http.Header) (Response, error) {
 	response := Response{}
 
 	request, err := http.NewRequest(http.MethodPatch, url, body)
@@ -95,17 +97,21 @@ func (hhc *hystrixHTTPClient) Patch(url string, body io.Reader) (Response, error
 		return response, errors.Wrap(err, "PATCH - request creation failed")
 	}
 
+	request.Header = headers
+
 	return hhc.do(request)
 }
 
 // Delete makes a HTTP DELETE request with provided URL
-func (hhc *hystrixHTTPClient) Delete(url string) (Response, error) {
+func (hhc *hystrixHTTPClient) Delete(url string, headers http.Header) (Response, error) {
 	response := Response{}
 
 	request, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
 		return response, errors.Wrap(err, "DELETE - request creation failed")
 	}
+
+	request.Header = headers
 
 	return hhc.do(request)
 }

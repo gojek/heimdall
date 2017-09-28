@@ -42,7 +42,7 @@ func (c *httpClient) SetRetrier(retrier Retriable) {
 }
 
 // Get makes a HTTP GET request to provided URL
-func (c *httpClient) Get(url string) (Response, error) {
+func (c *httpClient) Get(url string, headers http.Header) (Response, error) {
 	response := Response{}
 
 	request, err := http.NewRequest(http.MethodGet, url, nil)
@@ -50,11 +50,13 @@ func (c *httpClient) Get(url string) (Response, error) {
 		return response, errors.Wrap(err, "GET - request creation failed")
 	}
 
+	request.Header = headers
+
 	return c.do(request)
 }
 
 // Post makes a HTTP POST request to provided URL and requestBody
-func (c *httpClient) Post(url string, body io.Reader) (Response, error) {
+func (c *httpClient) Post(url string, body io.Reader, headers http.Header) (Response, error) {
 	response := Response{}
 
 	request, err := http.NewRequest(http.MethodPost, url, body)
@@ -62,11 +64,13 @@ func (c *httpClient) Post(url string, body io.Reader) (Response, error) {
 		return response, errors.Wrap(err, "POST - request creation failed")
 	}
 
+	request.Header = headers
+
 	return c.do(request)
 }
 
 // Put makes a HTTP PUT request to provided URL and requestBody
-func (c *httpClient) Put(url string, body io.Reader) (Response, error) {
+func (c *httpClient) Put(url string, body io.Reader, headers http.Header) (Response, error) {
 	response := Response{}
 
 	request, err := http.NewRequest(http.MethodPut, url, body)
@@ -74,11 +78,13 @@ func (c *httpClient) Put(url string, body io.Reader) (Response, error) {
 		return response, errors.Wrap(err, "PUT - request creation failed")
 	}
 
+	request.Header = headers
+
 	return c.do(request)
 }
 
 // Patch makes a HTTP PATCH request to provided URL and requestBody
-func (c *httpClient) Patch(url string, body io.Reader) (Response, error) {
+func (c *httpClient) Patch(url string, body io.Reader, headers http.Header) (Response, error) {
 	response := Response{}
 
 	request, err := http.NewRequest(http.MethodPatch, url, body)
@@ -86,17 +92,21 @@ func (c *httpClient) Patch(url string, body io.Reader) (Response, error) {
 		return response, errors.Wrap(err, "PATCH - request creation failed")
 	}
 
+	request.Header = headers
+
 	return c.do(request)
 }
 
 // Delete makes a HTTP DELETE request with provided URL
-func (c *httpClient) Delete(url string) (Response, error) {
+func (c *httpClient) Delete(url string, headers http.Header) (Response, error) {
 	response := Response{}
 
 	request, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
 		return response, errors.Wrap(err, "DELETE - request creation failed")
 	}
+
+	request.Header = headers
 
 	return c.do(request)
 }
