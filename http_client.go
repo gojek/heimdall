@@ -50,6 +50,8 @@ func (c *httpClient) Get(url string, headers http.Header) (Response, error) {
 		return response, errors.Wrap(err, "GET - request creation failed")
 	}
 
+	request.Header = headers
+
 	return c.do(request)
 }
 
@@ -61,6 +63,8 @@ func (c *httpClient) Post(url string, body io.Reader, headers http.Header) (Resp
 	if err != nil {
 		return response, errors.Wrap(err, "POST - request creation failed")
 	}
+
+	request.Header = headers
 
 	return c.do(request)
 }
@@ -74,6 +78,8 @@ func (c *httpClient) Put(url string, body io.Reader, headers http.Header) (Respo
 		return response, errors.Wrap(err, "PUT - request creation failed")
 	}
 
+	request.Header = headers
+
 	return c.do(request)
 }
 
@@ -86,6 +92,8 @@ func (c *httpClient) Patch(url string, body io.Reader, headers http.Header) (Res
 		return response, errors.Wrap(err, "PATCH - request creation failed")
 	}
 
+	request.Header = headers
+
 	return c.do(request)
 }
 
@@ -97,6 +105,8 @@ func (c *httpClient) Delete(url string, headers http.Header) (Response, error) {
 	if err != nil {
 		return response, errors.Wrap(err, "DELETE - request creation failed")
 	}
+
+	request.Header = headers
 
 	return c.do(request)
 }
