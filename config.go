@@ -20,8 +20,8 @@ type HystrixCommandConfig struct {
 }
 
 // NewHystrixConfig should be used to give hystrix commandName and config
-func NewHystrixConfig(commandName string, commandConfig HystrixCommandConfig) *HystrixConfig {
-	return &HystrixConfig{
+func NewHystrixConfig(commandName string, commandConfig HystrixCommandConfig) HystrixConfig {
+	return HystrixConfig{
 		commandName: commandName,
 		commandConfig: hystrix.CommandConfig{
 			Timeout:                commandConfig.Timeout,
