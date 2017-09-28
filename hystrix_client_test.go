@@ -29,9 +29,10 @@ func TestHystrixHTTPClientGetSuccess(t *testing.T) {
 	})
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			t.Errorf("Not a GET request")
-		}
+
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.Equal(t, r.Header.Get("Content-Type"), "application/json")
+		assert.Equal(t, r.Header.Get("Accept-Language"), "en")
 
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{ "response": "ok" }`))
@@ -40,7 +41,11 @@ func TestHystrixHTTPClientGetSuccess(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
 	defer server.Close()
 
-	response, err := client.Get(server.URL, http.Header{})
+	headers := http.Header{}
+	headers.Set("Content-Type", "application/json")
+	headers.Set("Accept-Language", "en")
+
+	response, err := client.Get(server.URL, headers)
 	require.NoError(t, err, "should not have failed to make a GET request")
 
 	assert.Equal(t, http.StatusOK, response.StatusCode())
@@ -64,16 +69,14 @@ func TestHystrixHTTPClientPostSuccess(t *testing.T) {
 	requestBodyString := `{ "name": "heimdall" }`
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			t.Errorf("Not a POST request")
-		}
+		assert.Equal(t, http.MethodPost, r.Method)
+		assert.Equal(t, r.Header.Get("Content-Type"), "application/json")
+		assert.Equal(t, r.Header.Get("Accept-Language"), "en")
 
 		rBody, err := ioutil.ReadAll(r.Body)
 		require.NoError(t, err, "should not have failed to extract request body")
 
-		if string(rBody) != requestBodyString {
-			t.Errorf("POST request has wrong request body")
-		}
+		assert.Equal(t, requestBodyString, string(rBody))
 
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{ "response": "ok" }`))
@@ -84,7 +87,11 @@ func TestHystrixHTTPClientPostSuccess(t *testing.T) {
 
 	requestBody := bytes.NewReader([]byte(requestBodyString))
 
-	response, err := client.Post(server.URL, requestBody, http.Header{})
+	headers := http.Header{}
+	headers.Set("Content-Type", "application/json")
+	headers.Set("Accept-Language", "en")
+
+	response, err := client.Post(server.URL, requestBody, headers)
 	require.NoError(t, err, "should not have failed to make a POST request")
 
 	assert.Equal(t, http.StatusOK, response.StatusCode())
@@ -106,9 +113,9 @@ func TestHystrixHTTPClientDeleteSuccess(t *testing.T) {
 	})
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodDelete {
-			t.Errorf("Not a DELETE request")
-		}
+		assert.Equal(t, http.MethodDelete, r.Method)
+		assert.Equal(t, r.Header.Get("Content-Type"), "application/json")
+		assert.Equal(t, r.Header.Get("Accept-Language"), "en")
 
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{ "response": "ok" }`))
@@ -117,7 +124,11 @@ func TestHystrixHTTPClientDeleteSuccess(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
 	defer server.Close()
 
-	response, err := client.Delete(server.URL, http.Header{})
+	headers := http.Header{}
+	headers.Set("Content-Type", "application/json")
+	headers.Set("Accept-Language", "en")
+
+	response, err := client.Delete(server.URL, headers)
 	require.NoError(t, err, "should not have failed to make a DELETE request")
 
 	assert.Equal(t, http.StatusOK, response.StatusCode())
@@ -141,16 +152,14 @@ func TestHystrixHTTPClientPutSuccess(t *testing.T) {
 	requestBodyString := `{ "name": "heimdall" }`
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPut {
-			t.Errorf("Not a PUT request")
-		}
+		assert.Equal(t, http.MethodPut, r.Method)
+		assert.Equal(t, r.Header.Get("Content-Type"), "application/json")
+		assert.Equal(t, r.Header.Get("Accept-Language"), "en")
 
 		rBody, err := ioutil.ReadAll(r.Body)
 		require.NoError(t, err, "should not have failed to extract request body")
 
-		if string(rBody) != requestBodyString {
-			t.Errorf("PUT request has wrong request body")
-		}
+		assert.Equal(t, requestBodyString, string(rBody))
 
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{ "response": "ok" }`))
@@ -161,7 +170,11 @@ func TestHystrixHTTPClientPutSuccess(t *testing.T) {
 
 	requestBody := bytes.NewReader([]byte(requestBodyString))
 
-	response, err := client.Put(server.URL, requestBody, http.Header{})
+	headers := http.Header{}
+	headers.Set("Content-Type", "application/json")
+	headers.Set("Accept-Language", "en")
+
+	response, err := client.Put(server.URL, requestBody, headers)
 	require.NoError(t, err, "should not have failed to make a PUT request")
 
 	assert.Equal(t, http.StatusOK, response.StatusCode())
@@ -185,16 +198,14 @@ func TestHystrixHTTPClientPatchSuccess(t *testing.T) {
 	requestBodyString := `{ "name": "heimdall" }`
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPatch {
-			t.Errorf("Not a PATCH request")
-		}
+		assert.Equal(t, http.MethodPatch, r.Method)
+		assert.Equal(t, r.Header.Get("Content-Type"), "application/json")
+		assert.Equal(t, r.Header.Get("Accept-Language"), "en")
 
 		rBody, err := ioutil.ReadAll(r.Body)
 		require.NoError(t, err, "should not have failed to extract request body")
 
-		if string(rBody) != requestBodyString {
-			t.Errorf("PATCH request has wrong request body")
-		}
+		assert.Equal(t, requestBodyString, string(rBody))
 
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{ "response": "ok" }`))
@@ -203,9 +214,13 @@ func TestHystrixHTTPClientPatchSuccess(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
 	defer server.Close()
 
+	headers := http.Header{}
+	headers.Set("Content-Type", "application/json")
+	headers.Set("Accept-Language", "en")
+
 	requestBody := bytes.NewReader([]byte(requestBodyString))
 
-	response, err := client.Patch(server.URL, requestBody, http.Header{})
+	response, err := client.Patch(server.URL, requestBody, headers)
 	require.NoError(t, err, "should not have failed to make a PATCH request")
 
 	assert.Equal(t, http.StatusOK, response.StatusCode())

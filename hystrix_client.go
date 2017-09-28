@@ -17,8 +17,7 @@ const defaultHystrixRetryCount int = 0
 type hystrixHTTPClient struct {
 	client *http.Client
 
-	hystrixCommandName   string
-	hystrixCommandConfig hystrix.CommandConfig
+	hystrixCommandName string
 
 	retryCount int
 	retrier    Retriable
