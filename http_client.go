@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"fmt"
-	"github.com/hashicorp/go-multierror"
+	"github.com/gojek-engineering/go-multierror"
 	"github.com/pkg/errors"
 )
 
@@ -117,13 +117,13 @@ func (c *httpClient) do(request *http.Request) (Response, error) {
 	hr := Response{}
 
 	request.Close = true
-	var multiErr error
+	multiErr := multierror.NewMultiError()
 
 	for i := 0; i <= c.retryCount; i++ {
 		var err error
 		response, err := c.client.Do(request)
 		if err != nil {
-			multiErr = multierror.Append(multiErr, err)
+			multiErr.Push(err.Error())
 			backoffTime := c.retrier.NextInterval(i)
 			time.Sleep(backoffTime)
 			continue
@@ -132,7 +132,7 @@ func (c *httpClient) do(request *http.Request) (Response, error) {
 		if response.Body != nil {
 			hr.body, err = ioutil.ReadAll(response.Body)
 			if err != nil {
-				multiErr = multierror.Append(multiErr, err)
+				multiErr.Push(err.Error())
 				backoffTime := c.retrier.NextInterval(i)
 				time.Sleep(backoffTime)
 				continue
@@ -145,16 +145,16 @@ func (c *httpClient) do(request *http.Request) (Response, error) {
 
 		if response.StatusCode >= http.StatusInternalServerError {
 			err = fmt.Errorf("server error: %d", response.StatusCode)
-			multiErr = multierror.Append(multiErr, err)
+			multiErr.Push(err.Error())
 
 			backoffTime := c.retrier.NextInterval(i)
 			time.Sleep(backoffTime)
 			continue
 		}
 
-		multiErr = nil // Clear errors if any call succeeds
+		multiErr = multierror.NewMultiError() // Clear errors if any iteration succeeds
 		break
 	}
 
-	return hr, multiErr
+	return hr, multiErr.HasError()
 }

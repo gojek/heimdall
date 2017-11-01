@@ -2,13 +2,11 @@ package heimdall
 
 import (
 	"bytes"
-	"errors"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/hashicorp/go-multierror"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -216,21 +214,13 @@ func TestHTTPClientGetReturnsAllErrorsIfRetriesFail(t *testing.T) {
 	client.SetRetryCount(noOfRetries)
 	client.SetRetrier(NewRetrier(NewConstantBackoff(1)))
 
-	var expectedErr error
-	errMsg := "server error: 500"
-	expectedErr = multierror.Append(expectedErr,
-		errors.New(errMsg),
-		errors.New(errMsg),
-		errors.New(errMsg),
-	)
-
 	response, err := client.Get(server.URL, http.Header{})
 
 	require.Equal(t, noOfRetries+1, count)
 	require.Equal(t, http.StatusInternalServerError, response.StatusCode())
 	require.Equal(t, "{ \"response\": \"something went wrong\" }", string(response.Body()))
 
-	assert.Equal(t, expectedErr.Error(), err.Error())
+	assert.Equal(t, "server error: 500, server error: 500, server error: 500", err.Error())
 }
 
 func TestHTTPClientGetReturnsNoErrorsIfRetrySucceeds(t *testing.T) {
@@ -279,7 +269,7 @@ func TestHTTPClientGetReturnsErrorOnClientCallFailure(t *testing.T) {
 
 	require.NotEqual(t, http.StatusOK, response.StatusCode())
 
-	assert.Equal(t, "1 error occurred:\n\n* Get : unsupported protocol scheme \"\"", err.Error())
+	assert.Equal(t, "Get : unsupported protocol scheme \"\"", err.Error())
 }
 
 func TestHTTPClientGetReturnsErrorOnParseResponseFailure(t *testing.T) {
@@ -298,7 +288,7 @@ func TestHTTPClientGetReturnsErrorOnParseResponseFailure(t *testing.T) {
 
 	require.NotEqual(t, http.StatusOK, response.StatusCode())
 
-	assert.Equal(t, "1 error occurred:\n\n* unexpected EOF", err.Error())
+	assert.Equal(t, "unexpected EOF", err.Error())
 }
 
 func TestHTTPClientGetReturnsErrorOn5xxFailure(t *testing.T) {
@@ -316,7 +306,7 @@ func TestHTTPClientGetReturnsErrorOn5xxFailure(t *testing.T) {
 
 	require.Equal(t, http.StatusInternalServerError, response.StatusCode())
 
-	assert.Equal(t, "1 error occurred:\n\n* server error: 500", err.Error())
+	assert.Equal(t, "server error: 500", err.Error())
 }
 
 func TestHTTPClientGetReturnsNoErrorOnSuccessWithoutRetries(t *testing.T) {
