@@ -1,5 +1,5 @@
-hash: a73d2c0d3280cf726169dacb05f106c7d78c675d602c0bcb99c930a97a42d32a
-updated: 2017-09-06T21:47:03.425270821+07:00
+hash: 9799a1cf0fc9efaf807f6ab04c8c5633472e4553ef842e0f01235ce2eb076d62
+updated: 2017-10-31T18:29:58.535430397+07:00
 imports:
 - name: github.com/afex/hystrix-go
   version: 39520ddd07a9d9a071d615f7476798659f5a3b89
@@ -7,6 +7,8 @@ imports:
   - hystrix
   - hystrix/metric_collector
   - hystrix/rolling
+- name: github.com/hashicorp/go-multierror
+  version: 83588e72410abfbe4df460eeb6f30841ae47d4c4
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/stretchr/testify
