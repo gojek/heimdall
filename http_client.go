@@ -144,8 +144,7 @@ func (c *httpClient) do(request *http.Request) (Response, error) {
 		hr.statusCode = response.StatusCode
 
 		if response.StatusCode >= http.StatusInternalServerError {
-			err = fmt.Errorf("server error: %d", response.StatusCode)
-			multiErr.Push(err.Error())
+			multiErr.Push(fmt.Sprintf("server error: %d", response.StatusCode))
 
 			backoffTime := c.retrier.NextInterval(i)
 			time.Sleep(backoffTime)

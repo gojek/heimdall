@@ -188,12 +188,13 @@ func TestHTTPClientGetRetriesOnFailure(t *testing.T) {
 	client.SetRetryCount(noOfRetries)
 	client.SetRetrier(NewRetrier(NewConstantBackoff(1)))
 
-	response, _ := client.Get(server.URL, http.Header{})
+	response, err := client.Get(server.URL, http.Header{})
 
 	require.Equal(t, http.StatusInternalServerError, response.StatusCode())
 	require.Equal(t, "{ \"response\": \"something went wrong\" }", string(response.Body()))
 
 	assert.Equal(t, noOfCalls, count)
+	assert.Error(t, err)
 }
 
 func TestHTTPClientGetReturnsAllErrorsIfRetriesFail(t *testing.T) {
@@ -307,26 +308,4 @@ func TestHTTPClientGetReturnsErrorOn5xxFailure(t *testing.T) {
 	require.Equal(t, http.StatusInternalServerError, response.StatusCode())
 
 	assert.Equal(t, "server error: 500", err.Error())
-}
-
-func TestHTTPClientGetReturnsNoErrorOnSuccessWithoutRetries(t *testing.T) {
-	client := NewHTTPClient(10)
-
-	count := 0
-
-	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{ "response": "success" }`))
-		count++
-	}
-
-	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
-	defer server.Close()
-
-	response, err := client.Get(server.URL, http.Header{})
-
-	require.Equal(t, 1, count)
-	require.Equal(t, http.StatusOK, response.StatusCode())
-
-	assert.NoError(t, err)
 }
