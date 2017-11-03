@@ -189,12 +189,12 @@ func TestHTTPClientGetRetriesOnFailure(t *testing.T) {
 	client.SetRetrier(NewRetrier(NewConstantBackoff(1)))
 
 	response, err := client.Get(server.URL, http.Header{})
+	require.Error(t, err, "should have failed to make GET request")
 
 	require.Equal(t, http.StatusInternalServerError, response.StatusCode())
 	require.Equal(t, "{ \"response\": \"something went wrong\" }", string(response.Body()))
 
 	assert.Equal(t, noOfCalls, count)
-	assert.Error(t, err)
 }
 
 func TestHTTPClientGetReturnsAllErrorsIfRetriesFail(t *testing.T) {
@@ -216,6 +216,7 @@ func TestHTTPClientGetReturnsAllErrorsIfRetriesFail(t *testing.T) {
 	client.SetRetrier(NewRetrier(NewConstantBackoff(1)))
 
 	response, err := client.Get(server.URL, http.Header{})
+	require.Error(t, err, "should have failed to make GET request")
 
 	require.Equal(t, noOfRetries+1, count)
 	require.Equal(t, http.StatusInternalServerError, response.StatusCode())
@@ -247,12 +248,11 @@ func TestHTTPClientGetReturnsNoErrorsIfRetrySucceeds(t *testing.T) {
 	client.SetRetrier(NewRetrier(NewConstantBackoff(1)))
 
 	response, err := client.Get(server.URL, http.Header{})
+	require.NoError(t, err, "should not have failed to make GET request")
 
 	require.Equal(t, countWhenCallSucceeds+1, count)
 	require.Equal(t, http.StatusOK, response.StatusCode())
 	require.Equal(t, "{ \"response\": \"success\" }", string(response.Body()))
-
-	assert.NoError(t, err)
 }
 
 func TestHTTPClientGetReturnsErrorOnClientCallFailure(t *testing.T) {
@@ -267,6 +267,7 @@ func TestHTTPClientGetReturnsErrorOnClientCallFailure(t *testing.T) {
 	defer server.Close()
 
 	response, err := client.Get(server.URL, http.Header{})
+	require.Error(t, err, "should have failed to make GET request")
 
 	require.NotEqual(t, http.StatusOK, response.StatusCode())
 
@@ -286,6 +287,7 @@ func TestHTTPClientGetReturnsErrorOnParseResponseFailure(t *testing.T) {
 	defer server.Close()
 
 	response, err := client.Get(server.URL, http.Header{})
+	require.Error(t, err, "should have failed to make GET request")
 
 	require.NotEqual(t, http.StatusOK, response.StatusCode())
 
@@ -304,6 +306,7 @@ func TestHTTPClientGetReturnsErrorOn5xxFailure(t *testing.T) {
 	defer server.Close()
 
 	response, err := client.Get(server.URL, http.Header{})
+	require.Error(t, err, "should have failed to make GET request")
 
 	require.Equal(t, http.StatusInternalServerError, response.StatusCode())
 
