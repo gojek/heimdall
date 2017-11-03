@@ -1,6 +1,8 @@
 ## Heimdall
 ![Heimdall](https://i.stack.imgur.com/3eLbk.png)
 
+[![Build Status](https://travis-ci.org/gojek-engineering/heimdall.svg?branch=master)](https://travis-ci.org/gojek-engineering/heimdall)
+
 ### Yet another Golang HTTP Client
 
 - Provides wrapper over HTTPClient with timeouts and a fluent interface for calling HTTP Methods
