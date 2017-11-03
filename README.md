@@ -1,12 +1,15 @@
 ## Heimdall
 ![Heimdall](https://i.stack.imgur.com/3eLbk.png)
-### Yet another HTTP Client 
 
-#### Supports Synchronous in-memory retries
+### Yet another Golang HTTP Client
+
+- Provides wrapper over HTTPClient with timeouts and a fluent interface for calling HTTP Methods
+- Provides Hystrix HTTP client with fluent interface
+- Supports Synchronous in-memory retries
 
 How to use this library:
 
-- Add this library as a dependency to your glide.yaml file, and preferably fix a version.
+- Add this library as a dependency to your glide.yaml file, and preferably fix a version
 
 # heimdall
 --
