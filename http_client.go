@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"time"
 
+	"fmt"
+	"github.com/gojek-engineering/go-multierror"
 	"github.com/pkg/errors"
 )
 
@@ -115,11 +117,13 @@ func (c *httpClient) do(request *http.Request) (Response, error) {
 	hr := Response{}
 
 	request.Close = true
+	multiErr := multierror.NewMultiError()
 
 	for i := 0; i <= c.retryCount; i++ {
 		var err error
 		response, err := c.client.Do(request)
 		if err != nil {
+			multiErr.Push(err.Error())
 			backoffTime := c.retrier.NextInterval(i)
 			time.Sleep(backoffTime)
 			continue
@@ -128,6 +132,7 @@ func (c *httpClient) do(request *http.Request) (Response, error) {
 		if response.Body != nil {
 			hr.body, err = ioutil.ReadAll(response.Body)
 			if err != nil {
+				multiErr.Push(err.Error())
 				backoffTime := c.retrier.NextInterval(i)
 				time.Sleep(backoffTime)
 				continue
@@ -139,13 +144,16 @@ func (c *httpClient) do(request *http.Request) (Response, error) {
 		hr.statusCode = response.StatusCode
 
 		if response.StatusCode >= http.StatusInternalServerError {
+			multiErr.Push(fmt.Sprintf("server error: %d", response.StatusCode))
+
 			backoffTime := c.retrier.NextInterval(i)
 			time.Sleep(backoffTime)
 			continue
 		}
 
+		multiErr = multierror.NewMultiError() // Clear errors if any iteration succeeds
 		break
 	}
 
-	return hr, nil
+	return hr, multiErr.HasError()
 }

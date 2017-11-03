@@ -168,7 +168,7 @@ func TestHTTPClientPatchSuccess(t *testing.T) {
 	assert.Equal(t, "{ \"response\": \"ok\" }", string(response.Body()))
 }
 
-func TestHTTPClientRetriesOnFailure(t *testing.T) {
+func TestHTTPClientGetRetriesOnFailure(t *testing.T) {
 	client := NewHTTPClient(10)
 
 	count := 0
@@ -176,7 +176,69 @@ func TestHTTPClientRetriesOnFailure(t *testing.T) {
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(`{ "response": "something went wrong" }`))
-		count = count + 1
+		count++
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+	defer server.Close()
+
+	noOfRetries := 3
+	noOfCalls := noOfRetries + 1
+
+	client.SetRetryCount(noOfRetries)
+	client.SetRetrier(NewRetrier(NewConstantBackoff(1)))
+
+	response, err := client.Get(server.URL, http.Header{})
+	require.Error(t, err, "should have failed to make GET request")
+
+	require.Equal(t, http.StatusInternalServerError, response.StatusCode())
+	require.Equal(t, "{ \"response\": \"something went wrong\" }", string(response.Body()))
+
+	assert.Equal(t, noOfCalls, count)
+}
+
+func TestHTTPClientGetReturnsAllErrorsIfRetriesFail(t *testing.T) {
+	client := NewHTTPClient(10)
+
+	count := 0
+
+	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{ "response": "something went wrong" }`))
+		count++
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+	defer server.Close()
+
+	noOfRetries := 2
+	client.SetRetryCount(noOfRetries)
+	client.SetRetrier(NewRetrier(NewConstantBackoff(1)))
+
+	response, err := client.Get(server.URL, http.Header{})
+	require.Error(t, err, "should have failed to make GET request")
+
+	require.Equal(t, noOfRetries+1, count)
+	require.Equal(t, http.StatusInternalServerError, response.StatusCode())
+	require.Equal(t, "{ \"response\": \"something went wrong\" }", string(response.Body()))
+
+	assert.Equal(t, "server error: 500, server error: 500, server error: 500", err.Error())
+}
+
+func TestHTTPClientGetReturnsNoErrorsIfRetrySucceeds(t *testing.T) {
+	client := NewHTTPClient(10)
+
+	count := 0
+	countWhenCallSucceeds := 2
+
+	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+		if count == countWhenCallSucceeds {
+			w.Write([]byte(`{ "response": "success" }`))
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(`{ "response": "something went wrong" }`))
+		}
+		count++
 	}
 
 	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
@@ -186,10 +248,67 @@ func TestHTTPClientRetriesOnFailure(t *testing.T) {
 	client.SetRetrier(NewRetrier(NewConstantBackoff(1)))
 
 	response, err := client.Get(server.URL, http.Header{})
-	require.NoError(t, err, "should not have failed to make a GET request")
+	require.NoError(t, err, "should not have failed to make GET request")
 
-	assert.Equal(t, 4, count)
+	require.Equal(t, countWhenCallSucceeds+1, count)
+	require.Equal(t, http.StatusOK, response.StatusCode())
+	require.Equal(t, "{ \"response\": \"success\" }", string(response.Body()))
+}
 
-	assert.Equal(t, http.StatusInternalServerError, response.StatusCode())
-	assert.Equal(t, "{ \"response\": \"something went wrong\" }", string(response.Body()))
+func TestHTTPClientGetReturnsErrorOnClientCallFailure(t *testing.T) {
+	client := NewHTTPClient(10)
+
+	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+	server.URL = "" // Invalid URL to simulate client.Do error
+	defer server.Close()
+
+	response, err := client.Get(server.URL, http.Header{})
+	require.Error(t, err, "should have failed to make GET request")
+
+	require.NotEqual(t, http.StatusOK, response.StatusCode())
+
+	assert.Equal(t, "Get : unsupported protocol scheme \"\"", err.Error())
+}
+
+func TestHTTPClientGetReturnsErrorOnParseResponseFailure(t *testing.T) {
+	client := NewHTTPClient(10)
+
+	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+		// Simulate unexpected EOF with a response longer than Content-Length
+		w.Header().Set("Content-Length", "3")
+		w.Write([]byte("aasd"))
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+	defer server.Close()
+
+	response, err := client.Get(server.URL, http.Header{})
+	require.Error(t, err, "should have failed to make GET request")
+
+	require.NotEqual(t, http.StatusOK, response.StatusCode())
+
+	assert.Equal(t, "unexpected EOF", err.Error())
+}
+
+func TestHTTPClientGetReturnsErrorOn5xxFailure(t *testing.T) {
+	client := NewHTTPClient(10)
+
+	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{ "response": "something went wrong" }`))
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+	defer server.Close()
+
+	response, err := client.Get(server.URL, http.Header{})
+	require.Error(t, err, "should have failed to make GET request")
+
+	require.Equal(t, http.StatusInternalServerError, response.StatusCode())
+
+	assert.Equal(t, "server error: 500", err.Error())
 }
