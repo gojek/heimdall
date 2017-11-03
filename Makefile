@@ -7,6 +7,7 @@ ALL_PACKAGES=$(shell go list ./... | grep -v "vendor")
 setup:
 	mkdir -p $(GOPATH)/bin
 	curl https://glide.sh/get | sh
+	go get -u github.com/Masterminds/glide
 	go get -u github.com/golang/lint/golint
 
 build-deps:
