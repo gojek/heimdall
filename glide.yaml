@@ -1,4 +1,4 @@
-package: source.golabs.io/core/heimdall
+package: github.com/gojek-engineering/heimdall
 import:
 - package: github.com/afex/hystrix-go
 - package: github.com/pkg/errors
