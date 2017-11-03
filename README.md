@@ -15,6 +15,7 @@ func NewHystrixHTTPClient(httpClient *http.Client, hystrixConfig HystrixConfig) 
 to create a new http client with hystrix.
 
 - HystrixConfig consists of
+
 ```
 type HystrixConfig struct {
 	commandName   string
@@ -28,7 +29,9 @@ type HystrixConfig struct {
 }
 
 ```
+
 - This http Client provides methods like GET, POST, PUT etc which can be called to make http requests.
+
 ```
 (hhc *hystrixHTTPClient) Post(url string, body io.Reader, headers http.Header) (Response, error)
 ```
