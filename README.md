@@ -15,7 +15,7 @@ How to use this library:
 
 # heimdall
 --
-    import "source.golabs.io/core/heimdall"
+    import "github.com/gojek-engineering/heimdall"
 
 
 ## Usage
@@ -64,7 +64,7 @@ Client Is a generic HTTP client interface
 #### func  NewHTTPClient
 
 ```go
-func NewHTTPClient(timeoutInSeconds int) Client
+func NewHTTPClient(timeoutInMilliseconds int) Client
 ```
 NewHTTPClient returns a new instance of HTTPClient
 
