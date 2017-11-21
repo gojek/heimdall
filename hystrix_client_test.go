@@ -23,7 +23,7 @@ func TestHystrixHTTPClientGetSuccess(t *testing.T) {
 		RequestVolumeThreshold: 10,
 	}
 
-	client := NewHystrixHTTPClient(&http.Client{}, HystrixConfig{
+	client := NewHystrixHTTPClient(10, HystrixConfig{
 		commandName:   "some_command_name",
 		commandConfig: hystrixCommandConfig,
 	})
@@ -61,7 +61,7 @@ func TestHystrixHTTPClientPostSuccess(t *testing.T) {
 		RequestVolumeThreshold: 10,
 	}
 
-	client := NewHystrixHTTPClient(&http.Client{}, HystrixConfig{
+	client := NewHystrixHTTPClient(10, HystrixConfig{
 		commandName:   "some_command_name",
 		commandConfig: hystrixCommandConfig,
 	})
@@ -107,7 +107,7 @@ func TestHystrixHTTPClientDeleteSuccess(t *testing.T) {
 		RequestVolumeThreshold: 10,
 	}
 
-	client := NewHystrixHTTPClient(&http.Client{}, HystrixConfig{
+	client := NewHystrixHTTPClient(10, HystrixConfig{
 		commandName:   "some_command_name",
 		commandConfig: hystrixCommandConfig,
 	})
@@ -144,7 +144,7 @@ func TestHystrixHTTPClientPutSuccess(t *testing.T) {
 		RequestVolumeThreshold: 10,
 	}
 
-	client := NewHystrixHTTPClient(&http.Client{}, HystrixConfig{
+	client := NewHystrixHTTPClient(10, HystrixConfig{
 		commandName:   "some_command_name",
 		commandConfig: hystrixCommandConfig,
 	})
@@ -190,7 +190,7 @@ func TestHystrixHTTPClientPatchSuccess(t *testing.T) {
 		RequestVolumeThreshold: 10,
 	}
 
-	client := NewHystrixHTTPClient(&http.Client{}, HystrixConfig{
+	client := NewHystrixHTTPClient(10, HystrixConfig{
 		commandName:   "some_command_name",
 		commandConfig: hystrixCommandConfig,
 	})
@@ -236,7 +236,7 @@ func TestHystrixHTTPClientRetriesOnFailure(t *testing.T) {
 		RequestVolumeThreshold: 10,
 	}
 
-	client := NewHystrixHTTPClient(&http.Client{}, HystrixConfig{
+	client := NewHystrixHTTPClient(10, HystrixConfig{
 		commandName:   "some_command_name",
 		commandConfig: hystrixCommandConfig,
 	})
@@ -273,7 +273,7 @@ func TestHystrixHTTPClientReturnsFallbackFailure(t *testing.T) {
 		RequestVolumeThreshold: 10,
 	}
 
-	client := NewHystrixHTTPClient(&http.Client{}, HystrixConfig{
+	client := NewHystrixHTTPClient(10, HystrixConfig{
 		commandName:   "some_command_name",
 		commandConfig: hystrixCommandConfig,
 	})

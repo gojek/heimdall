@@ -31,7 +31,7 @@ func httpClientUsage() error {
 }
 
 func hystrixClientUsage() error {
-	httpClient := &http.Client{}
+	timeoutInMillis := 100
 
 	hystrixConfig := heimdall.NewHystrixConfig("MyCommand", heimdall.HystrixCommandConfig{
 		Timeout:                1100,
@@ -41,7 +41,7 @@ func hystrixClientUsage() error {
 		RequestVolumeThreshold: 10,
 	})
 
-	hystrixClient := heimdall.NewHystrixHTTPClient(httpClient, hystrixConfig)
+	hystrixClient := heimdall.NewHystrixHTTPClient(timeoutInMillis, hystrixConfig)
 	headers := http.Header{}
 	response, err := hystrixClient.Get(baseURL, headers)
 	if err != nil {
