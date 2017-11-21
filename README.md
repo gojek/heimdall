@@ -154,6 +154,7 @@ NewRetrier returns retrier with some backoff strategy
 
 TODO:
 
-- [ ] Instrumentation of external calls
-- [ ] Integration with go-worker for asynchronous retries
+- [ ] Support Connection Pooling at transport layer
+- [ ] Fallback support for hystrix client
+- [ ] Instrumentation of these calls using HTTPClient
 
