@@ -1,4 +1,5 @@
 # Heimdall
+[![Build Status](https://travis-ci.org/gojektech/heimdall.svg?branch=master)](https://travis-ci.org/gojektech/heimdall)
 
 ![Heimdall Logo](doc/logo.png)
 
