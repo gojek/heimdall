@@ -1,6 +1,6 @@
 # Heimdall - Contributing
 
-Heimdall (gojektech/heimdall) is an open-source project. 
+Heimdall `github.com/gojektech/heimdall` is an open-source project. 
 It is licensed using the [Apache License 2.0][1]. 
 We appreciate pull requests; here are our guidelines:
 

@@ -15,9 +15,7 @@
 ```
 go get github.com/gojektech/heimdall
 ```
-or,
- 
-- Add `github.com/gojektech/heimdall` to a dependency manager, and preferably fix a version.
+or, just add `github.com/gojektech/heimdall` as dependency and preferably fix a version.
 
 ## License
 
