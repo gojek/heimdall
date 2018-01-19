@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/gojek-engineering/heimdall"
+	"github.com/gojektech/heimdall"
 	"github.com/pkg/errors"
 )
 

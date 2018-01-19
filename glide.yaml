@@ -1,9 +1,16 @@
-package: github.com/gojek-engineering/heimdall
+package: github.com/gojektech/heimdall
+homepage: https://gojek.tech/heimdall
+license: Apache-2.0
+owners:
+- name: GO-JEK Tech
+  email: tech@go-jek.com
+  homepage: https://gojek.tech
 import:
 - package: github.com/afex/hystrix-go
 - package: github.com/pkg/errors
   version: ^0.8.0
-- package: github.com/stretchr/testify
-  version: ^1.1.4
 - package: github.com/gojek-engineering/go-multierror
   version: ~1.0.0
+testImport:
+- package: github.com/stretchr/testify
+  version: ^1.1.4

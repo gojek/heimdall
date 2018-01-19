@@ -1,7 +1,8 @@
-## Heimdall
-![Heimdall](https://i.stack.imgur.com/3eLbk.png)
+# Heimdall
 
-[![Build Status](https://travis-ci.org/gojek-engineering/heimdall.svg?branch=master)](https://travis-ci.org/gojek-engineering/heimdall)
+![Heimdall Logo](doc/logo.png)
+
+## Description
 
 ### Yet another Golang HTTP Client
 
@@ -9,152 +10,28 @@
 - Provides Hystrix HTTP client with fluent interface
 - Supports Synchronous in-memory retries
 
-How to use this library:
-
-- Add this library as a dependency to your glide.yaml file, and preferably fix a version
-
-# heimdall
---
-    import "github.com/gojek-engineering/heimdall"
-
-
-## Usage
-
-#### type Backoff
-
-```go
-type Backoff interface {
-	Next(retry int) time.Duration
-}
+## Usage 
 ```
-
-Backoff interface defines contract for backoff strategies
-
-#### func  NewConstantBackoff
-
-```go
-func NewConstantBackoff(backoffInterval int64) Backoff
+go get github.com/gojektech/heimdall
 ```
-NewConstantBackoff returns an instance of ConstantBackoff
+or,
+ 
+- Add `github.com/gojektech/heimdall` to a dependency manager, and preferably fix a version.
 
-#### func  NewExponentialBackoff
+## License
 
-```go
-func NewExponentialBackoff(initialTimeout, maxTimeout time.Duration, exponentFactor float64) Backoff
 ```
-NewExponentialBackoff returns an instance of ExponentialBackoff
+Copyright 2018, GO-JEK Tech (http://gojek.tech)
 
-#### type Client
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-```go
-type Client interface {
-	Get(url string, headers http.Header) (Response, error)
-	Post(url string, body io.Reader, headers http.Header) (Response, error)
-	Put(url string, body io.Reader, headers http.Header) (Response, error)
-	Patch(url string, body io.Reader, headers http.Header) (Response, error)
-	Delete(url string, headers http.Header) (Response, error)
+    http://www.apache.org/licenses/LICENSE-2.0
 
-	SetRetryCount(count int)
-	SetRetrier(retrier Retriable)
-}
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 ```
-
-Client Is a generic HTTP client interface
-
-#### func  NewHTTPClient
-
-```go
-func NewHTTPClient(timeoutInMilliseconds int) Client
-```
-NewHTTPClient returns a new instance of HTTPClient
-
-#### func  NewHystrixHTTPClient
-
-```go
-func NewHystrixHTTPClient(httpClient *http.Client, hystrixConfig HystrixConfig) Client
-```
-NewHystrixHTTPClient returns a new instance of HystrixHTTPClient
-
-#### type HystrixCommandConfig
-
-```go
-type HystrixCommandConfig struct {
-	Timeout                int
-	MaxConcurrentRequests  int
-	RequestVolumeThreshold int
-	SleepWindow            int
-	ErrorPercentThreshold  int
-}
-```
-
-HystrixCommandConfig takes the hystrix config values
-
-#### type HystrixConfig
-
-```go
-type HystrixConfig struct {
-}
-```
-
-HystrixConfig is used to pass configurations for Hystrix
-
-#### func  NewHystrixConfig
-
-```go
-func NewHystrixConfig(commandName string, commandConfig HystrixCommandConfig) HystrixConfig
-```
-NewHystrixConfig should be used to give hystrix commandName and config
-
-#### type Response
-
-```go
-type Response struct {
-}
-```
-
-Response encapsulates details of a http response
-
-#### func (Response) Body
-
-```go
-func (hr Response) Body() []byte
-```
-Body returns body in bytes of a http request
-
-#### func (Response) StatusCode
-
-```go
-func (hr Response) StatusCode() int
-```
-StatusCode returns status code of a http request
-
-#### type Retriable
-
-```go
-type Retriable interface {
-	NextInterval(retry int) time.Duration
-}
-```
-
-Retriable defines contract for retriers to implement
-
-#### func  NewNoRetrier
-
-```go
-func NewNoRetrier() Retriable
-```
-NewNoRetrier returns a null object for retriable
-
-#### func  NewRetrier
-
-```go
-func NewRetrier(backoff Backoff) Retriable
-```
-NewRetrier returns retrier with some backoff strategy
-
-TODO:
-
-- [ ] Support Connection Pooling at transport layer
-- [ ] Fallback support for hystrix client
-- [ ] Instrumentation of these calls using HTTPClient
-

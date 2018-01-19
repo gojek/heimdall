@@ -1,5 +1,5 @@
-hash: 47f43214d62d1c0a8d63ad24f74d9ff2a10db8e53a7571fc117c51a74bf25511
-updated: 2017-11-03T17:17:44.88301026+07:00
+hash: eec0a9fed3782a76b7ff281b040b7ca02d3079792164175706323e291e6cc1ee
+updated: 2018-01-19T14:50:34.565454+05:30
 imports:
 - name: github.com/afex/hystrix-go
   version: 39520ddd07a9d9a071d615f7476798659f5a3b89
@@ -11,11 +11,6 @@ imports:
   version: 895eb76f3d86f1a6f505a4e868a769a4068d9215
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
-- name: github.com/stretchr/testify
-  version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
-  subpackages:
-  - assert
-  - require
 testImports:
 - name: github.com/davecgh/go-spew
   version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
@@ -25,3 +20,8 @@ testImports:
   version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
   subpackages:
   - difflib
+- name: github.com/stretchr/testify
+  version: b91bfb9ebec76498946beb6af7c0230c7cc7ba6c
+  subpackages:
+  - assert
+  - require
