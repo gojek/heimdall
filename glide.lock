@@ -1,5 +1,5 @@
-hash: eec0a9fed3782a76b7ff281b040b7ca02d3079792164175706323e291e6cc1ee
-updated: 2018-01-19T14:50:34.565454+05:30
+hash: 26667d74a1523ab8e7a4d0f80590b6d034835832f7ed451cda886c6b615ff622
+updated: 2018-01-19T22:01:30.51396+05:30
 imports:
 - name: github.com/afex/hystrix-go
   version: 39520ddd07a9d9a071d615f7476798659f5a3b89
@@ -7,8 +7,8 @@ imports:
   - hystrix
   - hystrix/metric_collector
   - hystrix/rolling
-- name: github.com/gojek-engineering/go-multierror
-  version: 895eb76f3d86f1a6f505a4e868a769a4068d9215
+- name: github.com/gojektech/valkyrie
+  version: a650b0bf375c5b63c7a7ba431cbbece8a2a05c7e
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
 testImports:

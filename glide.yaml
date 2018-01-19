@@ -9,8 +9,7 @@ import:
 - package: github.com/afex/hystrix-go
 - package: github.com/pkg/errors
   version: ^0.8.0
-- package: github.com/gojek-engineering/go-multierror
-  version: ~1.0.0
+- package: github.com/gojektech/valkyrie
 testImport:
 - package: github.com/stretchr/testify
   version: ^1.1.4

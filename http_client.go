@@ -1,13 +1,13 @@
 package heimdall
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"time"
 
-	"fmt"
-	"github.com/gojek-engineering/go-multierror"
+	"github.com/gojektech/valkyrie"
 	"github.com/pkg/errors"
 )
 
@@ -117,7 +117,7 @@ func (c *httpClient) do(request *http.Request) (Response, error) {
 	hr := Response{}
 
 	request.Close = true
-	multiErr := multierror.NewMultiError()
+	multiErr := valkyrie.NewMultiError()
 
 	for i := 0; i <= c.retryCount; i++ {
 		var err error
@@ -151,7 +151,7 @@ func (c *httpClient) do(request *http.Request) (Response, error) {
 			continue
 		}
 
-		multiErr = multierror.NewMultiError() // Clear errors if any iteration succeeds
+		multiErr = valkyrie.NewMultiError() // Clear errors if any iteration succeeds
 		break
 	}
 
