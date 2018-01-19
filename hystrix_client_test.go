@@ -278,6 +278,8 @@ func TestHystrixHTTPClientReturnsFallbackFailure(t *testing.T) {
 		commandConfig: hystrixCommandConfig,
 	})
 
-	_, err := client.Get("http://localhost", http.Header{})
+	_, err := client.Get("http://foobar.example", http.Header{})
+	require.Error(t, err, "should have failed")
+
 	assert.True(t, strings.Contains(err.Error(), "fallback failed"))
 }
