@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/afex/hystrix-go/hystrix"
@@ -121,10 +120,7 @@ func (hhc *hystrixHTTPClient) Do(request *http.Request) (*http.Response, error) 
 
 	var err error
 	var response *http.Response
-	var wg sync.WaitGroup
 	for i := 0; i <= hhc.retryCount; i++ {
-		wg.Add(1)
-
 		err = hystrix.Do(hhc.hystrixCommandName, func() error {
 			var err error
 			response, err = hhc.client.Do(request)
@@ -135,15 +131,10 @@ func (hhc *hystrixHTTPClient) Do(request *http.Request) (*http.Response, error) 
 			if response.StatusCode >= http.StatusInternalServerError {
 				return fmt.Errorf("Server is down: returned status code: %d", response.StatusCode)
 			}
-
-			wg.Done()
 			return nil
 		}, func(err error) error {
-			wg.Done()
 			return err
 		})
-		wg.Wait()
-
 		if err != nil {
 			backoffTime := hhc.retrier.NextInterval(i)
 			time.Sleep(backoffTime)
