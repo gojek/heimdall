@@ -3,8 +3,8 @@ package heimdall
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/afex/hystrix-go/hystrix"
@@ -61,8 +61,7 @@ func (hhc *hystrixHTTPClient) Get(url string, headers http.Header) (Response, er
 	}
 
 	request.Header = headers
-
-	return hhc.do(request)
+	return toHeimdallResponse(hhc.Do(request))
 }
 
 // Post makes a HTTP POST request to provided URL and requestBody
@@ -75,8 +74,7 @@ func (hhc *hystrixHTTPClient) Post(url string, body io.Reader, headers http.Head
 	}
 
 	request.Header = headers
-
-	return hhc.do(request)
+	return toHeimdallResponse(hhc.Do(request))
 }
 
 // Put makes a HTTP PUT request to provided URL and requestBody
@@ -89,8 +87,7 @@ func (hhc *hystrixHTTPClient) Put(url string, body io.Reader, headers http.Heade
 	}
 
 	request.Header = headers
-
-	return hhc.do(request)
+	return toHeimdallResponse(hhc.Do(request))
 }
 
 // Patch makes a HTTP PATCH request to provided URL and requestBody
@@ -103,8 +100,7 @@ func (hhc *hystrixHTTPClient) Patch(url string, body io.Reader, headers http.Hea
 	}
 
 	request.Header = headers
-
-	return hhc.do(request)
+	return toHeimdallResponse(hhc.Do(request))
 }
 
 // Delete makes a HTTP DELETE request with provided URL
@@ -117,43 +113,36 @@ func (hhc *hystrixHTTPClient) Delete(url string, headers http.Header) (Response,
 	}
 
 	request.Header = headers
-
-	return hhc.do(request)
+	return toHeimdallResponse(hhc.Do(request))
 }
 
-func (hhc *hystrixHTTPClient) do(request *http.Request) (Response, error) {
-	hr := Response{}
-
+func (hhc *hystrixHTTPClient) Do(request *http.Request) (*http.Response, error) {
 	request.Close = true
 
 	var err error
+	var response *http.Response
+	var wg sync.WaitGroup
 	for i := 0; i <= hhc.retryCount; i++ {
+		wg.Add(1)
 
 		err = hystrix.Do(hhc.hystrixCommandName, func() error {
-			response, err := hhc.client.Do(request)
+			var err error
+			response, err = hhc.client.Do(request)
 			if err != nil {
 				return err
 			}
-
-			if response.Body != nil {
-				hr.body, err = ioutil.ReadAll(response.Body)
-				if err != nil {
-					return err
-				}
-			}
-
-			response.Body.Close()
-
-			hr.statusCode = response.StatusCode
 
 			if response.StatusCode >= http.StatusInternalServerError {
 				return fmt.Errorf("Server is down: returned status code: %d", response.StatusCode)
 			}
 
+			wg.Done()
 			return nil
 		}, func(err error) error {
+			wg.Done()
 			return err
 		})
+		wg.Wait()
 
 		if err != nil {
 			backoffTime := hhc.retrier.NextInterval(i)
@@ -164,5 +153,5 @@ func (hhc *hystrixHTTPClient) do(request *http.Request) (Response, error) {
 		break
 	}
 
-	return hr, err
+	return response, err
 }
