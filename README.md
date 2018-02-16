@@ -37,6 +37,23 @@ panic(err)
 fmt.Println(string(res.Body()))
 ```
 
+You can also use the `*http.Request` object with the `http.Do` interface :
+
+```go
+client := heimdall.NewHTTPClient(1000)
+
+// Create an http.Request instance
+req, _ := http.NewRequest(http.MethodGet, "http://google.com", nil)
+// Call the `Do` method, which has a similar interface to the `http.Do` method
+res, err := client.Do(req)
+if err != nil {
+	panic(err)
+}
+
+body, err := ioutil.ReadAll(res.Body)
+fmt.Println(string(body))
+```
+
 ### Creating a hystrix-like circuit breaker
 
 You can use the `NewHystrixHTTPClient` function to create a client wrapped in a hystrix-like circuit breaker:

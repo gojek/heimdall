@@ -115,6 +115,7 @@ func (hhc *hystrixHTTPClient) Delete(url string, headers http.Header) (Response,
 	return toHeimdallResponse(hhc.Do(request))
 }
 
+// Do makes an HTTP request with the native `http.Do` interface
 func (hhc *hystrixHTTPClient) Do(request *http.Request) (*http.Response, error) {
 	request.Close = true
 

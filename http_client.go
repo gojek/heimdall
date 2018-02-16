@@ -140,6 +140,7 @@ func toHeimdallResponse(response *http.Response, err error) (Response, error) {
 	return hr, merr.HasError()
 }
 
+// Do makes an HTTP request with the native `http.Do` interface
 func (c *httpClient) Do(request *http.Request) (*http.Response, error) {
 	request.Close = true
 	multiErr := valkyrie.NewMultiError()
