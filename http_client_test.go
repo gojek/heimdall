@@ -11,6 +11,35 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestHTTPClientDoSuccess(t *testing.T) {
+	client := NewHTTPClient(10)
+
+	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.Equal(t, r.Header.Get("Content-Type"), "application/json")
+		assert.Equal(t, r.Header.Get("Accept-Language"), "en")
+
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{ "response": "ok" }`))
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+	defer server.Close()
+
+	req, err := http.NewRequest(http.MethodGet, server.URL, nil)
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Language", "en")
+	response, err := client.Do(req)
+	require.NoError(t, err, "should not have failed to make a GET request")
+
+	assert.Equal(t, http.StatusOK, response.StatusCode)
+
+	body, err := ioutil.ReadAll(response.Body)
+	require.NoError(t, err)
+	assert.Equal(t, "{ \"response\": \"ok\" }", string(body))
+}
+
 func TestHTTPClientGetSuccess(t *testing.T) {
 	client := NewHTTPClient(10)
 
@@ -287,11 +316,9 @@ func TestHTTPClientGetReturnsErrorOnParseResponseFailure(t *testing.T) {
 	defer server.Close()
 
 	response, err := client.Get(server.URL, http.Header{})
-	require.Error(t, err, "should have failed to make GET request")
+	require.EqualError(t, err, "unexpected EOF", "should have failed to make GET request")
 
 	require.NotEqual(t, http.StatusOK, response.StatusCode())
-
-	assert.Equal(t, "unexpected EOF", err.Error())
 }
 
 func TestHTTPClientGetReturnsErrorOn5xxFailure(t *testing.T) {

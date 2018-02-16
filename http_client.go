@@ -54,7 +54,8 @@ func (c *httpClient) Get(url string, headers http.Header) (Response, error) {
 
 	request.Header = headers
 
-	return c.do(request)
+	res, err := c.Do(request)
+	return toHeimdallResponse(res, err)
 }
 
 // Post makes a HTTP POST request to provided URL and requestBody
@@ -68,7 +69,8 @@ func (c *httpClient) Post(url string, body io.Reader, headers http.Header) (Resp
 
 	request.Header = headers
 
-	return c.do(request)
+	res, err := c.Do(request)
+	return toHeimdallResponse(res, err)
 }
 
 // Put makes a HTTP PUT request to provided URL and requestBody
@@ -82,7 +84,8 @@ func (c *httpClient) Put(url string, body io.Reader, headers http.Header) (Respo
 
 	request.Header = headers
 
-	return c.do(request)
+	res, err := c.Do(request)
+	return toHeimdallResponse(res, err)
 }
 
 // Patch makes a HTTP PATCH request to provided URL and requestBody
@@ -96,7 +99,8 @@ func (c *httpClient) Patch(url string, body io.Reader, headers http.Header) (Res
 
 	request.Header = headers
 
-	return c.do(request)
+	res, err := c.Do(request)
+	return toHeimdallResponse(res, err)
 }
 
 // Delete makes a HTTP DELETE request with provided URL
@@ -110,18 +114,41 @@ func (c *httpClient) Delete(url string, headers http.Header) (Response, error) {
 
 	request.Header = headers
 
-	return c.do(request)
+	res, err := c.Do(request)
+	return toHeimdallResponse(res, err)
 }
 
-func (c *httpClient) do(request *http.Request) (Response, error) {
-	hr := Response{}
+func toHeimdallResponse(response *http.Response, err error) (Response, error) {
+	fmt.Println(response, err)
+	var hr Response
+	merr := valkyrie.NewMultiError()
+	if err != nil {
+		merr.Push(err.Error())
+	}
+	if response == nil {
+		return hr, merr.HasError()
+	}
+	if response.Body != nil {
+		hr.body, err = ioutil.ReadAll(response.Body)
+		if err != nil {
+			merr.Push(err.Error())
+			return hr, merr.HasError()
+		}
+		response.Body.Close()
+	}
+	hr.statusCode = response.StatusCode
+	return hr, merr.HasError()
+}
 
+// Do makes an HTTP request with the native `http.Do` interface
+func (c *httpClient) Do(request *http.Request) (*http.Response, error) {
 	request.Close = true
 	multiErr := valkyrie.NewMultiError()
+	var response *http.Response
 
 	for i := 0; i <= c.retryCount; i++ {
 		var err error
-		response, err := c.client.Do(request)
+		response, err = c.client.Do(request)
 		if err != nil {
 			multiErr.Push(err.Error())
 			backoffTime := c.retrier.NextInterval(i)
@@ -129,25 +156,12 @@ func (c *httpClient) do(request *http.Request) (Response, error) {
 			continue
 		}
 
-		if response.Body != nil {
-			hr.body, err = ioutil.ReadAll(response.Body)
-			if err != nil {
-				multiErr.Push(err.Error())
-				backoffTime := c.retrier.NextInterval(i)
-				time.Sleep(backoffTime)
-				continue
-			}
-		}
-
-		response.Body.Close()
-
-		hr.statusCode = response.StatusCode
-
 		if response.StatusCode >= http.StatusInternalServerError {
 			multiErr.Push(fmt.Sprintf("server error: %d", response.StatusCode))
 
 			backoffTime := c.retrier.NextInterval(i)
 			time.Sleep(backoffTime)
+			fmt.Println("R: ", response.StatusCode)
 			continue
 		}
 
@@ -155,5 +169,5 @@ func (c *httpClient) do(request *http.Request) (Response, error) {
 		break
 	}
 
-	return hr, multiErr.HasError()
+	return response, multiErr.HasError()
 }
