@@ -119,9 +119,8 @@ func (c *httpClient) Delete(url string, headers http.Header) (Response, error) {
 }
 
 func toHeimdallResponse(response *http.Response, err error) (Response, error) {
-	fmt.Println(response, err)
 	var hr Response
-	merr := valkyrie.NewMultiError()
+	merr := &valkyrie.MultiError{}
 	if err != nil {
 		merr.Push(err.Error())
 	}
@@ -143,7 +142,8 @@ func toHeimdallResponse(response *http.Response, err error) (Response, error) {
 // Do makes an HTTP request with the native `http.Do` interface
 func (c *httpClient) Do(request *http.Request) (*http.Response, error) {
 	request.Close = true
-	multiErr := valkyrie.NewMultiError()
+
+	multiErr := &valkyrie.MultiError{}
 	var response *http.Response
 
 	for i := 0; i <= c.retryCount; i++ {
@@ -165,7 +165,7 @@ func (c *httpClient) Do(request *http.Request) (*http.Response, error) {
 			continue
 		}
 
-		multiErr = valkyrie.NewMultiError() // Clear errors if any iteration succeeds
+		multiErr = &valkyrie.MultiError{} // Clear errors if any iteration succeeds
 		break
 	}
 

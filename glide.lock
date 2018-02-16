@@ -1,5 +1,5 @@
-hash: 26667d74a1523ab8e7a4d0f80590b6d034835832f7ed451cda886c6b615ff622
-updated: 2018-01-19T22:01:30.51396+05:30
+hash: 7dcbaaf8618177a1dbe24a62309a7187979cfb97eee371c3a7ece5933beb8480
+updated: 2018-02-16T16:00:16.943474+05:30
 imports:
 - name: github.com/afex/hystrix-go
   version: 39520ddd07a9d9a071d615f7476798659f5a3b89
@@ -8,7 +8,7 @@ imports:
   - hystrix/metric_collector
   - hystrix/rolling
 - name: github.com/gojektech/valkyrie
-  version: a650b0bf375c5b63c7a7ba431cbbece8a2a05c7e
+  version: 6aee720afcdffc337029305c126e0079491063f0
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
 testImports:
@@ -21,7 +21,7 @@ testImports:
   subpackages:
   - difflib
 - name: github.com/stretchr/testify
-  version: b91bfb9ebec76498946beb6af7c0230c7cc7ba6c
+  version: 12b6f73e6084dad08a7c6e575284b177ecafbc71
   subpackages:
   - assert
   - require
