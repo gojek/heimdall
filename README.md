@@ -29,7 +29,7 @@ client := heimdall.NewHTTPClient(1000)
 // Use the clients GET method to create and execute the request
 res, err := client.Get("http://google.com", nil)
 if err != nil{
-panic(err)
+	panic(err)
 }
 
 // The heimdall response object comes with handy methods to obtain the contents of the reponse
