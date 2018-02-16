@@ -14,6 +14,47 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestHystrixHTTPClientDoSuccess(t *testing.T) {
+	hystrixCommandConfig := hystrix.CommandConfig{
+		Timeout:                10,
+		MaxConcurrentRequests:  100,
+		ErrorPercentThreshold:  10,
+		SleepWindow:            100,
+		RequestVolumeThreshold: 10,
+	}
+
+	client := NewHystrixHTTPClient(10, HystrixConfig{
+		commandName:   "some_command_name",
+		commandConfig: hystrixCommandConfig,
+	})
+
+	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.Equal(t, r.Header.Get("Content-Type"), "application/json")
+		assert.Equal(t, r.Header.Get("Accept-Language"), "en")
+
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{ "response": "ok" }`))
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+	defer server.Close()
+
+	req, err := http.NewRequest(http.MethodGet, server.URL, nil)
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Language", "en")
+
+	response, err := client.Do(req)
+	require.NoError(t, err, "should not have failed to make a GET request")
+
+	assert.Equal(t, http.StatusOK, response.StatusCode)
+	body, err := ioutil.ReadAll(response.Body)
+	require.NoError(t, err)
+	assert.Equal(t, "{ \"response\": \"ok\" }", string(body))
+}
+
 func TestHystrixHTTPClientGetSuccess(t *testing.T) {
 	hystrixCommandConfig := hystrix.CommandConfig{
 		Timeout:                10,
@@ -48,8 +89,8 @@ func TestHystrixHTTPClientGetSuccess(t *testing.T) {
 	response, err := client.Get(server.URL, headers)
 	require.NoError(t, err, "should not have failed to make a GET request")
 
-	assert.Equal(t, http.StatusOK, response.StatusCode())
-	assert.Equal(t, "{ \"response\": \"ok\" }", string(response.Body()))
+	assert.Equal(t, http.StatusOK, response.StatusCode)
+	assert.Equal(t, "{ \"response\": \"ok\" }", respBody(t, response))
 }
 
 func TestHystrixHTTPClientPostSuccess(t *testing.T) {
@@ -94,8 +135,8 @@ func TestHystrixHTTPClientPostSuccess(t *testing.T) {
 	response, err := client.Post(server.URL, requestBody, headers)
 	require.NoError(t, err, "should not have failed to make a POST request")
 
-	assert.Equal(t, http.StatusOK, response.StatusCode())
-	assert.Equal(t, "{ \"response\": \"ok\" }", string(response.Body()))
+	assert.Equal(t, http.StatusOK, response.StatusCode)
+	assert.Equal(t, "{ \"response\": \"ok\" }", respBody(t, response))
 }
 
 func TestHystrixHTTPClientDeleteSuccess(t *testing.T) {
@@ -131,8 +172,8 @@ func TestHystrixHTTPClientDeleteSuccess(t *testing.T) {
 	response, err := client.Delete(server.URL, headers)
 	require.NoError(t, err, "should not have failed to make a DELETE request")
 
-	assert.Equal(t, http.StatusOK, response.StatusCode())
-	assert.Equal(t, "{ \"response\": \"ok\" }", string(response.Body()))
+	assert.Equal(t, http.StatusOK, response.StatusCode)
+	assert.Equal(t, "{ \"response\": \"ok\" }", respBody(t, response))
 }
 
 func TestHystrixHTTPClientPutSuccess(t *testing.T) {
@@ -177,8 +218,8 @@ func TestHystrixHTTPClientPutSuccess(t *testing.T) {
 	response, err := client.Put(server.URL, requestBody, headers)
 	require.NoError(t, err, "should not have failed to make a PUT request")
 
-	assert.Equal(t, http.StatusOK, response.StatusCode())
-	assert.Equal(t, "{ \"response\": \"ok\" }", string(response.Body()))
+	assert.Equal(t, http.StatusOK, response.StatusCode)
+	assert.Equal(t, "{ \"response\": \"ok\" }", respBody(t, response))
 }
 
 func TestHystrixHTTPClientPatchSuccess(t *testing.T) {
@@ -223,8 +264,8 @@ func TestHystrixHTTPClientPatchSuccess(t *testing.T) {
 	response, err := client.Patch(server.URL, requestBody, headers)
 	require.NoError(t, err, "should not have failed to make a PATCH request")
 
-	assert.Equal(t, http.StatusOK, response.StatusCode())
-	assert.Equal(t, "{ \"response\": \"ok\" }", string(response.Body()))
+	assert.Equal(t, http.StatusOK, response.StatusCode)
+	assert.Equal(t, "{ \"response\": \"ok\" }", respBody(t, response))
 }
 
 func TestHystrixHTTPClientRetriesOnFailure(t *testing.T) {
@@ -260,8 +301,8 @@ func TestHystrixHTTPClientRetriesOnFailure(t *testing.T) {
 
 	assert.Equal(t, 4, count)
 
-	assert.Equal(t, http.StatusInternalServerError, response.StatusCode())
-	assert.Equal(t, "{ \"response\": \"something went wrong\" }", string(response.Body()))
+	assert.Equal(t, http.StatusInternalServerError, response.StatusCode)
+	assert.Equal(t, "{ \"response\": \"something went wrong\" }", respBody(t, response))
 }
 
 func TestHystrixHTTPClientReturnsFallbackFailure(t *testing.T) {

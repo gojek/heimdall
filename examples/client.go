@@ -2,6 +2,7 @@ package examples
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/gojektech/heimdall"
@@ -26,7 +27,14 @@ func httpClientUsage() error {
 		return errors.Wrap(err, "failed to make a request to server")
 	}
 
-	fmt.Printf("Response: %s", string(response.Body()))
+	defer response.Body.Close()
+
+	respBody, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return errors.Wrap(err, "failed to read response body")
+	}
+
+	fmt.Printf("Response: %s", string(respBody))
 	return nil
 }
 
@@ -48,6 +56,13 @@ func hystrixClientUsage() error {
 		return errors.Wrap(err, "failed to make a request to server")
 	}
 
-	fmt.Printf("Response: %s", string(response.Body()))
+	defer response.Body.Close()
+
+	respBody, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return errors.Wrap(err, "failed to read response body")
+	}
+
+	fmt.Printf("Response: %s", string(respBody))
 	return nil
 }

@@ -1,7 +1,9 @@
 # Heimdall
-[![Build Status](https://travis-ci.org/gojektech/heimdall.svg?branch=master)](https://travis-ci.org/gojektech/heimdall)
 
-![Heimdall Logo](doc/logo.png)
+<p align="center"><img src="doc/logo.png" width="360"></p>
+<p align="center">
+  <a href="https://travis-ci.org/gojektech/heimdall"><img src="https://travis-ci.org/gojektech/heimdall.svg?branch=master" alt="Build Status"></img></a>
+</p>
 
 ## Description
 
@@ -10,7 +12,7 @@ Heimdall is an HTTP client that helps your application make a large number of re
 - Add synchronous in-memory retries to each request, with the option of setting your own retrier strategy
 - Create clients with different timeouts for every request
 
-All HTTP methods are exposed as a fluent interface. The 
+All HTTP methods are exposed as a fluent interface.
 
 ## Installation 
 ```
@@ -32,9 +34,26 @@ if err != nil{
 	panic(err)
 }
 
-// The heimdall response object comes with handy methods to obtain the contents of the reponse
-// In this, case we can directly get the bytes of the response body using the `Body` method
-fmt.Println(string(res.Body()))
+// Heimdall returns the standard *http.Response object
+body, err := ioutil.ReadAll(res.Body)
+fmt.Println(string(body))
+```
+
+You can also use the `*http.Request` object with the `http.Do` interface :
+
+```go
+client := heimdall.NewHTTPClient(1000)
+
+// Create an http.Request instance
+req, _ := http.NewRequest(http.MethodGet, "http://google.com", nil)
+// Call the `Do` method, which has a similar interface to the `http.Do` method
+res, err := client.Do(req)
+if err != nil {
+	panic(err)
+}
+
+body, err := ioutil.ReadAll(res.Body)
+fmt.Println(string(body))
 ```
 
 ### Creating a hystrix-like circuit breaker
