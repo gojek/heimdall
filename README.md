@@ -1,7 +1,9 @@
 # Heimdall
-[![Build Status](https://travis-ci.org/gojektech/heimdall.svg?branch=master)](https://travis-ci.org/gojektech/heimdall)
 
-![Heimdall Logo](doc/logo.png)
+<p align="center"><img src="doc/logo.png" width="360"></p>
+<p align="center">
+  <a href="https://travis-ci.org/gojektech/heimdall"><img src="https://travis-ci.org/gojektech/heimdall.svg?branch=master" alt="Build Status"></img></a>
+</p>
 
 ## Description
 
@@ -10,7 +12,7 @@ Heimdall is an HTTP client that helps your application make a large number of re
 - Add synchronous in-memory retries to each request, with the option of setting your own retrier strategy
 - Create clients with different timeouts for every request
 
-All HTTP methods are exposed as a fluent interface. The 
+All HTTP methods are exposed as a fluent interface.
 
 ## Installation 
 ```
