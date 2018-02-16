@@ -3,7 +3,6 @@ package heimdall
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -44,9 +43,8 @@ func (c *httpClient) SetRetrier(retrier Retriable) {
 }
 
 // Get makes a HTTP GET request to provided URL
-func (c *httpClient) Get(url string, headers http.Header) (Response, error) {
-	response := Response{}
-
+func (c *httpClient) Get(url string, headers http.Header) (*http.Response, error) {
+	var response *http.Response
 	request, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return response, errors.Wrap(err, "GET - request creation failed")
@@ -54,14 +52,12 @@ func (c *httpClient) Get(url string, headers http.Header) (Response, error) {
 
 	request.Header = headers
 
-	res, err := c.Do(request)
-	return toHeimdallResponse(res, err)
+	return c.Do(request)
 }
 
 // Post makes a HTTP POST request to provided URL and requestBody
-func (c *httpClient) Post(url string, body io.Reader, headers http.Header) (Response, error) {
-	response := Response{}
-
+func (c *httpClient) Post(url string, body io.Reader, headers http.Header) (*http.Response, error) {
+	var response *http.Response
 	request, err := http.NewRequest(http.MethodPost, url, body)
 	if err != nil {
 		return response, errors.Wrap(err, "POST - request creation failed")
@@ -69,14 +65,12 @@ func (c *httpClient) Post(url string, body io.Reader, headers http.Header) (Resp
 
 	request.Header = headers
 
-	res, err := c.Do(request)
-	return toHeimdallResponse(res, err)
+	return c.Do(request)
 }
 
 // Put makes a HTTP PUT request to provided URL and requestBody
-func (c *httpClient) Put(url string, body io.Reader, headers http.Header) (Response, error) {
-	response := Response{}
-
+func (c *httpClient) Put(url string, body io.Reader, headers http.Header) (*http.Response, error) {
+	var response *http.Response
 	request, err := http.NewRequest(http.MethodPut, url, body)
 	if err != nil {
 		return response, errors.Wrap(err, "PUT - request creation failed")
@@ -84,14 +78,12 @@ func (c *httpClient) Put(url string, body io.Reader, headers http.Header) (Respo
 
 	request.Header = headers
 
-	res, err := c.Do(request)
-	return toHeimdallResponse(res, err)
+	return c.Do(request)
 }
 
 // Patch makes a HTTP PATCH request to provided URL and requestBody
-func (c *httpClient) Patch(url string, body io.Reader, headers http.Header) (Response, error) {
-	response := Response{}
-
+func (c *httpClient) Patch(url string, body io.Reader, headers http.Header) (*http.Response, error) {
+	var response *http.Response
 	request, err := http.NewRequest(http.MethodPatch, url, body)
 	if err != nil {
 		return response, errors.Wrap(err, "PATCH - request creation failed")
@@ -99,14 +91,12 @@ func (c *httpClient) Patch(url string, body io.Reader, headers http.Header) (Res
 
 	request.Header = headers
 
-	res, err := c.Do(request)
-	return toHeimdallResponse(res, err)
+	return c.Do(request)
 }
 
 // Delete makes a HTTP DELETE request with provided URL
-func (c *httpClient) Delete(url string, headers http.Header) (Response, error) {
-	response := Response{}
-
+func (c *httpClient) Delete(url string, headers http.Header) (*http.Response, error) {
+	var response *http.Response
 	request, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
 		return response, errors.Wrap(err, "DELETE - request creation failed")
@@ -114,29 +104,7 @@ func (c *httpClient) Delete(url string, headers http.Header) (Response, error) {
 
 	request.Header = headers
 
-	res, err := c.Do(request)
-	return toHeimdallResponse(res, err)
-}
-
-func toHeimdallResponse(response *http.Response, err error) (Response, error) {
-	var hr Response
-	merr := &valkyrie.MultiError{}
-	if err != nil {
-		merr.Push(err.Error())
-	}
-	if response == nil {
-		return hr, merr.HasError()
-	}
-	if response.Body != nil {
-		hr.body, err = ioutil.ReadAll(response.Body)
-		if err != nil {
-			merr.Push(err.Error())
-			return hr, merr.HasError()
-		}
-		response.Body.Close()
-	}
-	hr.statusCode = response.StatusCode
-	return hr, merr.HasError()
+	return c.Do(request)
 }
 
 // Do makes an HTTP request with the native `http.Do` interface
@@ -151,6 +119,7 @@ func (c *httpClient) Do(request *http.Request) (*http.Response, error) {
 		response, err = c.client.Do(request)
 		if err != nil {
 			multiErr.Push(err.Error())
+
 			backoffTime := c.retrier.NextInterval(i)
 			time.Sleep(backoffTime)
 			continue

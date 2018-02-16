@@ -51,79 +51,79 @@ func (hhc *hystrixHTTPClient) SetRetrier(retrier Retriable) {
 }
 
 // Get makes a HTTP GET request to provided URL
-func (hhc *hystrixHTTPClient) Get(url string, headers http.Header) (Response, error) {
-	response := Response{}
-
+func (hhc *hystrixHTTPClient) Get(url string, headers http.Header) (*http.Response, error) {
+	var response *http.Response
 	request, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return response, errors.Wrap(err, "GET - request creation failed")
 	}
 
 	request.Header = headers
-	return toHeimdallResponse(hhc.Do(request))
+
+	return hhc.Do(request)
 }
 
 // Post makes a HTTP POST request to provided URL and requestBody
-func (hhc *hystrixHTTPClient) Post(url string, body io.Reader, headers http.Header) (Response, error) {
-	response := Response{}
-
+func (hhc *hystrixHTTPClient) Post(url string, body io.Reader, headers http.Header) (*http.Response, error) {
+	var response *http.Response
 	request, err := http.NewRequest(http.MethodPost, url, body)
 	if err != nil {
 		return response, errors.Wrap(err, "POST - request creation failed")
 	}
 
 	request.Header = headers
-	return toHeimdallResponse(hhc.Do(request))
+
+	return hhc.Do(request)
 }
 
 // Put makes a HTTP PUT request to provided URL and requestBody
-func (hhc *hystrixHTTPClient) Put(url string, body io.Reader, headers http.Header) (Response, error) {
-	response := Response{}
-
+func (hhc *hystrixHTTPClient) Put(url string, body io.Reader, headers http.Header) (*http.Response, error) {
+	var response *http.Response
 	request, err := http.NewRequest(http.MethodPut, url, body)
 	if err != nil {
 		return response, errors.Wrap(err, "PUT - request creation failed")
 	}
 
 	request.Header = headers
-	return toHeimdallResponse(hhc.Do(request))
+
+	return hhc.Do(request)
 }
 
 // Patch makes a HTTP PATCH request to provided URL and requestBody
-func (hhc *hystrixHTTPClient) Patch(url string, body io.Reader, headers http.Header) (Response, error) {
-	response := Response{}
-
+func (hhc *hystrixHTTPClient) Patch(url string, body io.Reader, headers http.Header) (*http.Response, error) {
+	var response *http.Response
 	request, err := http.NewRequest(http.MethodPatch, url, body)
 	if err != nil {
 		return response, errors.Wrap(err, "PATCH - request creation failed")
 	}
 
 	request.Header = headers
-	return toHeimdallResponse(hhc.Do(request))
+
+	return hhc.Do(request)
 }
 
 // Delete makes a HTTP DELETE request with provided URL
-func (hhc *hystrixHTTPClient) Delete(url string, headers http.Header) (Response, error) {
-	response := Response{}
-
+func (hhc *hystrixHTTPClient) Delete(url string, headers http.Header) (*http.Response, error) {
+	var response *http.Response
 	request, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
 		return response, errors.Wrap(err, "DELETE - request creation failed")
 	}
 
 	request.Header = headers
-	return toHeimdallResponse(hhc.Do(request))
+
+	return hhc.Do(request)
 }
 
 // Do makes an HTTP request with the native `http.Do` interface
 func (hhc *hystrixHTTPClient) Do(request *http.Request) (*http.Response, error) {
 	request.Close = true
 
-	var err error
 	var response *http.Response
+	var err error
+
 	for i := 0; i <= hhc.retryCount; i++ {
 		err = hystrix.Do(hhc.hystrixCommandName, func() error {
-			var err error
 			response, err = hhc.client.Do(request)
 			if err != nil {
 				return err
@@ -134,8 +134,10 @@ func (hhc *hystrixHTTPClient) Do(request *http.Request) (*http.Response, error) 
 			}
 			return nil
 		}, func(err error) error {
+			//TODO: make this fallback configurable in client
 			return err
 		})
+
 		if err != nil {
 			backoffTime := hhc.retrier.NextInterval(i)
 			time.Sleep(backoffTime)
