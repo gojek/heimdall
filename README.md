@@ -34,9 +34,9 @@ if err != nil{
 panic(err)
 }
 
-// The heimdall response object comes with handy methods to obtain the contents of the reponse
-// In this, case we can directly get the bytes of the response body using the `Body` method
-fmt.Println(string(res.Body()))
+// Heimdall returns the standard *http.Response object
+body, err := ioutil.ReadAll(res.Body)
+fmt.Println(string(body))
 ```
 
 You can also use the `*http.Request` object with the `http.Do` interface :
