@@ -1,41 +1,33 @@
 .PHONY: all
 all: build test
 
-GLIDE_NOVENDOR=$(shell glide novendor)
 ALL_PACKAGES=$(shell go list ./... | grep -v "vendor")
 
 setup:
 	mkdir -p $(GOPATH)/bin
-	curl https://glide.sh/get | sh
-	go get -u github.com/Masterminds/glide
+	go get -u github.com/golang/dep/cmd/dep
 	go get -u github.com/golang/lint/golint
 
 build-deps:
-	glide install
-
-update-deps:
-	glide update
+	dep ensure
 
 compile:
 	mkdir -p out/
-	go build -race $(GLIDE_NOVENDOR)
+	go build -race ./...
 
 build: build-deps compile fmt vet lint
 
 fmt:
-	go fmt $(GLIDE_NOVENDOR)
+	go fmt ./...
 
 vet:
-	go vet $(GLIDE_NOVENDOR)
+	go vet ./...
 
 lint:
-	@for p in $(GLIDE_NOVENDOR); do \
-		echo "==> Linting $$p"; \
-		golint -set_exit_status $$p; \
-	done
+	golint -set_exit_status $(ALL_PACKAGES)
 
 test: build-deps fmt vet build
-	ENVIRONMENT=test go test -race $(GLIDE_NOVENDOR)
+	ENVIRONMENT=test go test -race ./...
 
 test-cover-html:
 	@echo "mode: count" > coverage-all.out
