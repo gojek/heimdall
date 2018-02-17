@@ -2,11 +2,12 @@ package heimdall
 
 import (
 	"bytes"
-	"github.com/afex/hystrix-go/hystrix"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/afex/hystrix-go/hystrix"
 
 	"strings"
 
