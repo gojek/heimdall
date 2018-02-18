@@ -2,8 +2,6 @@ package heimdall
 
 import "time"
 
-const defaultExponentFactor float64 = 2.0
-
 // Retriable defines contract for retriers to implement
 type Retriable interface {
 	NextInterval(retry int) time.Duration
