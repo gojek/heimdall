@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"github.com/gojektech/heimdall"
 	"github.com/pkg/errors"
@@ -14,7 +15,7 @@ const (
 )
 
 func httpClientUsage() error {
-	timeoutInMillis := 100
+	timeoutInMillis := 100 * time.Millisecond
 	httpClient := heimdall.NewHTTPClient(timeoutInMillis)
 	headers := http.Header{}
 	headers.Set("Content-Type", "application/json")
