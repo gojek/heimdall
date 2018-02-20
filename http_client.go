@@ -20,11 +20,10 @@ type httpClient struct {
 }
 
 // NewHTTPClient returns a new instance of HTTPClient
-func NewHTTPClient(timeoutInMilliseconds int) Client {
-	httpTimeout := time.Duration(timeoutInMilliseconds) * time.Millisecond
+func NewHTTPClient(timeout time.Duration) Client {
 	return &httpClient{
 		client: &http.Client{
-			Timeout: httpTimeout,
+			Timeout: timeout,
 		},
 
 		retryCount: defaultRetryCount,
