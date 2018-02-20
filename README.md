@@ -28,7 +28,8 @@ The below example will print the contents of the google home page:
 
 ```go
 // Create a new HTTP client with a default timeout
-client := heimdall.NewHTTPClient(1000)
+timeout := 1000 * time.Millisecond
+client := heimdall.NewHTTPClient(timeout)
 
 // Use the clients GET method to create and execute the request
 res, err := client.Get("http://google.com", nil)
@@ -44,7 +45,8 @@ fmt.Println(string(body))
 You can also use the `*http.Request` object with the `http.Do` interface :
 
 ```go
-client := heimdall.NewHTTPClient(1000)
+timeout := 1000 * time.Millisecond
+client := heimdall.NewHTTPClient(timeout)
 
 // Create an http.Request instance
 req, _ := http.NewRequest(http.MethodGet, "http://google.com", nil)

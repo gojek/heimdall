@@ -16,6 +16,7 @@ const (
 
 func httpClientUsage() error {
 	timeoutInMillis := 100 * time.Millisecond
+
 	httpClient := heimdall.NewHTTPClient(timeoutInMillis)
 	headers := http.Header{}
 	headers.Set("Content-Type", "application/json")
