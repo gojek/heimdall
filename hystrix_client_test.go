@@ -321,7 +321,7 @@ func TestHystrixHTTPClientReturnsFallbackFailureWithoutFallBackFunction(t *testi
 	})
 
 	_, err := client.Get("http://foobar.example", http.Header{})
-	assert.True(t, strings.Contains(err.Error(), "circuit open"))
+	assert.Equal(t, err.Error(), "hystrix: circuit open")
 }
 
 func TestHystrixHTTPClientReturnsFallbackFailureWithAFallBackFunction(t *testing.T) {
@@ -337,6 +337,7 @@ func TestHystrixHTTPClientReturnsFallbackFailureWithAFallBackFunction(t *testing
 		commandName:   "some_command_name",
 		commandConfig: hystrixCommandConfig,
 		fallbackFunc: func(err error) error {
+			// do something in the fallback function
 			return err
 		},
 	})
