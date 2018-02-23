@@ -94,8 +94,6 @@ func(err error) error {
 }
 ```
 
-**What If I dont want to pass in a fallback**
-That's ok! This parameter is totally optional but it is advisable to be using a fallback in case something goes wrong.
 
 **Example**
 ```go
@@ -106,12 +104,22 @@ hystrixConfig := heimdall.NewHystrixConfig("post_to_channel_one", heimdall.Hystr
     Timeout: 1000,
 })
 // Create a new fallback function
-fallbackFunc := func(err error) error {
+fallbackFn := func(err error) error {
     _, err := http.Post("post_to_channel_two")
     return err
 }
+
+hystrixConfig := heimdall.NewHystrixConfig("MyCommand", heimdall.HystrixCommandConfig{
+	Timeout:                1100,
+	MaxConcurrentRequests:  100,
+	ErrorPercentThreshold:  25,
+	SleepWindow:            10,
+	RequestVolumeThreshold: 10,
+	fallbackFunc: fallbackFn,
+})
+
 // Create a new hystrix-wrapped HTTP client with the fallbackFunc as fall-back function
-client := heimdall.NewHystrixHTTPClient(1000, hystrixConfig, fallbackFunc)
+client := heimdall.NewHystrixHTTPClient(1000, hystrixConfig)
 
 // The rest is the same as the previous example
 ```
