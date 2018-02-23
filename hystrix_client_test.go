@@ -324,7 +324,7 @@ func TestHystrixHTTPClientReturnsFallbackFailureWithoutFallBackFunction(t *testi
 	assert.Equal(t, err.Error(), "hystrix: circuit open")
 }
 
-func TestHystrixHTTPClientReturnsFallbackFailureWithAFallBackFunction(t *testing.T) {
+func TestHystrixHTTPClientReturnsFallbackFailureWithAFallBackFunctionWhichReturnAnError(t *testing.T) {
 	hystrixCommandConfig := hystrix.CommandConfig{
 		Timeout:                10,
 		MaxConcurrentRequests:  100,
@@ -346,4 +346,26 @@ func TestHystrixHTTPClientReturnsFallbackFailureWithAFallBackFunction(t *testing
 	require.Error(t, err, "should have failed")
 
 	assert.True(t, strings.Contains(err.Error(), "fallback failed"))
+}
+
+func TestHystrixHTTPClientReturnsFallbackFailureWithAFallBackFunctionWhichReturnsNil(t *testing.T) {
+	hystrixCommandConfig := hystrix.CommandConfig{
+		Timeout:                10,
+		MaxConcurrentRequests:  100,
+		ErrorPercentThreshold:  10,
+		SleepWindow:            100,
+		RequestVolumeThreshold: 10,
+	}
+
+	client := NewHystrixHTTPClient(10, HystrixConfig{
+		commandName:   "some_command_name",
+		commandConfig: hystrixCommandConfig,
+		fallbackFn: func(err error) error {
+			// do something in the fallback function
+			return nil
+		},
+	})
+
+	_, err := client.Get("http://foobar.example", http.Header{})
+	assert.Nil(t, err)
 }
