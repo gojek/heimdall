@@ -79,6 +79,45 @@ client := heimdall.NewHystrixHTTPClient(1000, hystrixConfig)
 
 In the above example, there are two timeout values used: one for the hystrix configuration, and one for the HTTP client configuration. The former determines the time at which hystrix should register an error, while the latter determines when the client itself should return a timeout error. Unless you have any special requirements, both of these would have the same values.
 
+### Creating a hystrix-like circuit breaker with fallbacks
+
+You can use the `NewHystrixHTTPClient` function to create a client wrapped in a hystrix-like circuit breaker by passing in your own custom fallbacks:
+
+The fallback function will trigger when your code returns an error, or whenever it is unable to complete based on a variety of [health checks](https://github.com/Netflix/Hystrix/wiki/How-it-Works).
+
+**How your fallback function should look like**
+you should pass in a function whose signature looks like following
+```go
+func(err error) error {
+    // your logic for handling the error/outage condition
+    return err
+}
+```
+
+**What If I dont want to pass in a fallback**
+That's ok! This parameter is totally optional but it is advisable to be using a fallback in case something goes wrong.
+
+**Example**
+```go
+// Create a new hystrix config, and input the command name, along with other required options
+hystrixConfig := heimdall.NewHystrixConfig("post_to_channel_one", heimdall.HystrixCommandConfig{
+    ErrorPercentThreshold : 20,
+    MaxConcurrentRequests: 30,
+    Timeout: 1000,
+})
+// Create a new fallback function
+fallbackFunc := func(err error) error {
+    _, err := http.Post("post_to_channel_two")
+    return err
+}
+// Create a new hystrix-wrapped HTTP client with the fallbackFunc as fall-back function
+client := heimdall.NewHystrixHTTPClient(1000, hystrixConfig, fallbackFunc)
+
+// The rest is the same as the previous example
+```
+
+In the above example, the `fallbackFunc` is a function which posts to channel two in case posting to channel one fails.
+
 ### Creating an HTTP client with a retry mechanism
 
 ```go
