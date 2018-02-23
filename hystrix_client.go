@@ -18,8 +18,9 @@ type hystrixHTTPClient struct {
 
 	hystrixCommandName string
 
-	retryCount int
-	retrier    Retriable
+	retryCount   int
+	retrier      Retriable
+	fallbackFunc func(err error) error
 }
 
 // NewHystrixHTTPClient returns a new instance of HystrixHTTPClient
@@ -37,6 +38,7 @@ func NewHystrixHTTPClient(timeoutInMillis int, hystrixConfig HystrixConfig) Clie
 		retryCount:         defaultHystrixRetryCount,
 		retrier:            NewNoRetrier(),
 		hystrixCommandName: hystrixConfig.commandName,
+		fallbackFunc:       hystrixConfig.fallbackFunc,
 	}
 }
 
@@ -133,10 +135,7 @@ func (hhc *hystrixHTTPClient) Do(request *http.Request) (*http.Response, error) 
 				return fmt.Errorf("Server is down: returned status code: %d", response.StatusCode)
 			}
 			return nil
-		}, func(err error) error {
-			//TODO: make this fallback configurable in client
-			return err
-		})
+		}, hhc.fallbackFunc)
 
 		if err != nil {
 			backoffTime := hhc.retrier.NextInterval(i)
