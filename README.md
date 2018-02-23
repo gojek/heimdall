@@ -7,6 +7,17 @@
   <a href="https://golangci.com"><img src="https://golangci.com/badges/github.com/gojektech/heimdall.svg"></img></a>
 </p>
 
+* [Description](#description)
+* [Installation](#installation)
+* [Usage](#usage)
+	+ [Making a simple `GET` request](#making-a-simple-get-request)
+	+ [Creating a hystrix-like circuit breaker](#creating-a-hystrix-like-circuit-breaker)
+	+ [Creating an HTTP client with a retry mechanism](#creating-an-http-client-with-a-retry-mechanism)
+	+ [Custom retry mechanisms](#custom-retry-mechanisms)
+* [Documentation](#documentation)
+* [FAQ](#faq)
+* [License](#license)
+
 ## Description
 
 Heimdall is an HTTP client that helps your application make a large number of requests, at scale. With Heimdall, you can:
@@ -140,6 +151,34 @@ client.SetRetryCount(4)
 ## Documentation
 
 Further documentation can be found on [godoc.org](https://www.godoc.org/github.com/gojektech/heimdall)
+
+## FAQ
+
+**Can I replace the standard Go HTTP client with Heimdall?**
+
+Yes, you can. Heimdall implements the standard [HTTP Do](https://golang.org/pkg/net/http/#Client.Do) method, along with [useful wrapper methods](https://golang.org/pkg/net/http/#Client.Do) that provide all the functionality that a regular Go HTTP client provides.
+
+---
+
+**When should I use Heimdall?**
+
+If you are making a large number of HTTP requests, or if you make requests among multiple distributed nodes, and wish to make your systems more fault tolerant, then Heimdall was made for you.
+
+Heimdall makes use of [multiple mechanisms](https://medium.com/@sohamkamani/how-to-handle-microservice-communication-at-scale-a6fb0ee0ed7) to make HTTP requests more fault tolerant:
+1. Retries - If a request fails, Heimdall retries behind the scenes, and returns the result if one of the retries are successful.
+2. Circuit breaking - If Heimdall detects that too many of your requests are failing, or that the number of requests sent are above a configured threshold, then it "opens the circuit" for a short period of time, which prevents any more requests from being made. _This gives your downstream systems time to recover._
+
+---
+
+**So does this mean that I shouldn't use Heimdall for small scale applications?**
+
+Although Heimdall was made keeping large scale systems in mind, it's interface is simple enough to be used for any type of systems. In fact, we use it for our pet projects as well. Even if you don't require retries or circuit breaking features, the [simpler HTTP client](https://github.com/gojektech/heimdall#making-a-simple-get-request) provides sensible defaults with a simpler interface, and can be upgraded easily should the need arise.
+
+---
+
+**Can I contribute to make Heimdall better?**
+
+[Please do!](https://github.com/gojektech/heimdall/blob/master/CONTRIBUTING.md) We are looking for any kind of contribution to improve Heimdalls core funtionality and documentation. When in doubt, make a PR!
 
 ## License
 
