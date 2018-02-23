@@ -10,7 +10,7 @@ type fallbackFunction func(error) error
 type HystrixConfig struct {
 	commandName   string
 	commandConfig hystrix.CommandConfig
-	fallbackFunc  fallbackFunction
+	fallbackFn    fallbackFunction
 }
 
 // HystrixCommandConfig takes the hystrix config values
@@ -20,14 +20,11 @@ type HystrixCommandConfig struct {
 	RequestVolumeThreshold int
 	SleepWindow            int
 	ErrorPercentThreshold  int
+	fallbackFunc           fallbackFunction
 }
 
 // NewHystrixConfig should be used to give hystrix commandName and config
-func NewHystrixConfig(commandName string, commandConfig HystrixCommandConfig, f ...fallbackFunction) HystrixConfig {
-	var hystrixFallbackFunction fallbackFunction
-	if len(f) > 0 {
-		hystrixFallbackFunction = f[0]
-	}
+func NewHystrixConfig(commandName string, commandConfig HystrixCommandConfig) HystrixConfig {
 	return HystrixConfig{
 		commandName: commandName,
 		commandConfig: hystrix.CommandConfig{
@@ -37,6 +34,6 @@ func NewHystrixConfig(commandName string, commandConfig HystrixCommandConfig, f 
 			SleepWindow:            commandConfig.SleepWindow,
 			ErrorPercentThreshold:  commandConfig.ErrorPercentThreshold,
 		},
-		fallbackFunc: hystrixFallbackFunction,
+		fallbackFn: commandConfig.fallbackFunc,
 	}
 }

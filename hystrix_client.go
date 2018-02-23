@@ -38,7 +38,7 @@ func NewHystrixHTTPClient(timeoutInMillis int, hystrixConfig HystrixConfig) Clie
 		retryCount:         defaultHystrixRetryCount,
 		retrier:            NewNoRetrier(),
 		hystrixCommandName: hystrixConfig.commandName,
-		fallbackFunc:       hystrixConfig.fallbackFunc,
+		fallbackFunc:       hystrixConfig.fallbackFn,
 	}
 }
 

@@ -336,7 +336,7 @@ func TestHystrixHTTPClientReturnsFallbackFailureWithAFallBackFunction(t *testing
 	client := NewHystrixHTTPClient(10, HystrixConfig{
 		commandName:   "some_command_name",
 		commandConfig: hystrixCommandConfig,
-		fallbackFunc: func(err error) error {
+		fallbackFn: func(err error) error {
 			// do something in the fallback function
 			return err
 		},
