@@ -4,13 +4,13 @@ import (
 	"github.com/afex/hystrix-go/hystrix"
 )
 
-type fallbackFunction func(error) error
+type fallbackFunc func(error) error
 
 // HystrixConfig is used to pass configurations for Hystrix
 type HystrixConfig struct {
 	commandName   string
 	commandConfig hystrix.CommandConfig
-	fallbackFn    fallbackFunction
+	fallbackFn    fallbackFunc
 }
 
 // HystrixCommandConfig takes the hystrix config values
@@ -20,7 +20,7 @@ type HystrixCommandConfig struct {
 	RequestVolumeThreshold int
 	SleepWindow            int
 	ErrorPercentThreshold  int
-	fallbackFunc           fallbackFunction
+	fallbackFunc           fallbackFunc
 }
 
 // NewHystrixConfig should be used to give hystrix commandName and config

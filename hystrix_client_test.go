@@ -363,9 +363,6 @@ func TestFallBackFunctionIsCalledWithHystrixHTTPClient(t *testing.T) {
 		commandConfig: hystrixCommandConfig,
 		fallbackFn: func(err error) error {
 			called = true
-			if called {
-
-			}
 			return err
 		},
 	})
