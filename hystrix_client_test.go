@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/afex/hystrix-go/hystrix"
 
@@ -24,13 +25,14 @@ func TestHystrixHTTPClientDoSuccess(t *testing.T) {
 		RequestVolumeThreshold: 10,
 	}
 
-	client := NewHystrixHTTPClient(10, HystrixConfig{
+	timeout := 10 * time.Millisecond
+
+	client := NewHystrixHTTPClient(timeout, HystrixConfig{
 		commandName:   "some_command_name",
 		commandConfig: hystrixCommandConfig,
 	})
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
-
 		assert.Equal(t, http.MethodGet, r.Method)
 		assert.Equal(t, r.Header.Get("Content-Type"), "application/json")
 		assert.Equal(t, r.Header.Get("Accept-Language"), "en")
@@ -65,13 +67,13 @@ func TestHystrixHTTPClientGetSuccess(t *testing.T) {
 		RequestVolumeThreshold: 10,
 	}
 
-	client := NewHystrixHTTPClient(10, HystrixConfig{
+	timeout := 10 * time.Millisecond
+	client := NewHystrixHTTPClient(timeout, HystrixConfig{
 		commandName:   "some_command_name",
 		commandConfig: hystrixCommandConfig,
 	})
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
-
 		assert.Equal(t, http.MethodGet, r.Method)
 		assert.Equal(t, r.Header.Get("Content-Type"), "application/json")
 		assert.Equal(t, r.Header.Get("Accept-Language"), "en")
@@ -103,7 +105,8 @@ func TestHystrixHTTPClientPostSuccess(t *testing.T) {
 		RequestVolumeThreshold: 10,
 	}
 
-	client := NewHystrixHTTPClient(10, HystrixConfig{
+	timeout := 10 * time.Millisecond
+	client := NewHystrixHTTPClient(timeout, HystrixConfig{
 		commandName:   "some_command_name",
 		commandConfig: hystrixCommandConfig,
 	})
@@ -149,7 +152,8 @@ func TestHystrixHTTPClientDeleteSuccess(t *testing.T) {
 		RequestVolumeThreshold: 10,
 	}
 
-	client := NewHystrixHTTPClient(10, HystrixConfig{
+	timeout := 10 * time.Millisecond
+	client := NewHystrixHTTPClient(timeout, HystrixConfig{
 		commandName:   "some_command_name",
 		commandConfig: hystrixCommandConfig,
 	})
@@ -186,7 +190,8 @@ func TestHystrixHTTPClientPutSuccess(t *testing.T) {
 		RequestVolumeThreshold: 10,
 	}
 
-	client := NewHystrixHTTPClient(10, HystrixConfig{
+	timeout := 10 * time.Millisecond
+	client := NewHystrixHTTPClient(timeout, HystrixConfig{
 		commandName:   "some_command_name",
 		commandConfig: hystrixCommandConfig,
 	})
@@ -232,7 +237,8 @@ func TestHystrixHTTPClientPatchSuccess(t *testing.T) {
 		RequestVolumeThreshold: 10,
 	}
 
-	client := NewHystrixHTTPClient(10, HystrixConfig{
+	timeout := 10 * time.Millisecond
+	client := NewHystrixHTTPClient(timeout, HystrixConfig{
 		commandName:   "some_command_name",
 		commandConfig: hystrixCommandConfig,
 	})
@@ -278,7 +284,8 @@ func TestHystrixHTTPClientRetriesOnFailure(t *testing.T) {
 		RequestVolumeThreshold: 10,
 	}
 
-	client := NewHystrixHTTPClient(10, HystrixConfig{
+	timeout := 10 * time.Millisecond
+	client := NewHystrixHTTPClient(timeout, HystrixConfig{
 		commandName:   "some_command_name",
 		commandConfig: hystrixCommandConfig,
 	})
@@ -315,7 +322,8 @@ func TestHystrixHTTPClientReturnsFallbackFailureWithoutFallBackFunction(t *testi
 		RequestVolumeThreshold: 10,
 	}
 
-	client := NewHystrixHTTPClient(10, HystrixConfig{
+	timeout := 10 * time.Millisecond
+	client := NewHystrixHTTPClient(timeout, HystrixConfig{
 		commandName:   "some_command_name",
 		commandConfig: hystrixCommandConfig,
 	})
@@ -333,7 +341,8 @@ func TestHystrixHTTPClientReturnsFallbackFailureWithAFallBackFunctionWhichReturn
 		RequestVolumeThreshold: 10,
 	}
 
-	client := NewHystrixHTTPClient(10, HystrixConfig{
+	timeout := 10 * time.Millisecond
+	client := NewHystrixHTTPClient(timeout, HystrixConfig{
 		commandName:   "some_command_name",
 		commandConfig: hystrixCommandConfig,
 		fallbackFn: func(err error) error {
@@ -358,7 +367,8 @@ func TestFallBackFunctionIsCalledWithHystrixHTTPClient(t *testing.T) {
 	}
 
 	called := false
-	client := NewHystrixHTTPClient(10, HystrixConfig{
+	timeout := 10 * time.Millisecond
+	client := NewHystrixHTTPClient(timeout, HystrixConfig{
 		commandName:   "some_command_name",
 		commandConfig: hystrixCommandConfig,
 		fallbackFn: func(err error) error {
@@ -381,7 +391,8 @@ func TestHystrixHTTPClientReturnsFallbackFailureWithAFallBackFunctionWhichReturn
 		RequestVolumeThreshold: 10,
 	}
 
-	client := NewHystrixHTTPClient(10, HystrixConfig{
+	timeout := 10 * time.Millisecond
+	client := NewHystrixHTTPClient(timeout, HystrixConfig{
 		commandName:   "some_command_name",
 		commandConfig: hystrixCommandConfig,
 		fallbackFn: func(err error) error {

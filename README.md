@@ -83,8 +83,9 @@ hystrixConfig := heimdall.NewHystrixConfig("google_get_request", heimdall.Hystri
     MaxConcurrentRequests: 30,
     Timeout: 1000,
 })
+timeout := 10 * time.Millisecond
 // Create a new hystrix-wrapped HTTP client
-client := heimdall.NewHystrixHTTPClient(1000, hystrixConfig)
+client := heimdall.NewHystrixHTTPClient(timeout, hystrixConfig)
 
 // The rest is the same as the previous example
 ```
@@ -109,12 +110,6 @@ func(err error) error {
 
 **Example**
 ```go
-// Create a new hystrix config, and input the command name, along with other required options
-hystrixConfig := heimdall.NewHystrixConfig("post_to_channel_one", heimdall.HystrixCommandConfig{
-    ErrorPercentThreshold : 20,
-    MaxConcurrentRequests: 30,
-    Timeout: 1000,
-})
 // Create a new fallback function
 fallbackFn := func(err error) error {
     _, err := http.Post("post_to_channel_two")
@@ -130,8 +125,9 @@ hystrixConfig := heimdall.NewHystrixConfig("MyCommand", heimdall.HystrixCommandC
 	fallbackFunc: fallbackFn,
 })
 
+timeout := 10 * time.Millisecond
 // Create a new hystrix-wrapped HTTP client with the fallbackFunc as fall-back function
-client := heimdall.NewHystrixHTTPClient(1000, hystrixConfig)
+client := heimdall.NewHystrixHTTPClient(timeout, hystrixConfig)
 
 // The rest is the same as the previous example
 ```

@@ -24,10 +24,9 @@ type hystrixHTTPClient struct {
 }
 
 // NewHystrixHTTPClient returns a new instance of HystrixHTTPClient
-func NewHystrixHTTPClient(timeoutInMillis int, hystrixConfig HystrixConfig) Client {
-	httpTimeout := time.Duration(timeoutInMillis) * time.Millisecond
+func NewHystrixHTTPClient(timeout time.Duration, hystrixConfig HystrixConfig) Client {
 	httpClient := &http.Client{
-		Timeout: httpTimeout,
+		Timeout: timeout,
 	}
 
 	hystrix.ConfigureCommand(hystrixConfig.commandName, hystrixConfig.commandConfig)
