@@ -122,7 +122,7 @@ hystrixConfig := heimdall.NewHystrixConfig("MyCommand", heimdall.HystrixCommandC
 	ErrorPercentThreshold:  25,
 	SleepWindow:            10,
 	RequestVolumeThreshold: 10,
-	fallbackFunc: fallbackFn,
+	FallbackFunc: fallbackFn,
 })
 
 timeout := 10 * time.Millisecond

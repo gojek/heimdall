@@ -345,7 +345,7 @@ func TestHystrixHTTPClientReturnsFallbackFailureWithAFallBackFunctionWhichReturn
 	client := NewHystrixHTTPClient(timeout, HystrixConfig{
 		commandName:   "some_command_name",
 		commandConfig: hystrixCommandConfig,
-		fallbackFn: func(err error) error {
+		fallbackFunc: func(err error) error {
 			// do something in the fallback function
 			return err
 		},
@@ -371,7 +371,7 @@ func TestFallBackFunctionIsCalledWithHystrixHTTPClient(t *testing.T) {
 	client := NewHystrixHTTPClient(timeout, HystrixConfig{
 		commandName:   "some_command_name",
 		commandConfig: hystrixCommandConfig,
-		fallbackFn: func(err error) error {
+		fallbackFunc: func(err error) error {
 			called = true
 			return err
 		},
@@ -395,7 +395,7 @@ func TestHystrixHTTPClientReturnsFallbackFailureWithAFallBackFunctionWhichReturn
 	client := NewHystrixHTTPClient(timeout, HystrixConfig{
 		commandName:   "some_command_name",
 		commandConfig: hystrixCommandConfig,
-		fallbackFn: func(err error) error {
+		fallbackFunc: func(err error) error {
 			// do something in the fallback function
 			return nil
 		},

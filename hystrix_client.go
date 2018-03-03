@@ -37,7 +37,7 @@ func NewHystrixHTTPClient(timeout time.Duration, hystrixConfig HystrixConfig) Cl
 		retryCount:         defaultHystrixRetryCount,
 		retrier:            NewNoRetrier(),
 		hystrixCommandName: hystrixConfig.commandName,
-		fallbackFunc:       hystrixConfig.fallbackFn,
+		fallbackFunc:       hystrixConfig.fallbackFunc,
 	}
 }
 
