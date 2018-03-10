@@ -22,7 +22,7 @@ func httpClientUsage() error {
 	headers.Set("Content-Type", "application/json")
 
 	httpClient.SetRetryCount(2)
-	httpClient.SetRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(10)))
+	httpClient.SetRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(10, 5)))
 
 	response, err := httpClient.Get(baseURL, headers)
 	if err != nil {
