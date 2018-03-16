@@ -2,6 +2,7 @@ package heimdall
 
 import (
 	"math"
+	"math/rand"
 	"time"
 )
 
@@ -29,17 +30,19 @@ func (cb *constantBackoff) Next(retry int) time.Duration {
 }
 
 type exponentialBackoff struct {
-	exponentFactor float64
-	initialTimeout float64
-	maxTimeout     float64
+	exponentFactor        float64
+	initialTimeout        float64
+	maxTimeout            float64
+	maximumJitterInterval int64
 }
 
 // NewExponentialBackoff returns an instance of ExponentialBackoff
-func NewExponentialBackoff(initialTimeout, maxTimeout time.Duration, exponentFactor float64) Backoff {
+func NewExponentialBackoff(initialTimeout, maxTimeout time.Duration, exponentFactor float64, maximumJitterInterval int64) Backoff {
 	return &exponentialBackoff{
-		exponentFactor: exponentFactor,
-		initialTimeout: float64(initialTimeout / time.Millisecond),
-		maxTimeout:     float64(maxTimeout / time.Millisecond),
+		exponentFactor:        exponentFactor,
+		initialTimeout:        float64(initialTimeout / time.Millisecond),
+		maxTimeout:            float64(maxTimeout / time.Millisecond),
+		maximumJitterInterval: maximumJitterInterval,
 	}
 }
 
@@ -49,5 +52,5 @@ func (eb *exponentialBackoff) Next(retry int) time.Duration {
 		return 0 * time.Millisecond
 	}
 
-	return time.Duration(math.Min(eb.initialTimeout+math.Pow(eb.exponentFactor, float64(retry)), eb.maxTimeout)) * time.Millisecond
+	return time.Duration(math.Min(eb.initialTimeout+math.Pow(eb.exponentFactor, float64(retry))+float64(rand.Int63n(eb.maximumJitterInterval)), eb.maxTimeout)) * time.Millisecond
 }

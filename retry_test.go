@@ -9,7 +9,7 @@ import (
 
 func TestRetrierWithExponentialBackoff(t *testing.T) {
 
-	exponentialBackoff := NewExponentialBackoff(2*time.Millisecond, 10*time.Millisecond, 2.0)
+	exponentialBackoff := NewExponentialBackoff(2*time.Millisecond, 10*time.Millisecond, 2.0, 1)
 	exponentialRetrier := NewRetrier(exponentialBackoff)
 
 	assert.Equal(t, 4*time.Millisecond, exponentialRetrier.NextInterval(1))
