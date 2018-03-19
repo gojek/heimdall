@@ -100,6 +100,7 @@ The fallback function will trigger when your code returns an error, or whenever 
 
 **How your fallback function should look like**
 you should pass in a function whose signature looks like following
+
 ```go
 func(err error) error {
     // your logic for handling the error/outage condition
@@ -109,6 +110,7 @@ func(err error) error {
 
 
 **Example**
+
 ```go
 // Create a new fallback function
 fallbackFn := func(err error) error {
@@ -139,6 +141,29 @@ In the above example, the `fallbackFunc` is a function which posts to channel tw
 ```go
 // First set a backoff mechanism. Constant backoff increases the backoff at a constant rate
 backoff := heimdall.NewConstantBackoff(500)
+
+// Create a new retry mechanism with the backoff
+retrier := heimdall.NewRetrier(backoff)
+
+client := heimdall.NewHTTPClient(1000)
+// Set the retry mechanism for the client, and the number of times you would like to retry
+client.SetRetrier(retrier)
+client.SetRetryCount(4)
+
+// The rest is the same as the first example
+```
+Or create client with exponential backoff
+
+```go
+// First set a backoff mechanism. Exponential Backoff increases the backoff at a exponential rate
+
+initalTimeout := 2*time.Millisecond  // Inital timeout
+maxTimeout := 9*time.Millisecond    // Max time out
+exponentFactor := 2                 // Multiplier
+maximumJitterInterval := 2          // Max jitter interval
+
+backoff := heimdall.NewExponentialBackoff(initalTimeout, maxTimeout, exponentFactor, maximumJitterInterval)
+
 // Create a new retry mechanism with the backoff
 retrier := heimdall.NewRetrier(backoff)
 
