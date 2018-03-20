@@ -12,7 +12,7 @@ type Backoff interface {
 }
 
 type constantBackoff struct {
-	backoffInterval int64
+	backoffInterval       int64
 	maximumJitterInterval int64
 }
 
@@ -38,12 +38,12 @@ type exponentialBackoff struct {
 }
 
 // NewExponentialBackoff returns an instance of ExponentialBackoff
-func NewExponentialBackoff(initialTimeout, maxTimeout time.Duration, exponentFactor float64, maximumJitterInterval int64) Backoff {
+func NewExponentialBackoff(initialTimeout, maxTimeout time.Duration, exponentFactor float64, maximumJitterInterval time.Duration) Backoff {
 	return &exponentialBackoff{
 		exponentFactor:        exponentFactor,
 		initialTimeout:        float64(initialTimeout / time.Millisecond),
 		maxTimeout:            float64(maxTimeout / time.Millisecond),
-		maximumJitterInterval: maximumJitterInterval,
+		maximumJitterInterval: int64(maximumJitterInterval / time.Millisecond),
 	}
 }
 

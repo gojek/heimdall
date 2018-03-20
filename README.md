@@ -157,10 +157,10 @@ Or create client with exponential backoff
 ```go
 // First set a backoff mechanism. Exponential Backoff increases the backoff at a exponential rate
 
-initalTimeout := 2*time.Millisecond  // Inital timeout
-maxTimeout := 9*time.Millisecond    // Max time out
-exponentFactor := 2                 // Multiplier
-maximumJitterInterval := 2          // Max jitter interval
+initalTimeout := 2*time.Millisecond            // Inital timeout
+maxTimeout := 9*time.Millisecond               // Max time out
+exponentFactor := 2                            // Multiplier
+maximumJitterInterval := 2*time.Millisecond    // Max jitter interval
 
 backoff := heimdall.NewExponentialBackoff(initalTimeout, maxTimeout, exponentFactor, maximumJitterInterval)
 
