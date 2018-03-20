@@ -148,7 +148,8 @@ backoff := heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval)
 // Create a new retry mechanism with the backoff
 retrier := heimdall.NewRetrier(backoff)
 
-client := heimdall.NewHTTPClient(1000)
+timeout := 1000 * time.Millisecond
+client := heimdall.NewHTTPClient(timeout)
 // Set the retry mechanism for the client, and the number of times you would like to retry
 client.SetRetrier(retrier)
 client.SetRetryCount(4)
@@ -170,7 +171,8 @@ backoff := heimdall.NewExponentialBackoff(initalTimeout, maxTimeout, exponentFac
 // Create a new retry mechanism with the backoff
 retrier := heimdall.NewRetrier(backoff)
 
-client := heimdall.NewHTTPClient(1000)
+timeout := 1000 * time.Millisecond
+client := heimdall.NewHTTPClient(timeout)
 // Set the retry mechanism for the client, and the number of times you would like to retry
 client.SetRetrier(retrier)
 client.SetRetryCount(4)
@@ -213,7 +215,8 @@ This will create a backoff mechanism, where the retry time will increase linearl
 backoff := &linearBackoff{100}
 retrier := heimdall.NewRetrier(backoff)
 
-client := heimdall.NewHTTPClient(1000)
+timeout := 1000 * time.Millisecond
+client := heimdall.NewHTTPClient(timeout)
 client.SetRetrier(retrier)
 client.SetRetryCount(4)
 
