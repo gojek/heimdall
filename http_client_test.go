@@ -216,7 +216,7 @@ func TestHTTPClientGetRetriesOnFailure(t *testing.T) {
 	noOfCalls := noOfRetries + 1
 
 	client.SetRetryCount(noOfRetries)
-	client.SetRetrier(NewRetrier(NewConstantBackoff(1)))
+	client.SetRetrier(NewRetrier(NewConstantBackoff(1, 1)))
 
 	response, err := client.Get(server.URL, http.Header{})
 	require.Error(t, err, "should have failed to make GET request")
@@ -243,7 +243,7 @@ func TestHTTPClientGetReturnsAllErrorsIfRetriesFail(t *testing.T) {
 
 	noOfRetries := 2
 	client.SetRetryCount(noOfRetries)
-	client.SetRetrier(NewRetrier(NewConstantBackoff(1)))
+	client.SetRetrier(NewRetrier(NewConstantBackoff(1, 1)))
 
 	response, err := client.Get(server.URL, http.Header{})
 	require.Error(t, err, "should have failed to make GET request")
@@ -275,7 +275,7 @@ func TestHTTPClientGetReturnsNoErrorsIfRetrySucceeds(t *testing.T) {
 	defer server.Close()
 
 	client.SetRetryCount(3)
-	client.SetRetrier(NewRetrier(NewConstantBackoff(1)))
+	client.SetRetrier(NewRetrier(NewConstantBackoff(1, 1)))
 
 	response, err := client.Get(server.URL, http.Header{})
 	require.NoError(t, err, "should not have failed to make GET request")

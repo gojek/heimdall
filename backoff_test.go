@@ -44,14 +44,14 @@ func TestExponentialBackoffJitter(t *testing.T) {
 
 func TestConstantBackoffNextTime(t *testing.T) {
 
-	constantBackoff := NewConstantBackoff(100)
+	constantBackoff := NewConstantBackoff(100, 50)
 
-	assert.Equal(t, 100*time.Millisecond, constantBackoff.Next(1))
+	assert.NotEqual(t, 100*time.Millisecond, constantBackoff.Next(1))
 }
 
 func TestConstantBackoffWhenRetryIsZero(t *testing.T) {
 
-	constantBackoff := NewConstantBackoff(100)
+	constantBackoff := NewConstantBackoff(100, 50)
 
 	assert.Equal(t, 0*time.Millisecond, constantBackoff.Next(0))
 }

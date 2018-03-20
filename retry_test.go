@@ -17,7 +17,7 @@ func TestRetrierWithExponentialBackoff(t *testing.T) {
 
 func TestRetrierWithConstantBackoff(t *testing.T) {
 
-	constantBackoff := NewConstantBackoff(2)
+	constantBackoff := NewConstantBackoff(2, 2)
 	constantRetrier := NewRetrier(constantBackoff)
 
 	assert.Equal(t, 2*time.Millisecond, constantRetrier.NextInterval(1))

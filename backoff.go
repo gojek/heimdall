@@ -13,11 +13,12 @@ type Backoff interface {
 
 type constantBackoff struct {
 	backoffInterval int64
+	maximumJitterInterval int64
 }
 
 // NewConstantBackoff returns an instance of ConstantBackoff
-func NewConstantBackoff(backoffInterval int64) Backoff {
-	return &constantBackoff{backoffInterval: backoffInterval}
+func NewConstantBackoff(backoffInterval, maximumJitterInterval int64) Backoff {
+	return &constantBackoff{backoffInterval: backoffInterval, maximumJitterInterval: maximumJitterInterval}
 }
 
 // Next returns next time for retrying operation with constant strategy
@@ -26,7 +27,7 @@ func (cb *constantBackoff) Next(retry int) time.Duration {
 		return 0 * time.Millisecond
 	}
 
-	return time.Duration(cb.backoffInterval) * time.Millisecond
+	return (time.Duration(cb.backoffInterval) * time.Millisecond) + (time.Duration(rand.Int63n(cb.maximumJitterInterval)) * time.Millisecond)
 }
 
 type exponentialBackoff struct {

@@ -175,7 +175,7 @@ client.SetRetryCount(4)
 // The rest is the same as the first example
 ```
 
-This will create an HTTP client which will retry every `500` milliseconds incase the request fails. THe library also comes with an [Exponential Backoff](https://www.godoc.org/github.com/gojektech/heimdall#NewExponentialBackoff)
+This will create an HTTP client which will retry every `500` milliseconds incase the request fails. The library also comes with an [Exponential Backoff](https://www.godoc.org/github.com/gojektech/heimdall#NewExponentialBackoff)
 
 ### Custom retry mechanisms
 
