@@ -301,8 +301,11 @@ func TestHystrixHTTPClientRetriesOnFailure(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
 	defer server.Close()
 
+	backoffInterval := 1 * time.Millisecond
+	maximumJitterInterval := 1 * time.Millisecond
+
 	client.SetRetryCount(3)
-	client.SetRetrier(NewRetrier(NewConstantBackoff(1, 1)))
+	client.SetRetrier(NewRetrier(NewConstantBackoff(backoffInterval, maximumJitterInterval)))
 
 	response, err := client.Get(server.URL, http.Header{})
 	require.Error(t, err)

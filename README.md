@@ -140,7 +140,10 @@ In the above example, the `fallbackFunc` is a function which posts to channel tw
 
 ```go
 // First set a backoff mechanism. Constant backoff increases the backoff at a constant rate
-backoff := heimdall.NewConstantBackoff(500)
+backoffInterval := 2 * time.Millisecond
+maximumJitterInterval := 5 * time.Millisecond
+
+backoff := heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval)
 
 // Create a new retry mechanism with the backoff
 retrier := heimdall.NewRetrier(backoff)

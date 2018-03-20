@@ -215,8 +215,11 @@ func TestHTTPClientGetRetriesOnFailure(t *testing.T) {
 	noOfRetries := 3
 	noOfCalls := noOfRetries + 1
 
+	backoffInterval := 1 * time.Millisecond
+	maximumJitterInterval := 1 * time.Millisecond
+
 	client.SetRetryCount(noOfRetries)
-	client.SetRetrier(NewRetrier(NewConstantBackoff(1, 1)))
+	client.SetRetrier(NewRetrier(NewConstantBackoff(backoffInterval, maximumJitterInterval)))
 
 	response, err := client.Get(server.URL, http.Header{})
 	require.Error(t, err, "should have failed to make GET request")
@@ -241,9 +244,12 @@ func TestHTTPClientGetReturnsAllErrorsIfRetriesFail(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
 	defer server.Close()
 
+	backoffInterval := 1 * time.Millisecond
+	maximumJitterInterval := 1 * time.Millisecond
+
 	noOfRetries := 2
 	client.SetRetryCount(noOfRetries)
-	client.SetRetrier(NewRetrier(NewConstantBackoff(1, 1)))
+	client.SetRetrier(NewRetrier(NewConstantBackoff(backoffInterval, maximumJitterInterval)))
 
 	response, err := client.Get(server.URL, http.Header{})
 	require.Error(t, err, "should have failed to make GET request")
@@ -274,8 +280,11 @@ func TestHTTPClientGetReturnsNoErrorsIfRetrySucceeds(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
 	defer server.Close()
 
+	backoffInterval := 1 * time.Millisecond
+	maximumJitterInterval := 1 * time.Millisecond
+
 	client.SetRetryCount(3)
-	client.SetRetrier(NewRetrier(NewConstantBackoff(1, 1)))
+	client.SetRetrier(NewRetrier(NewConstantBackoff(backoffInterval, maximumJitterInterval)))
 
 	response, err := client.Get(server.URL, http.Header{})
 	require.NoError(t, err, "should not have failed to make GET request")

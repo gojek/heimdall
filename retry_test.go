@@ -16,8 +16,10 @@ func TestRetrierWithExponentialBackoff(t *testing.T) {
 }
 
 func TestRetrierWithConstantBackoff(t *testing.T) {
+	backoffInterval := 2 * time.Millisecond
+	maximumJitterInterval := 1 * time.Millisecond
 
-	constantBackoff := NewConstantBackoff(2, 1)
+	constantBackoff := NewConstantBackoff(backoffInterval, maximumJitterInterval)
 	constantRetrier := NewRetrier(constantBackoff)
 
 	assert.True(t, 2*time.Millisecond <= constantRetrier.NextInterval(1))

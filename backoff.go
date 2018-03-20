@@ -21,8 +21,11 @@ func init() {
 }
 
 // NewConstantBackoff returns an instance of ConstantBackoff
-func NewConstantBackoff(backoffInterval, maximumJitterInterval int64) Backoff {
-	return &constantBackoff{backoffInterval: backoffInterval, maximumJitterInterval: maximumJitterInterval}
+func NewConstantBackoff(backoffInterval, maximumJitterInterval time.Duration) Backoff {
+	return &constantBackoff{
+		backoffInterval:       int64(backoffInterval / time.Millisecond),
+		maximumJitterInterval: int64(maximumJitterInterval / time.Millisecond),
+	}
 }
 
 // Next returns next time for retrying operation with constant strategy
