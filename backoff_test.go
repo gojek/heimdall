@@ -35,6 +35,13 @@ func TestExponentialBackoffWhenRetryIsZero(t *testing.T) {
 	assert.Equal(t, 0*time.Millisecond, exponentialBackoff.Next(0))
 }
 
+func TestExponentialBackoffJitter(t *testing.T) {
+
+	exponentialBackoff := NewExponentialBackoff(2*time.Millisecond, 10*time.Millisecond, 2.0, 2)
+
+	assert.True(t, 4*time.Millisecond < exponentialBackoff.Next(1))
+}
+
 func TestConstantBackoffNextTime(t *testing.T) {
 
 	constantBackoff := NewConstantBackoff(100)

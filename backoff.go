@@ -52,5 +52,5 @@ func (eb *exponentialBackoff) Next(retry int) time.Duration {
 		return 0 * time.Millisecond
 	}
 
-	return time.Duration(math.Min(eb.initialTimeout+math.Pow(eb.exponentFactor, float64(retry))+float64(rand.Int63n(eb.maximumJitterInterval)), eb.maxTimeout)) * time.Millisecond
+	return time.Duration(math.Min(eb.initialTimeout+math.Pow(eb.exponentFactor, float64(retry)), eb.maxTimeout)+float64(rand.Int63n(eb.maximumJitterInterval))) * time.Millisecond
 }
