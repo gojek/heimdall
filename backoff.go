@@ -16,6 +16,10 @@ type constantBackoff struct {
 	maximumJitterInterval int64
 }
 
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
 // NewConstantBackoff returns an instance of ConstantBackoff
 func NewConstantBackoff(backoffInterval, maximumJitterInterval int64) Backoff {
 	return &constantBackoff{backoffInterval: backoffInterval, maximumJitterInterval: maximumJitterInterval}
