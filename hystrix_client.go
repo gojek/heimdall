@@ -14,7 +14,7 @@ import (
 const defaultHystrixRetryCount int = 0
 
 type hystrixHTTPClient struct {
-	client *http.Client
+	client Doer
 
 	hystrixCommandName string
 
@@ -49,6 +49,11 @@ func (hhc *hystrixHTTPClient) SetRetryCount(count int) {
 // SetRetrier sets the strategy for retrying
 func (hhc *hystrixHTTPClient) SetRetrier(retrier Retriable) {
 	hhc.retrier = retrier
+}
+
+// SetRetrier sets the strategy for retrying
+func (hhc *hystrixHTTPClient) SetCustomHTTPClient(customHTTPClient Doer) {
+	hhc.client = customHTTPClient
 }
 
 // Get makes a HTTP GET request to provided URL

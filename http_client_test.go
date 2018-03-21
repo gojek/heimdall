@@ -342,7 +342,7 @@ func (c *myHTTPClient) Do(request *http.Request) (*http.Response, error) {
 	return response, err
 }
 
-func TestCustomHTTPClientHeader(t *testing.T) {
+func TestCustomHTTPClientHeaderSuccess(t *testing.T) {
 	client := NewHTTPClient(10 * time.Millisecond)
 
 	client.SetCustomHTTPClient(&myHTTPClient{
