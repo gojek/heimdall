@@ -12,12 +12,6 @@ import (
 
 const defaultRetryCount int = 0
 
-// Doer defines the method required to use a type as HttpClient.
-// The net/*http.Client type satisfies this interface.
-type Doer interface {
-	Do(*http.Request) (*http.Response, error)
-}
-
 type httpClient struct {
 	client Doer
 
@@ -40,6 +34,11 @@ func NewHTTPClient(timeout time.Duration) Client {
 // SetRetryCount sets the retry count for the httpClient
 func (c *httpClient) SetRetryCount(count int) {
 	c.retryCount = count
+}
+
+// SetCustomHTTPClient sets custom HTTP client
+func (c *httpClient) SetCustomHTTPClient(customHTTPClient Doer) {
+	c.client = customHTTPClient
 }
 
 // SetRetrier sets the strategy for retrying
