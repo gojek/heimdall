@@ -407,3 +407,42 @@ func TestHystrixHTTPClientReturnsFallbackFailureWithAFallBackFunctionWhichReturn
 	_, err := client.Get("http://foobar.example", http.Header{})
 	assert.Nil(t, err)
 }
+
+func TestCustomHystrixHTTPClientDoSuccess(t *testing.T) {
+	hystrixCommandConfig := hystrix.CommandConfig{
+		Timeout:                10,
+		MaxConcurrentRequests:  100,
+		ErrorPercentThreshold:  10,
+		SleepWindow:            100,
+		RequestVolumeThreshold: 10,
+	}
+
+	timeout := 10 * time.Millisecond
+
+	client := NewHystrixHTTPClient(timeout, HystrixConfig{
+		commandName:   "some_new_command_name",
+		commandConfig: hystrixCommandConfig,
+	})
+
+	client.SetCustomHTTPClient(&myHTTPClient{
+		client: http.Client{Timeout: 25 * time.Millisecond}})
+
+	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, r.Header.Get("foo"), "bar")
+		assert.NotEqual(t, r.Header.Get("foo"), "baz")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{ "response": "ok" }`))
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+	defer server.Close()
+
+	req, err := http.NewRequest(http.MethodGet, server.URL, nil)
+	require.NoError(t, err)
+	response, err := client.Do(req)
+	assert.Equal(t, http.StatusOK, response.StatusCode)
+
+	body, err := ioutil.ReadAll(response.Body)
+	require.NoError(t, err)
+	assert.Equal(t, "{ \"response\": \"ok\" }", string(body))
+}
