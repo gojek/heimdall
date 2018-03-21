@@ -12,8 +12,14 @@ import (
 
 const defaultRetryCount int = 0
 
+// Doer defines the method required to use a type as HttpClient.
+// The net/*http.Client type satisfies this interface.
+type Doer interface {
+	Do(*http.Request) (*http.Response, error)
+}
+
 type httpClient struct {
-	client *http.Client
+	client Doer
 
 	retryCount int
 	retrier    Retriable
