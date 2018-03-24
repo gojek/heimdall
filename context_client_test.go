@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestHTTPClientWithContextSuccessWithTODOContext(t *testing.T) {
+func TestHTTPClientWithContextSuccess(t *testing.T) {
 	client := NewHTTPClientWithContext(10 * time.Millisecond)
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
@@ -42,7 +42,7 @@ func TestHTTPClientWithContextSuccessWithTODOContext(t *testing.T) {
 	assert.Equal(t, "{ \"response\": \"ok\" }", string(body))
 }
 
-func TestHTTPClientWithContextGetSuccessWithTODOContext(t *testing.T) {
+func TestHTTPClientWithContextGetSuccess(t *testing.T) {
 	client := NewHTTPClientWithContext(10 * time.Millisecond)
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
@@ -68,7 +68,7 @@ func TestHTTPClientWithContextGetSuccessWithTODOContext(t *testing.T) {
 	assert.Equal(t, "{ \"response\": \"ok\" }", respBody(t, response))
 }
 
-func TestHTTPClientWithContextPostSuccessWithTODOContext(t *testing.T) {
+func TestHTTPClientWithContextPostSuccess(t *testing.T) {
 	client := NewHTTPClientWithContext(10 * time.Millisecond)
 
 	requestBodyString := `{ "name": "heimdall" }`
@@ -103,7 +103,7 @@ func TestHTTPClientWithContextPostSuccessWithTODOContext(t *testing.T) {
 	assert.Equal(t, "{ \"response\": \"ok\" }", respBody(t, response))
 }
 
-func TestHTTPClientWithContextDeleteSuccessWithTODOContext(t *testing.T) {
+func TestHTTPClientWithContextDeleteSuccess(t *testing.T) {
 	client := NewHTTPClientWithContext(10 * time.Millisecond)
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
@@ -129,7 +129,7 @@ func TestHTTPClientWithContextDeleteSuccessWithTODOContext(t *testing.T) {
 	assert.Equal(t, "{ \"response\": \"ok\" }", respBody(t, response))
 }
 
-func TestHTTPClientWithContextPutSuccessWithTODOContext(t *testing.T) {
+func TestHTTPClientWithContextPutSuccess(t *testing.T) {
 	client := NewHTTPClientWithContext(10 * time.Millisecond)
 
 	requestBodyString := `{ "name": "heimdall" }`
@@ -164,7 +164,7 @@ func TestHTTPClientWithContextPutSuccessWithTODOContext(t *testing.T) {
 	assert.Equal(t, "{ \"response\": \"ok\" }", respBody(t, response))
 }
 
-func TestHTTPClientWithContextPatchSuccessWithTODOContext(t *testing.T) {
+func TestHTTPClientWithContextPatchSuccess(t *testing.T) {
 	client := NewHTTPClientWithContext(10 * time.Millisecond)
 
 	requestBodyString := `{ "name": "heimdall" }`
