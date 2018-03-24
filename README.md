@@ -223,6 +223,25 @@ client.SetRetryCount(4)
 // The rest is the same as the first example
 ```
 
+### Support for golang context
+
+To make use of golang context, you can use the `NewHTTPClientWithContext` method. example:
+```go
+client := heimdall.NewHTTPClientWithContext(10 * time.Second)
+
+ctx, cancel := context.WithTimeout(context.Background(), 5 * time.Second)
+defer cancel()
+
+req, _ := http.NewRequest(http.MethodGet, "http://google.com", nil)
+
+response, err := client.Get(ctx, req)
+
+//use the response.
+
+```
+
+* The client returned by `NewHTTPClientWithContext` supports all methods supported by hystrix or the HTTP client.
+
 ## Documentation
 
 Further documentation can be found on [godoc.org](https://www.godoc.org/github.com/gojektech/heimdall)
