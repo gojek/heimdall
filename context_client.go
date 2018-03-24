@@ -18,6 +18,14 @@ type httpClientWithContext struct {
 	retrier    Retriable
 }
 
+func (c *httpClientWithContext) SetRetryCount(count int) {
+	c.retryCount = count
+}
+
+func (c *httpClientWithContext) SetRetrier(retrier Retriable) {
+	c.retrier = retrier
+}
+
 func (c *httpClientWithContext) Get(ctx context.Context, url string, headers http.Header) (*http.Response, error) {
 	var response *http.Response
 	request, err := http.NewRequest(http.MethodGet, url, nil)
