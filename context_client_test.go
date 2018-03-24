@@ -227,3 +227,35 @@ func TestHTTPClientWithContextFailure(t *testing.T) {
 
 	assert.Nil(t, response)
 }
+
+func TestHTTPClientWithContextFailureWhenContextTimesOut(t *testing.T) {
+	client := NewHTTPClientWithContext(10 * time.Millisecond)
+
+	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.Equal(t, r.Header.Get("Content-Type"), "application/json")
+		assert.Equal(t, r.Header.Get("Accept-Language"), "en")
+
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{ "response": "ok" }`))
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+	defer server.Close()
+
+	req, err := http.NewRequest(http.MethodGet, server.URL, nil)
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Language", "en")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
+	time.Sleep(2 * time.Second)
+
+	response, err := client.Do(ctx, req)
+
+	require.Error(t, err, "context deadline exceeded")
+
+	assert.Nil(t, response)
+}
