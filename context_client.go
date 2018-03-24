@@ -3,6 +3,7 @@ package heimdall
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -15,6 +16,18 @@ type httpClientWithContext struct {
 
 	retryCount int
 	retrier    Retriable
+}
+
+func (c *httpClientWithContext) Patch(ctx context.Context, url string, body io.Reader, headers http.Header) (*http.Response, error) {
+	var response *http.Response
+	request, err := http.NewRequest(http.MethodPatch, url, body)
+	if err != nil {
+		return response, errors.Wrap(err, "PATCH - request creation failed")
+	}
+
+	request.Header = headers
+
+	return c.Do(ctx, request)
 }
 
 func (c *httpClientWithContext) Delete(ctx context.Context, url string, headers http.Header) (*http.Response, error) {
