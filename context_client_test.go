@@ -102,3 +102,29 @@ func TestHTTPClientWithContextPostSuccessWithTODOContext(t *testing.T) {
 	assert.Equal(t, http.StatusOK, response.StatusCode)
 	assert.Equal(t, "{ \"response\": \"ok\" }", respBody(t, response))
 }
+
+func TestHTTPClientWithContextDeleteSuccessWithTODOContext(t *testing.T) {
+	client := NewHTTPClientWithContext(10 * time.Millisecond)
+
+	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodDelete, r.Method)
+		assert.Equal(t, r.Header.Get("Content-Type"), "application/json")
+		assert.Equal(t, r.Header.Get("Accept-Language"), "en")
+
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{ "response": "ok" }`))
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+	defer server.Close()
+
+	headers := http.Header{}
+	headers.Set("Content-Type", "application/json")
+	headers.Set("Accept-Language", "en")
+
+	response, err := client.Delete(context.TODO(), server.URL, headers)
+	require.NoError(t, err, "should not have failed to make a DELETE request")
+
+	assert.Equal(t, http.StatusOK, response.StatusCode)
+	assert.Equal(t, "{ \"response\": \"ok\" }", respBody(t, response))
+}
