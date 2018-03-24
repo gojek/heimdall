@@ -1,6 +1,7 @@
 package heimdall
 
 import (
+	"bytes"
 	"context"
 	"io/ioutil"
 	"net/http"
@@ -62,6 +63,41 @@ func TestHTTPClientWithContextGetSuccessWithTODOContext(t *testing.T) {
 
 	response, err := client.Get(context.TODO(), server.URL, headers)
 	require.NoError(t, err, "should not have failed to make a GET request")
+
+	assert.Equal(t, http.StatusOK, response.StatusCode)
+	assert.Equal(t, "{ \"response\": \"ok\" }", respBody(t, response))
+}
+
+func TestHTTPClientWithContextPostSuccessWithTODOContext(t *testing.T) {
+	client := NewHTTPClientWithContext(10 * time.Millisecond)
+
+	requestBodyString := `{ "name": "heimdall" }`
+
+	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodPost, r.Method)
+		assert.Equal(t, r.Header.Get("Content-Type"), "application/json")
+		assert.Equal(t, r.Header.Get("Accept-Language"), "en")
+
+		rBody, err := ioutil.ReadAll(r.Body)
+		require.NoError(t, err, "should not have failed to extract request body")
+
+		assert.Equal(t, requestBodyString, string(rBody))
+
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{ "response": "ok" }`))
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+	defer server.Close()
+
+	requestBody := bytes.NewReader([]byte(requestBodyString))
+
+	headers := http.Header{}
+	headers.Set("Content-Type", "application/json")
+	headers.Set("Accept-Language", "en")
+
+	response, err := client.Post(context.TODO(), server.URL, requestBody, headers)
+	require.NoError(t, err, "should not have failed to make a POST request")
 
 	assert.Equal(t, http.StatusOK, response.StatusCode)
 	assert.Equal(t, "{ \"response\": \"ok\" }", respBody(t, response))
