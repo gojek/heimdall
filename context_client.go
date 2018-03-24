@@ -18,14 +18,17 @@ type httpClientWithContext struct {
 	retrier    Retriable
 }
 
+// SetRetryCount sets the retry count for the httpClient
 func (c *httpClientWithContext) SetRetryCount(count int) {
 	c.retryCount = count
 }
 
+// SetRetryCount sets the retry count for the httpClient
 func (c *httpClientWithContext) SetRetrier(retrier Retriable) {
 	c.retrier = retrier
 }
 
+// Get makes a HTTP GET request to provided URL with context passed in
 func (c *httpClientWithContext) Get(ctx context.Context, url string, headers http.Header) (*http.Response, error) {
 	var response *http.Response
 	request, err := http.NewRequest(http.MethodGet, url, nil)
@@ -38,6 +41,7 @@ func (c *httpClientWithContext) Get(ctx context.Context, url string, headers htt
 	return c.Do(ctx, request)
 }
 
+// Post makes a HTTP POST request to provided URL with context passed in
 func (c *httpClientWithContext) Post(ctx context.Context, url string, body io.Reader, headers http.Header) (*http.Response, error) {
 	var response *http.Response
 	request, err := http.NewRequest(http.MethodPost, url, body)
@@ -50,6 +54,7 @@ func (c *httpClientWithContext) Post(ctx context.Context, url string, body io.Re
 	return c.Do(ctx, request)
 }
 
+// Put makes a HTTP PUT request to provided URL with context passed in
 func (c *httpClientWithContext) Put(ctx context.Context, url string, body io.Reader, headers http.Header) (*http.Response, error) {
 	var response *http.Response
 	request, err := http.NewRequest(http.MethodPut, url, body)
@@ -62,6 +67,7 @@ func (c *httpClientWithContext) Put(ctx context.Context, url string, body io.Rea
 	return c.Do(ctx, request)
 }
 
+// Patch makes a HTTP PATCH request to provided URL with context passed in
 func (c *httpClientWithContext) Patch(ctx context.Context, url string, body io.Reader, headers http.Header) (*http.Response, error) {
 	var response *http.Response
 	request, err := http.NewRequest(http.MethodPatch, url, body)
@@ -74,6 +80,7 @@ func (c *httpClientWithContext) Patch(ctx context.Context, url string, body io.R
 	return c.Do(ctx, request)
 }
 
+// Delete makes a HTTP DELETE request to provided URL with context passed in
 func (c *httpClientWithContext) Delete(ctx context.Context, url string, headers http.Header) (*http.Response, error) {
 	var response *http.Response
 	request, err := http.NewRequest(http.MethodDelete, url, nil)
@@ -86,6 +93,7 @@ func (c *httpClientWithContext) Delete(ctx context.Context, url string, headers 
 	return c.Do(ctx, request)
 }
 
+// Do makes an HTTP request with the native `http.Do` interface and context passed in
 func (c *httpClientWithContext) Do(ctx context.Context, req *http.Request) (*http.Response, error) {
 	var response *http.Response
 	var contextCancelled bool = false
