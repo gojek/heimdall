@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gojektech/valkyrie"
+	"github.com/pkg/errors"
 )
 
 type httpClientWithContext struct {
@@ -14,6 +15,18 @@ type httpClientWithContext struct {
 
 	retryCount int
 	retrier    Retriable
+}
+
+func (c *httpClientWithContext) Delete(ctx context.Context, url string, headers http.Header) (*http.Response, error) {
+	var response *http.Response
+	request, err := http.NewRequest(http.MethodDelete, url, nil)
+	if err != nil {
+		return response, errors.Wrap(err, "DELETE - request creation failed")
+	}
+
+	request.Header = headers
+
+	return c.Do(ctx, request)
 }
 
 func (c *httpClientWithContext) Do(ctx context.Context, req *http.Request) (*http.Response, error) {
