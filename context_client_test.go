@@ -199,7 +199,7 @@ func TestHTTPClientWithContextPatchSuccessWithTODOContext(t *testing.T) {
 	assert.Equal(t, "{ \"response\": \"ok\" }", respBody(t, response))
 }
 
-func TestHTTPClientWithContextFailure(t *testing.T) {
+func TestHTTPClientWithContextFailureWhenParentContextCancels(t *testing.T) {
 	client := NewHTTPClientWithContext(10 * time.Millisecond)
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
@@ -258,4 +258,39 @@ func TestHTTPClientWithContextFailureWhenContextTimesOut(t *testing.T) {
 	require.Error(t, err, "context deadline exceeded")
 
 	assert.Nil(t, response)
+}
+
+func TestHTTPClientWithContextFailureWhenContextCancelsBetweenRetries(t *testing.T) {
+	client := NewHTTPClientWithContext(10 * time.Millisecond)
+
+	count := 0
+	countWhenContextCancels := 2
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+		if count == countWhenContextCancels {
+			cancel()
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(`{ "response": "something went wrong" }`))
+		}
+		count++
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+	defer server.Close()
+
+	req, err := http.NewRequest(http.MethodGet, server.URL, nil)
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Language", "en")
+
+	client.SetRetryCount(3)
+
+	response, err := client.Do(ctx, req)
+
+	assert.Nil(t, response)
+
+	require.Error(t, err, "server error: 500, server error: 500, context canceled")
 }
