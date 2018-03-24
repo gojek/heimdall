@@ -18,6 +18,18 @@ type httpClientWithContext struct {
 	retrier    Retriable
 }
 
+func (c *httpClientWithContext) Put(ctx context.Context, url string, body io.Reader, headers http.Header) (*http.Response, error) {
+	var response *http.Response
+	request, err := http.NewRequest(http.MethodPut, url, body)
+	if err != nil {
+		return response, errors.Wrap(err, "PUT - request creation failed")
+	}
+
+	request.Header = headers
+
+	return c.Do(ctx, request)
+}
+
 func (c *httpClientWithContext) Patch(ctx context.Context, url string, body io.Reader, headers http.Header) (*http.Response, error) {
 	var response *http.Response
 	request, err := http.NewRequest(http.MethodPatch, url, body)
