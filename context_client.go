@@ -18,6 +18,18 @@ type httpClientWithContext struct {
 	retrier    Retriable
 }
 
+// NewHTTPClientWithContext returns a new instance of httpClientWithContext
+func NewHTTPClientWithContext(timeout time.Duration) ClientWithContext {
+	return &httpClientWithContext{
+		client: &http.Client{
+			Timeout: timeout,
+		},
+
+		retryCount: defaultRetryCount,
+		retrier:    NewNoRetrier(),
+	}
+}
+
 // SetRetryCount sets the retry count for the httpClient
 func (c *httpClientWithContext) SetRetryCount(count int) {
 	c.retryCount = count
@@ -96,11 +108,11 @@ func (c *httpClientWithContext) Delete(ctx context.Context, url string, headers 
 // Do makes an HTTP request with the native `http.Do` interface and context passed in
 func (c *httpClientWithContext) Do(ctx context.Context, req *http.Request) (*http.Response, error) {
 	var response *http.Response
-	var contextCancelled bool = false
 
 	multiErr := &valkyrie.MultiError{}
 
 	for i := 0; i <= c.retryCount; i++ {
+		contextCancelled := false
 		var err error
 		response, err = c.client.Do(req.WithContext(ctx))
 		if err != nil {
