@@ -338,8 +338,7 @@ type myHTTPClient struct {
 
 func (c *myHTTPClient) Do(request *http.Request) (*http.Response, error) {
 	request.Header.Set("foo", "bar")
-	response, err := c.client.Do(request)
-	return response, err
+	return c.client.Do(request)
 }
 
 func TestCustomHTTPClientHeaderSuccess(t *testing.T) {
