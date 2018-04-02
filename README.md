@@ -223,6 +223,40 @@ client.SetRetryCount(4)
 // The rest is the same as the first example
 ```
 
+### Custom HTTP clients
+
+Heimdall supports custom HTTP clients. This is useful if you are using a client imported from another library and/or wish to implement custom logging, cookies, headers etc for each request that you make with your client.
+
+Under the hood, the `httpClient` struct now accepts `Doer`, which is the standard interface implemented by HTTP clients (including the standard library's `net/*http.Client`)
+
+Let's say we wish to add authorization headers to all our requests.
+
+We can define our client `myHTTPClient`
+
+```go
+type myHTTPClient struct {
+	client http.Client
+}
+
+func (c *myHTTPClient) Do(request *http.Request) (*http.Response, error) {
+	request.SetBasicAuth("username", "passwd")
+	return c.client.Do(request)
+}
+```
+
+And set this with `httpClient.SetCustomHTTPClient(&myHTTPClient{client: http.DefaultClient})`
+
+Now, each sent request will have the `Authorization` header to use HTTP basic authentication with the provided username and password.
+
+This can be done for the hystrix client as well
+
+```
+hystrixClient.SetCustomHTTPClient(&myHTTPClient{
+    client: http.Client{Timeout: 25 * time.Millisecond}})
+
+// The rest is the same as the first example
+```
+
 ## Documentation
 
 Further documentation can be found on [godoc.org](https://www.godoc.org/github.com/gojektech/heimdall)
