@@ -5,6 +5,12 @@ import (
 	"net/http"
 )
 
+// Doer interface has the method required to use a type as custom http client.
+// The net/*http.Client type satisfies this interface.
+type Doer interface {
+	Do(*http.Request) (*http.Response, error)
+}
+
 // Client Is a generic HTTP client interface
 type Client interface {
 	Get(url string, headers http.Header) (*http.Response, error)
@@ -16,4 +22,5 @@ type Client interface {
 
 	SetRetryCount(count int)
 	SetRetrier(retrier Retriable)
+	SetCustomHTTPClient(customHTTPClient Doer)
 }

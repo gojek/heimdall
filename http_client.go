@@ -13,7 +13,7 @@ import (
 const defaultRetryCount int = 0
 
 type httpClient struct {
-	client *http.Client
+	client Doer
 
 	retryCount int
 	retrier    Retriable
@@ -34,6 +34,11 @@ func NewHTTPClient(timeout time.Duration) Client {
 // SetRetryCount sets the retry count for the httpClient
 func (c *httpClient) SetRetryCount(count int) {
 	c.retryCount = count
+}
+
+// SetCustomHTTPClient sets custom HTTP client
+func (c *httpClient) SetCustomHTTPClient(customHTTPClient Doer) {
+	c.client = customHTTPClient
 }
 
 // SetRetrier sets the strategy for retrying

@@ -332,6 +332,41 @@ func TestHTTPClientGetReturnsErrorOn5xxFailure(t *testing.T) {
 	assert.Equal(t, "server error: 500", err.Error())
 }
 
+type myHTTPClient struct {
+	client http.Client
+}
+
+func (c *myHTTPClient) Do(request *http.Request) (*http.Response, error) {
+	request.Header.Set("foo", "bar")
+	return c.client.Do(request)
+}
+
+func TestCustomHTTPClientHeaderSuccess(t *testing.T) {
+	client := NewHTTPClient(10 * time.Millisecond)
+
+	client.SetCustomHTTPClient(&myHTTPClient{
+		client: http.Client{Timeout: 25 * time.Millisecond}})
+
+	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, r.Header.Get("foo"), "bar")
+		assert.NotEqual(t, r.Header.Get("foo"), "baz")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{ "response": "ok" }`))
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+	defer server.Close()
+
+	req, err := http.NewRequest(http.MethodGet, server.URL, nil)
+	require.NoError(t, err)
+	response, err := client.Do(req)
+	assert.Equal(t, http.StatusOK, response.StatusCode)
+
+	body, err := ioutil.ReadAll(response.Body)
+	require.NoError(t, err)
+	assert.Equal(t, "{ \"response\": \"ok\" }", string(body))
+}
+
 func respBody(t *testing.T, response *http.Response) string {
 	if response.Body != nil {
 		defer response.Body.Close()
