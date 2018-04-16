@@ -24,3 +24,14 @@ func TestRetrierWithConstantBackoff(t *testing.T) {
 
 	assert.True(t, 2*time.Millisecond <= constantRetrier.NextInterval(1))
 }
+
+func TestRetrierFunc(t *testing.T) {
+	linearRetrier := NewRetrierFunc(func(retry int) time.Duration {
+		if retry <= 0 {
+			return 0 * time.Millisecond
+		}
+		return time.Duration(retry) * time.Millisecond
+	})
+
+	assert.True(t, 3*time.Millisecond <= linearRetrier.NextInterval(4))
+}

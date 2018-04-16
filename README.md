@@ -223,6 +223,21 @@ client.SetRetryCount(4)
 // The rest is the same as the first example
 ```
 
+Heimdall also allows you to simply pass a function that returns the retry timeout. This can be used to create the client, like:
+```go
+linearRetrier := NewRetrierFunc(func(retry int) time.Duration {
+	if retry <= 0 {
+		return 0 * time.Millisecond
+	}
+	return time.Duration(retry) * time.Millisecond
+})
+
+timeout := 1000 * time.Millisecond
+client := heimdall.NewHTTPClient(timeout)
+client.SetRetrier(linearRetrier)
+client.SetRetryCount(4)
+```
+
 ### Custom HTTP clients
 
 Heimdall supports custom HTTP clients. This is useful if you are using a client imported from another library and/or wish to implement custom logging, cookies, headers etc for each request that you make with your client.
