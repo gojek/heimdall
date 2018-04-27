@@ -51,7 +51,7 @@ func (hhc *hystrixHTTPClient) SetRetrier(retrier Retriable) {
 	hhc.retrier = retrier
 }
 
-// SetRetrier sets the strategy for retrying
+// SetCustomHTTPClient sets custom HTTP client
 func (hhc *hystrixHTTPClient) SetCustomHTTPClient(customHTTPClient Doer) {
 	hhc.client = customHTTPClient
 }
