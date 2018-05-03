@@ -1,4 +1,4 @@
-package heimdall
+package hystrix
 
 import (
 	"fmt"
@@ -7,57 +7,61 @@ import (
 	"time"
 
 	"github.com/afex/hystrix-go/hystrix"
-
+	"github.com/gojektech/heimdall"
 	"github.com/pkg/errors"
 )
 
+type fallbackFunc func(error) error
+
+type Client struct {
+	client heimdall.Doer
+
+	timeout                time.Duration
+	hystrixTimeout         time.Duration
+	hystrixCommandName     string
+	maxConcurrentRequests  int
+	requestVolumeThreshold int
+	sleepWindow            int
+	errorPercentThreshold  int
+	retryCount             int
+	retrier                heimdall.Retriable
+	fallbackFunc           func(err error) error
+}
+
 const defaultHystrixRetryCount int = 0
 
-type hystrixHTTPClient struct {
-	client Doer
+var _ heimdall.Client = (*Client)(nil)
 
-	hystrixCommandName string
-
-	retryCount   int
-	retrier      Retriable
-	fallbackFunc func(err error) error
-}
-
-// NewHystrixHTTPClient returns a new instance of HystrixHTTPClient
-func NewHystrixHTTPClient(timeout time.Duration, hystrixConfig HystrixConfig) Client {
-	httpClient := &http.Client{
-		Timeout: timeout,
+// NewClient returns a new instance of Client
+func NewClient(opts ...Option) *Client {
+	client := Client{
+		retryCount: defaultHystrixRetryCount,
+		retrier:    heimdall.NewNoRetrier(),
 	}
 
-	hystrix.ConfigureCommand(hystrixConfig.commandName, hystrixConfig.commandConfig)
-
-	return &hystrixHTTPClient{
-		client: httpClient,
-
-		retryCount:         defaultHystrixRetryCount,
-		retrier:            NewNoRetrier(),
-		hystrixCommandName: hystrixConfig.commandName,
-		fallbackFunc:       hystrixConfig.fallbackFunc,
+	for _, opt := range opts {
+		opt(&client)
 	}
-}
 
-// SetRetryCount sets the retry count for the hystrixHTTPClient
-func (hhc *hystrixHTTPClient) SetRetryCount(count int) {
-	hhc.retryCount = count
-}
+	if client.client == nil {
+		client.client = &http.Client{
+			Timeout: client.timeout,
+		}
+	}
 
-// SetRetrier sets the strategy for retrying
-func (hhc *hystrixHTTPClient) SetRetrier(retrier Retriable) {
-	hhc.retrier = retrier
-}
+	hystrix.ConfigureCommand(client.hystrixCommandName, hystrix.CommandConfig{
+		Timeout:                int(client.hystrixTimeout),
+		MaxConcurrentRequests:  client.maxConcurrentRequests,
+		RequestVolumeThreshold: client.requestVolumeThreshold,
+		SleepWindow:            client.sleepWindow,
+		ErrorPercentThreshold:  client.errorPercentThreshold,
+	})
 
-// SetRetrier sets the strategy for retrying
-func (hhc *hystrixHTTPClient) SetCustomHTTPClient(customHTTPClient Doer) {
-	hhc.client = customHTTPClient
+	return &client
 }
 
 // Get makes a HTTP GET request to provided URL
-func (hhc *hystrixHTTPClient) Get(url string, headers http.Header) (*http.Response, error) {
+func (hhc *Client) Get(url string, headers http.Header) (*http.Response, error) {
 	var response *http.Response
 	request, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -70,7 +74,7 @@ func (hhc *hystrixHTTPClient) Get(url string, headers http.Header) (*http.Respon
 }
 
 // Post makes a HTTP POST request to provided URL and requestBody
-func (hhc *hystrixHTTPClient) Post(url string, body io.Reader, headers http.Header) (*http.Response, error) {
+func (hhc *Client) Post(url string, body io.Reader, headers http.Header) (*http.Response, error) {
 	var response *http.Response
 	request, err := http.NewRequest(http.MethodPost, url, body)
 	if err != nil {
@@ -83,7 +87,7 @@ func (hhc *hystrixHTTPClient) Post(url string, body io.Reader, headers http.Head
 }
 
 // Put makes a HTTP PUT request to provided URL and requestBody
-func (hhc *hystrixHTTPClient) Put(url string, body io.Reader, headers http.Header) (*http.Response, error) {
+func (hhc *Client) Put(url string, body io.Reader, headers http.Header) (*http.Response, error) {
 	var response *http.Response
 	request, err := http.NewRequest(http.MethodPut, url, body)
 	if err != nil {
@@ -96,7 +100,7 @@ func (hhc *hystrixHTTPClient) Put(url string, body io.Reader, headers http.Heade
 }
 
 // Patch makes a HTTP PATCH request to provided URL and requestBody
-func (hhc *hystrixHTTPClient) Patch(url string, body io.Reader, headers http.Header) (*http.Response, error) {
+func (hhc *Client) Patch(url string, body io.Reader, headers http.Header) (*http.Response, error) {
 	var response *http.Response
 	request, err := http.NewRequest(http.MethodPatch, url, body)
 	if err != nil {
@@ -109,7 +113,7 @@ func (hhc *hystrixHTTPClient) Patch(url string, body io.Reader, headers http.Hea
 }
 
 // Delete makes a HTTP DELETE request with provided URL
-func (hhc *hystrixHTTPClient) Delete(url string, headers http.Header) (*http.Response, error) {
+func (hhc *Client) Delete(url string, headers http.Header) (*http.Response, error) {
 	var response *http.Response
 	request, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
@@ -122,7 +126,7 @@ func (hhc *hystrixHTTPClient) Delete(url string, headers http.Header) (*http.Res
 }
 
 // Do makes an HTTP request with the native `http.Do` interface
-func (hhc *hystrixHTTPClient) Do(request *http.Request) (*http.Response, error) {
+func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
 	request.Close = true
 
 	var response *http.Response
