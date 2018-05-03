@@ -41,7 +41,7 @@ The below example will print the contents of the google home page:
 ```go
 // Create a new HTTP client with a default timeout
 timeout := 1000 * time.Millisecond
-client := heimdall.NewHTTPClient(timeout)
+client := httpclient.NewClient(httpclient.WithTimeout(timeout))
 
 // Use the clients GET method to create and execute the request
 res, err := client.Get("http://google.com", nil)
@@ -58,7 +58,7 @@ You can also use the `*http.Request` object with the `http.Do` interface :
 
 ```go
 timeout := 1000 * time.Millisecond
-client := heimdall.NewHTTPClient(timeout)
+client := httpclient.NewClient(httpclient.WithTimeout(timeout))
 
 // Create an http.Request instance
 req, _ := http.NewRequest(http.MethodGet, "http://google.com", nil)
@@ -74,18 +74,17 @@ fmt.Println(string(body))
 
 ### Creating a hystrix-like circuit breaker
 
-You can use the `NewHystrixHTTPClient` function to create a client wrapped in a hystrix-like circuit breaker:
+You can use the `hystrix.NewClient` function to create a client wrapped in a hystrix-like circuit breaker:
 
 ```go
-// Create a new hystrix config, and input the command name, along with other required options
-hystrixConfig := heimdall.NewHystrixConfig("google_get_request", heimdall.HystrixCommandConfig{
-    ErrorPercentThreshold : 20,
-    MaxConcurrentRequests: 30,
-    Timeout: 1000,
+// Create a new hystrix-wrapped HTTP client with the command name, along with other required options
+client := hystrix.NewClient(
+	hystrix.WithTimeout(10 * time.Millisecond),
+	hystrix.WithCommandName("google_get_request"),
+	hystrix.WithHystrixTimeout(1000),
+	hystrix.WithMaxConcurrentRequests(30),
+	hystrix.WithErrorPercentThreshold(20),
 })
-timeout := 10 * time.Millisecond
-// Create a new hystrix-wrapped HTTP client
-client := heimdall.NewHystrixHTTPClient(timeout, hystrixConfig)
 
 // The rest is the same as the previous example
 ```
@@ -94,7 +93,7 @@ In the above example, there are two timeout values used: one for the hystrix con
 
 ### Creating a hystrix-like circuit breaker with fallbacks
 
-You can use the `NewHystrixHTTPClient` function to create a client wrapped in a hystrix-like circuit breaker by passing in your own custom fallbacks:
+You can use the `hystrix.NewClient` function to create a client wrapped in a hystrix-like circuit breaker by passing in your own custom fallbacks:
 
 The fallback function will trigger when your code returns an error, or whenever it is unable to complete based on a variety of [health checks](https://github.com/Netflix/Hystrix/wiki/How-it-Works).
 
@@ -118,18 +117,19 @@ fallbackFn := func(err error) error {
     return err
 }
 
-hystrixConfig := heimdall.NewHystrixConfig("MyCommand", heimdall.HystrixCommandConfig{
-	Timeout:                1100,
-	MaxConcurrentRequests:  100,
-	ErrorPercentThreshold:  25,
-	SleepWindow:            10,
-	RequestVolumeThreshold: 10,
-	FallbackFunc: fallbackFn,
-})
-
 timeout := 10 * time.Millisecond
+
 // Create a new hystrix-wrapped HTTP client with the fallbackFunc as fall-back function
-client := heimdall.NewHystrixHTTPClient(timeout, hystrixConfig)
+client := hystrix.NewClient(
+	hystrix.WithTimeout(timeout),
+	hystrix.WithCommandName("MyCommand"),
+	hystrix.WithHystrixTimeout(1100),
+	hystrix.WithMaxConcurrentRequests(100),
+	hystrix.WithErrorPercentThreshold(20),
+	hystrix.WithSleepWindow(10),
+	hystrixWithRequestVolumeThreshold(10),
+	hystrix.WithFallbackFunc(fallbackFn),
+})
 
 // The rest is the same as the previous example
 ```
@@ -149,10 +149,12 @@ backoff := heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval)
 retrier := heimdall.NewRetrier(backoff)
 
 timeout := 1000 * time.Millisecond
-client := heimdall.NewHTTPClient(timeout)
-// Set the retry mechanism for the client, and the number of times you would like to retry
-client.SetRetrier(retrier)
-client.SetRetryCount(4)
+// Create a new client, sets the retry mechanism, and the number of times you would like to retry
+client := httpclient.NewClient(
+	httpclient.WithTimeout(timeout),
+	httpclient.WithRetrier(retrier),
+	httpclient.WithRetryCount(4),
+)
 
 // The rest is the same as the first example
 ```
@@ -172,10 +174,12 @@ backoff := heimdall.NewExponentialBackoff(initalTimeout, maxTimeout, exponentFac
 retrier := heimdall.NewRetrier(backoff)
 
 timeout := 1000 * time.Millisecond
-client := heimdall.NewHTTPClient(timeout)
-// Set the retry mechanism for the client, and the number of times you would like to retry
-client.SetRetrier(retrier)
-client.SetRetryCount(4)
+// Create a new client, sets the retry mechanism, and the number of times you would like to retry
+client := httpclient.NewClient(
+	httpclient.WithTimeout(timeout),
+	httpclient.WithRetrier(retrier),
+	httpclient.WithRetryCount(4),
+)
 
 // The rest is the same as the first example
 ```
@@ -216,9 +220,12 @@ backoff := &linearBackoff{100}
 retrier := heimdall.NewRetrier(backoff)
 
 timeout := 1000 * time.Millisecond
-client := heimdall.NewHTTPClient(timeout)
-client.SetRetrier(retrier)
-client.SetRetryCount(4)
+// Create a new client, sets the retry mechanism, and the number of times you would like to retry
+client := httpclient.NewClient(
+	httpclient.WithTimeout(timeout),
+	httpclient.WithRetrier(retrier),
+	httpclient.WithRetryCount(4),
+)
 
 // The rest is the same as the first example
 ```
@@ -233,9 +240,11 @@ linearRetrier := NewRetrierFunc(func(retry int) time.Duration {
 })
 
 timeout := 1000 * time.Millisecond
-client := heimdall.NewHTTPClient(timeout)
-client.SetRetrier(linearRetrier)
-client.SetRetryCount(4)
+client := httpclient.NewClient(
+	httpclient.WithTimeout(timeout),
+	httpclient.WithRetrier(linearRetrier),
+	httpclient.WithRetryCount(4),
+)
 ```
 
 ### Custom HTTP clients
@@ -259,15 +268,19 @@ func (c *myHTTPClient) Do(request *http.Request) (*http.Response, error) {
 }
 ```
 
-And set this with `httpClient.SetCustomHTTPClient(&myHTTPClient{client: http.DefaultClient})`
+And set this with `httpclient.NewClient(httpclient.NewClient&myHTTPClient{client: http.DefaultClient}))`
 
 Now, each sent request will have the `Authorization` header to use HTTP basic authentication with the provided username and password.
 
 This can be done for the hystrix client as well
 
 ```
-hystrixClient.SetCustomHTTPClient(&myHTTPClient{
-    client: http.Client{Timeout: 25 * time.Millisecond}})
+client := httpclient.NewClient(
+	httpclient.NewClient(&myHTTPClient{
+    		client: http.Client{Timeout: 25 * time.Millisecond}
+		}
+	)
+)
 
 // The rest is the same as the first example
 ```
