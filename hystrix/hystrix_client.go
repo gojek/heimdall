@@ -13,6 +13,7 @@ import (
 
 type fallbackFunc func(error) error
 
+// Client is the hystrix client implementation
 type Client struct {
 	client heimdall.Doer
 
@@ -32,7 +33,7 @@ const defaultHystrixRetryCount int = 0
 
 var _ heimdall.Client = (*Client)(nil)
 
-// NewClient returns a new instance of Client
+// NewClient returns a new instance of hystrix Client
 func NewClient(opts ...Option) *Client {
 	client := Client{
 		retryCount: defaultHystrixRetryCount,

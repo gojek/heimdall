@@ -11,6 +11,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Client is the http client implementation
 type Client struct {
 	client heimdall.Doer
 
@@ -23,7 +24,7 @@ const defaultRetryCount int = 0
 
 var _ heimdall.Client = (*Client)(nil)
 
-// NewClient returns a new instance of HTTPClient
+// NewClient returns a new instance of http Client
 func NewClient(opts ...Option) *Client {
 	client := Client{
 		retryCount: defaultRetryCount,
