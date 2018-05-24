@@ -1,6 +1,6 @@
 # Heimdall
 
-<p align="center"><img src="doc/logo.png" width="360"></p>
+<p align="center"><img src="doc/heimdall-logo.png" width="360"></p>
 <p align="center">
   <a href="https://travis-ci.org/gojektech/heimdall"><img src="https://travis-ci.org/gojektech/heimdall.svg?branch=master" alt="Build Status"></img></a>
   <a href="https://goreportcard.com/report/github.com/gojektech/heimdall"><img src="https://goreportcard.com/badge/github.com/gojektech/heimdall"></img></a>
