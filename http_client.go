@@ -6,6 +6,9 @@ import (
 	"net/http"
 	"time"
 
+	"bytes"
+	"io/ioutil"
+
 	"github.com/gojektech/valkyrie"
 	"github.com/pkg/errors"
 )
@@ -115,11 +118,24 @@ func (c *httpClient) Delete(url string, headers http.Header) (*http.Response, er
 func (c *httpClient) Do(request *http.Request) (*http.Response, error) {
 	request.Close = true
 
+	var reqBuffer []byte
+
+	if request != nil && request.Body != nil {
+		var err error
+
+		// Storing request buffer to create new reader on each request
+		reqBuffer, err = ioutil.ReadAll(request.Body)
+
+		if err != nil {
+			return nil, err
+		}
+	}
 	multiErr := &valkyrie.MultiError{}
 	var response *http.Response
 
 	for i := 0; i <= c.retryCount; i++ {
 		var err error
+		request.Body = ioutil.NopCloser(bytes.NewBuffer(reqBuffer))
 		response, err = c.client.Do(request)
 		if err != nil {
 			multiErr.Push(err.Error())
