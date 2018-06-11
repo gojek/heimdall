@@ -16,8 +16,7 @@ import (
 const defaultRetryCount int = 0
 
 type httpClient struct {
-	client Doer
-
+	client     Doer
 	retryCount int
 	retrier    Retriable
 }
@@ -28,7 +27,6 @@ func NewHTTPClient(timeout time.Duration) Client {
 		client: &http.Client{
 			Timeout: timeout,
 		},
-
 		retryCount: defaultRetryCount,
 		retrier:    NewNoRetrier(),
 	}
@@ -51,66 +49,51 @@ func (c *httpClient) SetRetrier(retrier Retriable) {
 
 // Get makes a HTTP GET request to provided URL
 func (c *httpClient) Get(url string, headers http.Header) (*http.Response, error) {
-	var response *http.Response
 	request, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return response, errors.Wrap(err, "GET - request creation failed")
+		return nil, errors.Wrap(err, "GET - request creation failed")
 	}
-
 	request.Header = headers
-
 	return c.Do(request)
 }
 
 // Post makes a HTTP POST request to provided URL and requestBody
 func (c *httpClient) Post(url string, body io.Reader, headers http.Header) (*http.Response, error) {
-	var response *http.Response
 	request, err := http.NewRequest(http.MethodPost, url, body)
 	if err != nil {
-		return response, errors.Wrap(err, "POST - request creation failed")
+		return nil, errors.Wrap(err, "POST - request creation failed")
 	}
-
 	request.Header = headers
-
 	return c.Do(request)
 }
 
 // Put makes a HTTP PUT request to provided URL and requestBody
 func (c *httpClient) Put(url string, body io.Reader, headers http.Header) (*http.Response, error) {
-	var response *http.Response
 	request, err := http.NewRequest(http.MethodPut, url, body)
 	if err != nil {
-		return response, errors.Wrap(err, "PUT - request creation failed")
+		return nil, errors.Wrap(err, "PUT - request creation failed")
 	}
-
 	request.Header = headers
-
 	return c.Do(request)
 }
 
 // Patch makes a HTTP PATCH request to provided URL and requestBody
 func (c *httpClient) Patch(url string, body io.Reader, headers http.Header) (*http.Response, error) {
-	var response *http.Response
 	request, err := http.NewRequest(http.MethodPatch, url, body)
 	if err != nil {
-		return response, errors.Wrap(err, "PATCH - request creation failed")
+		return nil, errors.Wrap(err, "PATCH - request creation failed")
 	}
-
 	request.Header = headers
-
 	return c.Do(request)
 }
 
 // Delete makes a HTTP DELETE request with provided URL
 func (c *httpClient) Delete(url string, headers http.Header) (*http.Response, error) {
-	var response *http.Response
 	request, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
-		return response, errors.Wrap(err, "DELETE - request creation failed")
+		return nil, errors.Wrap(err, "DELETE - request creation failed")
 	}
-
 	request.Header = headers
-
 	return c.Do(request)
 }
 
@@ -119,24 +102,18 @@ func (c *httpClient) Do(request *http.Request) (*http.Response, error) {
 	request.Close = true
 
 	var reqBuffer []byte
-
 	if request != nil && request.Body != nil {
 		var err error
-
 		// Storing request buffer to create new reader on each request
 		reqBuffer, err = ioutil.ReadAll(request.Body)
-
 		if err != nil {
 			return nil, err
 		}
 	}
 	multiErr := &valkyrie.MultiError{}
-	var response *http.Response
-
 	for i := 0; i <= c.retryCount; i++ {
-		var err error
 		request.Body = ioutil.NopCloser(bytes.NewBuffer(reqBuffer))
-		response, err = c.client.Do(request)
+		response, err := c.client.Do(request)
 		if err != nil {
 			multiErr.Push(err.Error())
 
@@ -144,7 +121,6 @@ func (c *httpClient) Do(request *http.Request) (*http.Response, error) {
 			time.Sleep(backoffTime)
 			continue
 		}
-
 		if response.StatusCode >= http.StatusInternalServerError {
 			multiErr.Push(fmt.Sprintf("server error: %d", response.StatusCode))
 
@@ -152,10 +128,7 @@ func (c *httpClient) Do(request *http.Request) (*http.Response, error) {
 			time.Sleep(backoffTime)
 			continue
 		}
-
-		multiErr = &valkyrie.MultiError{} // Clear errors if any iteration succeeds
-		break
+		return response, nil
 	}
-
-	return response, multiErr.HasError()
+	return nil, multiErr
 }

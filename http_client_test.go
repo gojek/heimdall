@@ -224,8 +224,7 @@ func TestHTTPClientGetRetriesOnFailure(t *testing.T) {
 	response, err := client.Get(server.URL, http.Header{})
 	require.Error(t, err, "should have failed to make GET request")
 
-	require.Equal(t, http.StatusInternalServerError, response.StatusCode)
-	require.Equal(t, "{ \"response\": \"something went wrong\" }", respBody(t, response))
+	require.Nil(t, response)
 
 	assert.Equal(t, noOfCalls, count)
 }
@@ -255,8 +254,7 @@ func TestHTTPClientGetReturnsAllErrorsIfRetriesFail(t *testing.T) {
 	require.Error(t, err, "should have failed to make GET request")
 
 	require.Equal(t, noOfRetries+1, count)
-	require.Equal(t, http.StatusInternalServerError, response.StatusCode)
-	require.Equal(t, "{ \"response\": \"something went wrong\" }", respBody(t, response))
+	require.Nil(t, response)
 
 	assert.Equal(t, "server error: 500, server error: 500, server error: 500", err.Error())
 }
@@ -327,7 +325,7 @@ func TestHTTPClientGetReturnsErrorOn5xxFailure(t *testing.T) {
 	response, err := client.Get(server.URL, http.Header{})
 	require.Error(t, err, "should have failed to make GET request")
 
-	require.Equal(t, http.StatusInternalServerError, response.StatusCode)
+	require.Nil(t, response)
 
 	assert.Equal(t, "server error: 500", err.Error())
 }
