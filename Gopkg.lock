@@ -9,13 +9,18 @@
     "hystrix/metric_collector",
     "hystrix/rolling"
   ]
-  revision = "27fae8d30f1a3cbcab6618d2ee55a4cb43064376"
+  revision = "fa1af6a1f4f56e0e50d427fe901cd604d8c6fb8a"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
   version = "v1.1.0"
+
+[[projects]]
+  name = "github.com/gojektech/heimdall"
+  packages = ["."]
+  revision = "6494102a6392a7ba66522eae2f6d791ed9deb23b"
 
 [[projects]]
   name = "github.com/gojektech/valkyrie"
@@ -41,12 +46,12 @@
     "assert",
     "require"
   ]
-  revision = "12b6f73e6084dad08a7c6e575284b177ecafbc71"
-  version = "v1.2.1"
+  revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
+  version = "v1.2.2"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f35486b6fb6316814979c379328f343aa0ccf2ddb2cfa764768d583285375c4d"
+  inputs-digest = "1828b3a6dcb39beaf9164552dbfd8c54f892f7f67d59fb78ba03169617158f28"
   solver-name = "gps-cdcl"
   solver-version = 1
