@@ -312,8 +312,7 @@ func TestHystrixHTTPClientRetriesOnFailure(t *testing.T) {
 
 	assert.Equal(t, 4, count)
 
-	assert.Equal(t, http.StatusInternalServerError, response.StatusCode)
-	assert.Equal(t, "{ \"response\": \"something went wrong\" }", respBody(t, response))
+	require.Nil(t, response)
 }
 
 func TestHystrixHTTPClientReturnsFallbackFailureWithoutFallBackFunction(t *testing.T) {
