@@ -150,7 +150,6 @@ func (c *httpClient) Do(request *http.Request) (*http.Response, error) {
 
 			backoffTime := c.retrier.NextInterval(i)
 			time.Sleep(backoffTime)
-			fmt.Println("R: ", response.StatusCode)
 			continue
 		}
 
