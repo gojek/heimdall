@@ -304,15 +304,18 @@ func TestHystrixHTTPClientRetriesOnFailure(t *testing.T) {
 	backoffInterval := 1 * time.Millisecond
 	maximumJitterInterval := 1 * time.Millisecond
 
-	client.SetRetryCount(3)
+	noOfRetries := 3
+	client.SetRetryCount(noOfRetries)
 	client.SetRetrier(NewRetrier(NewConstantBackoff(backoffInterval, maximumJitterInterval)))
 
 	response, err := client.Get(server.URL, http.Header{})
 	require.Error(t, err)
 
-	assert.Equal(t, 4, count)
+	assert.Equal(t, noOfRetries+1, count)
 
 	require.Nil(t, response)
+
+	assert.Equal(t, "server error: 500, server error: 500, server error: 500, server error: 500", err.Error())
 }
 
 func TestHystrixHTTPClientReturnsFallbackFailureWithoutFallBackFunction(t *testing.T) {
