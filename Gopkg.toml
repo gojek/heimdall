@@ -42,8 +42,8 @@
   version = "1.1.4"
 
 [[constraint]]
+  branch = "master"
   name = "github.com/gojektech/heimdall"
-  revision = "6494102a6392a7ba66522eae2f6d791ed9deb23b"
 
 [prune]
   go-tests = true

@@ -18,6 +18,7 @@
   version = "v1.1.0"
 
 [[projects]]
+  branch = "master"
   name = "github.com/gojektech/heimdall"
   packages = ["."]
   revision = "6494102a6392a7ba66522eae2f6d791ed9deb23b"
@@ -52,6 +53,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "1828b3a6dcb39beaf9164552dbfd8c54f892f7f67d59fb78ba03169617158f28"
+  inputs-digest = "fd7e3659cc1d2659b98edde203c5cb564c38ff442f4efa28447ab3f0df1fe1c1"
   solver-name = "gps-cdcl"
   solver-version = 1
