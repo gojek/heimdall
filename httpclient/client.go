@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"io/ioutil"
 
+	"github.com/gojektech/heimdall"
 	"github.com/gojektech/valkyrie"
 	"github.com/pkg/errors"
 )
