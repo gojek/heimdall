@@ -18,8 +18,8 @@ func TestHTTPClientDoSuccess(t *testing.T) {
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
-		assert.Equal(t, r.Header.Get("Content-Type"), "application/json")
-		assert.Equal(t, r.Header.Get("Accept-Language"), "en")
+		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+		assert.Equal(t, "en", r.Header.Get("Accept-Language"))
 
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{ "response": "ok" }`))
@@ -47,8 +47,8 @@ func TestHTTPClientGetSuccess(t *testing.T) {
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
-		assert.Equal(t, r.Header.Get("Content-Type"), "application/json")
-		assert.Equal(t, r.Header.Get("Accept-Language"), "en")
+		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+		assert.Equal(t, "en", r.Header.Get("Accept-Language"))
 
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{ "response": "ok" }`))
@@ -75,8 +75,8 @@ func TestHTTPClientPostSuccess(t *testing.T) {
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodPost, r.Method)
-		assert.Equal(t, r.Header.Get("Content-Type"), "application/json")
-		assert.Equal(t, r.Header.Get("Accept-Language"), "en")
+		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+		assert.Equal(t, "en", r.Header.Get("Accept-Language"))
 
 		rBody, err := ioutil.ReadAll(r.Body)
 		require.NoError(t, err, "should not have failed to extract request body")
@@ -108,8 +108,8 @@ func TestHTTPClientDeleteSuccess(t *testing.T) {
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodDelete, r.Method)
-		assert.Equal(t, r.Header.Get("Content-Type"), "application/json")
-		assert.Equal(t, r.Header.Get("Accept-Language"), "en")
+		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+		assert.Equal(t, "en", r.Header.Get("Accept-Language"))
 
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{ "response": "ok" }`))
@@ -136,8 +136,8 @@ func TestHTTPClientPutSuccess(t *testing.T) {
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodPut, r.Method)
-		assert.Equal(t, r.Header.Get("Content-Type"), "application/json")
-		assert.Equal(t, r.Header.Get("Accept-Language"), "en")
+		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+		assert.Equal(t, "en", r.Header.Get("Accept-Language"))
 
 		rBody, err := ioutil.ReadAll(r.Body)
 		require.NoError(t, err, "should not have failed to extract request body")
@@ -171,8 +171,8 @@ func TestHTTPClientPatchSuccess(t *testing.T) {
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodPatch, r.Method)
-		assert.Equal(t, r.Header.Get("Content-Type"), "application/json")
-		assert.Equal(t, r.Header.Get("Accept-Language"), "en")
+		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+		assert.Equal(t, "en", r.Header.Get("Accept-Language"))
 
 		rBody, err := ioutil.ReadAll(r.Body)
 		require.NoError(t, err, "should not have failed to extract request body")
@@ -349,8 +349,8 @@ func TestCustomHTTPClientHeaderSuccess(t *testing.T) {
 	)
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, r.Header.Get("foo"), "bar")
-		assert.NotEqual(t, r.Header.Get("foo"), "baz")
+		assert.Equal(t, "bar", r.Header.Get("foo"))
+		assert.NotEqual(t, "baz", r.Header.Get("foo"))
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{ "response": "ok" }`))
 	}
