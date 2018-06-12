@@ -34,8 +34,8 @@ func TestHystrixHTTPClientDoSuccess(t *testing.T) {
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
-		assert.Equal(t, r.Header.Get("Content-Type"), "application/json")
-		assert.Equal(t, r.Header.Get("Accept-Language"), "en")
+		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+		assert.Equal(t, "en", r.Header.Get("Accept-Language"))
 
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{ "response": "ok" }`))
@@ -75,8 +75,8 @@ func TestHystrixHTTPClientGetSuccess(t *testing.T) {
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
-		assert.Equal(t, r.Header.Get("Content-Type"), "application/json")
-		assert.Equal(t, r.Header.Get("Accept-Language"), "en")
+		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+		assert.Equal(t, "en", r.Header.Get("Accept-Language"))
 
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{ "response": "ok" }`))
@@ -115,8 +115,8 @@ func TestHystrixHTTPClientPostSuccess(t *testing.T) {
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodPost, r.Method)
-		assert.Equal(t, r.Header.Get("Content-Type"), "application/json")
-		assert.Equal(t, r.Header.Get("Accept-Language"), "en")
+		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+		assert.Equal(t, "en", r.Header.Get("Accept-Language"))
 
 		rBody, err := ioutil.ReadAll(r.Body)
 		require.NoError(t, err, "should not have failed to extract request body")
@@ -160,8 +160,8 @@ func TestHystrixHTTPClientDeleteSuccess(t *testing.T) {
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodDelete, r.Method)
-		assert.Equal(t, r.Header.Get("Content-Type"), "application/json")
-		assert.Equal(t, r.Header.Get("Accept-Language"), "en")
+		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+		assert.Equal(t, "en", r.Header.Get("Accept-Language"))
 
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{ "response": "ok" }`))
@@ -200,8 +200,8 @@ func TestHystrixHTTPClientPutSuccess(t *testing.T) {
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodPut, r.Method)
-		assert.Equal(t, r.Header.Get("Content-Type"), "application/json")
-		assert.Equal(t, r.Header.Get("Accept-Language"), "en")
+		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+		assert.Equal(t, "en", r.Header.Get("Accept-Language"))
 
 		rBody, err := ioutil.ReadAll(r.Body)
 		require.NoError(t, err, "should not have failed to extract request body")
@@ -247,8 +247,8 @@ func TestHystrixHTTPClientPatchSuccess(t *testing.T) {
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodPatch, r.Method)
-		assert.Equal(t, r.Header.Get("Content-Type"), "application/json")
-		assert.Equal(t, r.Header.Get("Accept-Language"), "en")
+		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+		assert.Equal(t, "en", r.Header.Get("Accept-Language"))
 
 		rBody, err := ioutil.ReadAll(r.Body)
 		require.NoError(t, err, "should not have failed to extract request body")
