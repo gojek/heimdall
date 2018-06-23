@@ -20,6 +20,7 @@ type httpClient struct {
 
 	retryCount int
 	retrier    Retriable
+	plugins    []Plugin
 }
 
 // NewHTTPClient returns a new instance of HTTPClient
@@ -47,6 +48,10 @@ func (c *httpClient) SetCustomHTTPClient(customHTTPClient Doer) {
 // SetRetrier sets the strategy for retrying
 func (c *httpClient) SetRetrier(retrier Retriable) {
 	c.retrier = retrier
+}
+
+func (c *httpClient) AddPlugin(p Plugin) {
+	c.plugins = append(c.plugins, p)
 }
 
 // Get makes a HTTP GET request to provided URL
@@ -136,14 +141,17 @@ func (c *httpClient) Do(request *http.Request) (*http.Response, error) {
 	for i := 0; i <= c.retryCount; i++ {
 		var err error
 		request.Body = ioutil.NopCloser(bytes.NewBuffer(reqBuffer))
+
+		c.reportRequestStart(request)
 		response, err = c.client.Do(request)
 		if err != nil {
 			multiErr.Push(err.Error())
-
+			c.reportError(request, err)
 			backoffTime := c.retrier.NextInterval(i)
 			time.Sleep(backoffTime)
 			continue
 		}
+		c.reportRequestEnd(request, response)
 
 		if response.StatusCode >= http.StatusInternalServerError {
 			multiErr.Push(fmt.Sprintf("server error: %d", response.StatusCode))
@@ -158,4 +166,22 @@ func (c *httpClient) Do(request *http.Request) (*http.Response, error) {
 	}
 
 	return response, multiErr.HasError()
+}
+
+func (c *httpClient) reportRequestStart(request *http.Request) {
+	for _, plugin := range c.plugins {
+		plugin.OnRequestStart(request)
+	}
+}
+
+func (c *httpClient) reportError(request *http.Request, err error) {
+	for _, plugin := range c.plugins {
+		plugin.OnError(request, err)
+	}
+}
+
+func (c *httpClient) reportRequestEnd(request *http.Request, response *http.Response) {
+	for _, plugin := range c.plugins {
+		plugin.OnRequestEnd(request, response)
+	}
 }

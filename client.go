@@ -23,4 +23,5 @@ type Client interface {
 	SetRetryCount(count int)
 	SetRetrier(retrier Retriable)
 	SetCustomHTTPClient(customHTTPClient Doer)
+	AddPlugin(p Plugin)
 }

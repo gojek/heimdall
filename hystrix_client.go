@@ -14,7 +14,7 @@ import (
 const defaultHystrixRetryCount int = 0
 
 type hystrixHTTPClient struct {
-	client Doer
+	client Client
 
 	hystrixCommandName string
 
@@ -25,9 +25,7 @@ type hystrixHTTPClient struct {
 
 // NewHystrixHTTPClient returns a new instance of HystrixHTTPClient
 func NewHystrixHTTPClient(timeout time.Duration, hystrixConfig HystrixConfig) Client {
-	httpClient := &http.Client{
-		Timeout: timeout,
-	}
+	httpClient := NewHTTPClient(timeout)
 
 	hystrix.ConfigureCommand(hystrixConfig.commandName, hystrixConfig.commandConfig)
 
@@ -53,7 +51,11 @@ func (hhc *hystrixHTTPClient) SetRetrier(retrier Retriable) {
 
 // SetCustomHTTPClient sets custom HTTP client
 func (hhc *hystrixHTTPClient) SetCustomHTTPClient(customHTTPClient Doer) {
-	hhc.client = customHTTPClient
+	hhc.client.SetCustomHTTPClient(customHTTPClient)
+}
+
+func (hhc *hystrixHTTPClient) AddPlugin(p Plugin) {
+	hhc.client.AddPlugin(p)
 }
 
 // Get makes a HTTP GET request to provided URL
