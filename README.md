@@ -11,10 +11,13 @@
 * [Description](#description)
 * [Installation](#installation)
 * [Usage](#usage)
-	+ [Making a simple `GET` request](#making-a-simple-get-request)
-	+ [Creating a hystrix-like circuit breaker](#creating-a-hystrix-like-circuit-breaker)
-	+ [Creating an HTTP client with a retry mechanism](#creating-an-http-client-with-a-retry-mechanism)
-	+ [Custom retry mechanisms](#custom-retry-mechanisms)
+  + [Making a simple `GET` request](#making-a-simple-get-request)
+  + [Creating a hystrix-like circuit breaker](#creating-a-hystrix-like-circuit-breaker)
+  + [Creating a hystrix-like circuit breaker with fallbacks](#creating-a-hystrix-like-circuit-breaker-with-fallbacks)
+  + [Creating an HTTP client with a retry mechanism](#creating-an-http-client-with-a-retry-mechanism)
+  + [Custom retry mechanisms](#custom-retry-mechanisms)
+  + [Custom HTTP clients](#custom-http-clients)
+* [Plugins](#plugins)
 * [Documentation](#documentation)
 * [FAQ](#faq)
 * [License](#license)
@@ -271,6 +274,39 @@ hystrixClient.SetCustomHTTPClient(&myHTTPClient{
 
 // The rest is the same as the first example
 ```
+
+## Plugins
+
+To add a plugin to an existing client, use the `AddPlugin` method of the client. 
+
+An example, with the [request logger plugin](/plugins/request_logger.go):
+
+```go
+// import "github.com/gojektech/heimdall/plugins"
+
+client := heimdall.NewHTTPClient(timeout)
+requestLogger := plugins.NewRequestLogger(nil, nil)
+client.AddPlugin(requestLogger)
+// use the client as before
+
+req, _ := http.NewRequest(http.MethodGet, "http://google.com", nil)
+res, err := client.Do(req)
+if err != nil {
+	panic(err)
+}
+// This will log:
+//23/Jun/2018 12:48:04 GET http://google.com 200 [412ms]
+// to STDOUT
+```
+
+A plugin is an interface whose methods get called during key events in a requests lifecycle:
+
+- `OnRequestStart` is called just before the request is made
+- `OnRequestEnd` is called once the request has successfully executed
+- `OnError` is called is the request failed
+
+Each method is called with the request object as an argument, with `OnRequestEnd`, and `OnError` additionally being called with the response and error instances respectively.
+For a simple example on how to write plugins, look at the [request logger plugin](/plugins/request_logger.go).
 
 ## Documentation
 

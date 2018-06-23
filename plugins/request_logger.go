@@ -38,7 +38,6 @@ func NewRequestLogger(out io.Writer, errOut io.Writer) heimdall.Plugin {
 }
 
 func (rl *requestLogger) OnRequestStart(req *http.Request) {
-	fmt.Println("start")
 	ctx := context.WithValue(req.Context(), reqTime, time.Now())
 	*req = *(req.WithContext(ctx))
 }
