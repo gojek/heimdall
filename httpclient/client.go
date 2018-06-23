@@ -19,6 +19,7 @@ type Client struct {
 	timeout    time.Duration
 	retryCount int
 	retrier    heimdall.Retriable
+	plugins    []heimdall.Plugin
 }
 
 const (
@@ -47,6 +48,11 @@ func NewClient(opts ...Option) *Client {
 	}
 
 	return &client
+}
+
+// AddPlugin Adds plugin to client
+func (c *Client) AddPlugin(p heimdall.Plugin) {
+	c.plugins = append(c.plugins, p)
 }
 
 // Get makes a HTTP GET request to provided URL
@@ -147,11 +153,12 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 
 		if err != nil {
 			multiErr.Push(err.Error())
-
+			c.reportError(request, err)
 			backoffTime := c.retrier.NextInterval(i)
 			time.Sleep(backoffTime)
 			continue
 		}
+		c.reportRequestEnd(request, response)
 
 		if response.StatusCode >= http.StatusInternalServerError {
 			backoffTime := c.retrier.NextInterval(i)
@@ -164,4 +171,22 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 	}
 
 	return response, multiErr.HasError()
+}
+
+func (c *Client) reportRequestStart(request *http.Request) {
+	for _, plugin := range c.plugins {
+		plugin.OnRequestStart(request)
+	}
+}
+
+func (c *Client) reportError(request *http.Request, err error) {
+	for _, plugin := range c.plugins {
+		plugin.OnError(request, err)
+	}
+}
+
+func (c *Client) reportRequestEnd(request *http.Request, response *http.Response) {
+	for _, plugin := range c.plugins {
+		plugin.OnRequestEnd(request, response)
+	}
 }

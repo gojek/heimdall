@@ -2,6 +2,8 @@ package hystrix
 
 import (
 	"bytes"
+	"fmt"
+	"github.com/gojektech/heimdall/httpclient"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -16,7 +18,7 @@ type fallbackFunc func(error) error
 
 // Client is the hystrix client implementation
 type Client struct {
-	client heimdall.Doer
+	client *httpclient.Client
 
 	timeout                time.Duration
 	hystrixTimeout         time.Duration
@@ -49,6 +51,7 @@ var err5xx = errors.New("server returned 5xx status code")
 // NewClient returns a new instance of hystrix Client
 func NewClient(opts ...Option) *Client {
 	client := Client{
+		client:                 httpclient.NewClient(),
 		timeout:                defaultHTTPTimeout,
 		hystrixTimeout:         defaultHystrixTimeout,
 		maxConcurrentRequests:  defaultMaxConcurrentRequests,
@@ -61,12 +64,6 @@ func NewClient(opts ...Option) *Client {
 
 	for _, opt := range opts {
 		opt(&client)
-	}
-
-	if client.client == nil {
-		client.client = &http.Client{
-			Timeout: client.timeout,
-		}
 	}
 
 	hystrix.ConfigureCommand(client.hystrixCommandName, hystrix.CommandConfig{
@@ -210,4 +207,9 @@ func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
 	}
 
 	return response, err
+}
+
+// AddPlugin Adds plugin to client
+func (hhc *Client) AddPlugin(p heimdall.Plugin) {
+	hhc.client.AddPlugin(p)
 }

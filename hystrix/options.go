@@ -1,6 +1,7 @@
 package hystrix
 
 import (
+	"github.com/gojektech/heimdall/httpclient"
 	"time"
 
 	"github.com/gojektech/heimdall"
@@ -82,6 +83,7 @@ func WithRetrier(retrier heimdall.Retriable) Option {
 // WithHTTPClient sets a custom http client for hystrix client
 func WithHTTPClient(client heimdall.Doer) Option {
 	return func(c *Client) {
-		c.client = client
+		opt := httpclient.WithHTTPClient(client)
+		opt(c.client)
 	}
 }
