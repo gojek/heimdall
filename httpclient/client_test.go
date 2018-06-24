@@ -460,7 +460,6 @@ func TestPluginErrorMethodCalled(t *testing.T) {
 	serverURL := "http://does_not_exist"
 	_, err := client.Get(serverURL, http.Header{})
 
-	require.EqualError(t, err, "Get http://does_not_exist: net/http: request canceled while waiting for connection (Client.Timeout exceeded while awaiting headers)")
 	mockPlugin.AssertNumberOfCalls(t, "OnRequestStart", 1)
 	pluginRequest, ok := mockPlugin.Calls[0].Arguments[0].(*http.Request)
 	require.True(t, ok)
@@ -470,7 +469,7 @@ func TestPluginErrorMethodCalled(t *testing.T) {
 	mockPlugin.AssertNumberOfCalls(t, "OnError", 1)
 	err, ok = mockPlugin.Calls[1].Arguments[1].(error)
 	require.True(t, ok)
-	assert.EqualError(t, err, "Get http://does_not_exist: net/http: request canceled while waiting for connection (Client.Timeout exceeded while awaiting headers)")
+	assert.EqualError(t, err, "Get http://does_not_exist: dial tcp: lookup does_not_exist: no such host")
 }
 
 type myHTTPClient struct {
