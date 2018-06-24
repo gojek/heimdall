@@ -14,7 +14,7 @@ import (
 )
 
 func TestHTTPClientDoSuccess(t *testing.T) {
-	client := NewHTTPClient(10 * time.Millisecond)
+	client := NewHTTPClient(50 * time.Millisecond)
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
@@ -43,7 +43,7 @@ func TestHTTPClientDoSuccess(t *testing.T) {
 }
 
 func TestHTTPClientGetSuccess(t *testing.T) {
-	client := NewHTTPClient(10 * time.Millisecond)
+	client := NewHTTPClient(50 * time.Millisecond)
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
@@ -69,7 +69,7 @@ func TestHTTPClientGetSuccess(t *testing.T) {
 }
 
 func TestHTTPClientPostSuccess(t *testing.T) {
-	client := NewHTTPClient(10 * time.Millisecond)
+	client := NewHTTPClient(50 * time.Millisecond)
 
 	requestBodyString := `{ "name": "heimdall" }`
 
@@ -104,7 +104,7 @@ func TestHTTPClientPostSuccess(t *testing.T) {
 }
 
 func TestHTTPClientDeleteSuccess(t *testing.T) {
-	client := NewHTTPClient(10 * time.Millisecond)
+	client := NewHTTPClient(50 * time.Millisecond)
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodDelete, r.Method)
@@ -130,7 +130,7 @@ func TestHTTPClientDeleteSuccess(t *testing.T) {
 }
 
 func TestHTTPClientPutSuccess(t *testing.T) {
-	client := NewHTTPClient(10 * time.Millisecond)
+	client := NewHTTPClient(50 * time.Millisecond)
 
 	requestBodyString := `{ "name": "heimdall" }`
 
@@ -165,7 +165,7 @@ func TestHTTPClientPutSuccess(t *testing.T) {
 }
 
 func TestHTTPClientPatchSuccess(t *testing.T) {
-	client := NewHTTPClient(10 * time.Millisecond)
+	client := NewHTTPClient(50 * time.Millisecond)
 
 	requestBodyString := `{ "name": "heimdall" }`
 
@@ -200,7 +200,7 @@ func TestHTTPClientPatchSuccess(t *testing.T) {
 }
 
 func TestHTTPClientGetRetriesOnFailure(t *testing.T) {
-	client := NewHTTPClient(10 * time.Millisecond)
+	client := NewHTTPClient(50 * time.Millisecond)
 
 	count := 0
 
@@ -232,7 +232,7 @@ func TestHTTPClientGetRetriesOnFailure(t *testing.T) {
 }
 
 func TestHTTPClientGetReturnsAllErrorsIfRetriesFail(t *testing.T) {
-	client := NewHTTPClient(10 * time.Millisecond)
+	client := NewHTTPClient(50 * time.Millisecond)
 
 	count := 0
 
@@ -263,7 +263,7 @@ func TestHTTPClientGetReturnsAllErrorsIfRetriesFail(t *testing.T) {
 }
 
 func TestHTTPClientGetReturnsNoErrorsIfRetrySucceeds(t *testing.T) {
-	client := NewHTTPClient(10 * time.Millisecond)
+	client := NewHTTPClient(50 * time.Millisecond)
 
 	count := 0
 	countWhenCallSucceeds := 2
@@ -296,7 +296,7 @@ func TestHTTPClientGetReturnsNoErrorsIfRetrySucceeds(t *testing.T) {
 }
 
 func TestHTTPClientGetReturnsErrorOnClientCallFailure(t *testing.T) {
-	client := NewHTTPClient(10 * time.Millisecond)
+	client := NewHTTPClient(50 * time.Millisecond)
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -315,7 +315,7 @@ func TestHTTPClientGetReturnsErrorOnClientCallFailure(t *testing.T) {
 }
 
 func TestHTTPClientGetReturnsErrorOn5xxFailure(t *testing.T) {
-	client := NewHTTPClient(10 * time.Millisecond)
+	client := NewHTTPClient(50 * time.Millisecond)
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -334,7 +334,7 @@ func TestHTTPClientGetReturnsErrorOn5xxFailure(t *testing.T) {
 }
 
 func TestPluginMethodsCalled(t *testing.T) {
-	client := NewHTTPClient(10 * time.Millisecond)
+	client := NewHTTPClient(50 * time.Millisecond)
 	mockPlugin := &MockPlugin{}
 	client.AddPlugin(mockPlugin)
 
@@ -365,7 +365,7 @@ func TestPluginMethodsCalled(t *testing.T) {
 }
 
 func TestPluginErrorMethodCalled(t *testing.T) {
-	client := NewHTTPClient(10 * time.Millisecond)
+	client := NewHTTPClient(50 * time.Millisecond)
 	mockPlugin := &MockPlugin{}
 	client.AddPlugin(mockPlugin)
 
@@ -397,7 +397,7 @@ func (c *myHTTPClient) Do(request *http.Request) (*http.Response, error) {
 }
 
 func TestCustomHTTPClientHeaderSuccess(t *testing.T) {
-	client := NewHTTPClient(10 * time.Millisecond)
+	client := NewHTTPClient(50 * time.Millisecond)
 
 	client.SetCustomHTTPClient(&myHTTPClient{
 		client: http.Client{Timeout: 25 * time.Millisecond}})
