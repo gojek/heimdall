@@ -1,4 +1,4 @@
-package plugins
+package heimdall
 
 import (
 	"net/http"
