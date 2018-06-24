@@ -457,7 +457,7 @@ func TestPluginErrorMethodCalled(t *testing.T) {
 	mockPlugin.On("OnRequestStart", mock.Anything)
 	mockPlugin.On("OnError", mock.Anything, mock.Anything)
 
-	serverURL := "http://does_not_exist"
+	serverURL := "does_not_exist"
 	_, err := client.Get(serverURL, http.Header{})
 
 	mockPlugin.AssertNumberOfCalls(t, "OnRequestStart", 1)
@@ -469,7 +469,7 @@ func TestPluginErrorMethodCalled(t *testing.T) {
 	mockPlugin.AssertNumberOfCalls(t, "OnError", 1)
 	err, ok = mockPlugin.Calls[1].Arguments[1].(error)
 	require.True(t, ok)
-	assert.EqualError(t, err, "Get http://does_not_exist: dial tcp: lookup does_not_exist: no such host")
+	assert.EqualError(t, err, "Get does_not_exist: unsupported protocol scheme \"\"")
 }
 
 type myHTTPClient struct {
