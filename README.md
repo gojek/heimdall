@@ -268,7 +268,7 @@ func (c *myHTTPClient) Do(request *http.Request) (*http.Response, error) {
 }
 ```
 
-And set this with `httpclient.NewClient(httpclient.NewClient&myHTTPClient{client: http.DefaultClient}))`
+And set this with `httpclient.NewClient(httpclient.WithHTTPClient(&myHTTPClient{client: http.DefaultClient}))`
 
 Now, each sent request will have the `Authorization` header to use HTTP basic authentication with the provided username and password.
 
@@ -276,7 +276,7 @@ This can be done for the hystrix client as well
 
 ```
 client := httpclient.NewClient(
-	httpclient.NewClient(&myHTTPClient{
+	httpclient.WithHTTPClient(&myHTTPClient{
     		client: http.Client{Timeout: 25 * time.Millisecond}
 		}
 	)
