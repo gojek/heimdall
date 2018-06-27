@@ -29,15 +29,29 @@ type Client struct {
 	fallbackFunc           func(err error) error
 }
 
-const defaultHystrixRetryCount int = 0
+const (
+	defaultHystrixRetryCount      = 0
+	defaultHTTPTimeout            = 30 * time.Second
+	defaultHystriximeout          = 30 * time.Second
+	defaultMaxConcurrentRequests  = 100
+	defaultErrorPercentThreshold  = 25
+	defaultSleepWindow            = 10
+	defaultRequestVolumeThreshold = 10
+)
 
 var _ heimdall.Client = (*Client)(nil)
 
 // NewClient returns a new instance of hystrix Client
 func NewClient(opts ...Option) *Client {
 	client := Client{
-		retryCount: defaultHystrixRetryCount,
-		retrier:    heimdall.NewNoRetrier(),
+		timeout:                defaultHTTPTimeout,
+		hystrixTimeout:         defaultHystriximeout,
+		maxConcurrentRequests:  defaultMaxConcurrentRequests,
+		errorPercentThreshold:  defaultErrorPercentThreshold,
+		sleepWindow:            defaultSleepWindow,
+		requestVolumeThreshold: defaultRequestVolumeThreshold,
+		retryCount:             defaultHystrixRetryCount,
+		retrier:                heimdall.NewNoRetrier(),
 	}
 
 	for _, opt := range opts {
