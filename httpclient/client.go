@@ -23,13 +23,17 @@ type Client struct {
 	retrier    heimdall.Retriable
 }
 
-const defaultRetryCount int = 0
+const (
+	defaultRetryCount  = 0
+	defaultHTTPTimeout = 30 * time.Second
+)
 
 var _ heimdall.Client = (*Client)(nil)
 
 // NewClient returns a new instance of http Client
 func NewClient(opts ...Option) *Client {
 	client := Client{
+		timeout:    defaultHTTPTimeout,
 		retryCount: defaultRetryCount,
 		retrier:    heimdall.NewNoRetrier(),
 	}
