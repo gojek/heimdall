@@ -1,4 +1,4 @@
-package heimdall
+package httpclient
 
 import (
 	"bytes"
@@ -8,12 +8,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gojektech/heimdall"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestHTTPClientDoSuccess(t *testing.T) {
-	client := NewHTTPClient(10 * time.Millisecond)
+	client := NewClient(WithHTTPTimeout(10 * time.Millisecond))
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
@@ -42,7 +43,7 @@ func TestHTTPClientDoSuccess(t *testing.T) {
 }
 
 func TestHTTPClientGetSuccess(t *testing.T) {
-	client := NewHTTPClient(10 * time.Millisecond)
+	client := NewClient(WithHTTPTimeout(10 * time.Millisecond))
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
@@ -68,7 +69,7 @@ func TestHTTPClientGetSuccess(t *testing.T) {
 }
 
 func TestHTTPClientPostSuccess(t *testing.T) {
-	client := NewHTTPClient(10 * time.Millisecond)
+	client := NewClient(WithHTTPTimeout(10 * time.Millisecond))
 
 	requestBodyString := `{ "name": "heimdall" }`
 
@@ -103,7 +104,7 @@ func TestHTTPClientPostSuccess(t *testing.T) {
 }
 
 func TestHTTPClientDeleteSuccess(t *testing.T) {
-	client := NewHTTPClient(10 * time.Millisecond)
+	client := NewClient(WithHTTPTimeout(10 * time.Millisecond))
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodDelete, r.Method)
@@ -129,7 +130,7 @@ func TestHTTPClientDeleteSuccess(t *testing.T) {
 }
 
 func TestHTTPClientPutSuccess(t *testing.T) {
-	client := NewHTTPClient(10 * time.Millisecond)
+	client := NewClient(WithHTTPTimeout(10 * time.Millisecond))
 
 	requestBodyString := `{ "name": "heimdall" }`
 
@@ -164,7 +165,7 @@ func TestHTTPClientPutSuccess(t *testing.T) {
 }
 
 func TestHTTPClientPatchSuccess(t *testing.T) {
-	client := NewHTTPClient(10 * time.Millisecond)
+	client := NewClient(WithHTTPTimeout(10 * time.Millisecond))
 
 	requestBodyString := `{ "name": "heimdall" }`
 
@@ -199,9 +200,17 @@ func TestHTTPClientPatchSuccess(t *testing.T) {
 }
 
 func TestHTTPClientGetRetriesOnFailure(t *testing.T) {
-	client := NewHTTPClient(10 * time.Millisecond)
-
 	count := 0
+	noOfRetries := 3
+	noOfCalls := noOfRetries + 1
+	backoffInterval := 1 * time.Millisecond
+	maximumJitterInterval := 1 * time.Millisecond
+
+	client := NewClient(
+		WithHTTPTimeout(10*time.Millisecond),
+		WithRetryCount(noOfRetries),
+		WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval))),
+	)
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -211,15 +220,6 @@ func TestHTTPClientGetRetriesOnFailure(t *testing.T) {
 
 	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
 	defer server.Close()
-
-	noOfRetries := 3
-	noOfCalls := noOfRetries + 1
-
-	backoffInterval := 1 * time.Millisecond
-	maximumJitterInterval := 1 * time.Millisecond
-
-	client.SetRetryCount(noOfRetries)
-	client.SetRetrier(NewRetrier(NewConstantBackoff(backoffInterval, maximumJitterInterval)))
 
 	response, err := client.Get(server.URL, http.Header{})
 	require.Error(t, err, "should have failed to make GET request")
@@ -231,9 +231,16 @@ func TestHTTPClientGetRetriesOnFailure(t *testing.T) {
 }
 
 func TestHTTPClientGetReturnsAllErrorsIfRetriesFail(t *testing.T) {
-	client := NewHTTPClient(10 * time.Millisecond)
-
 	count := 0
+	noOfRetries := 2
+	backoffInterval := 1 * time.Millisecond
+	maximumJitterInterval := 1 * time.Millisecond
+
+	client := NewClient(
+		WithHTTPTimeout(10*time.Millisecond),
+		WithRetryCount(noOfRetries),
+		WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval))),
+	)
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -243,13 +250,6 @@ func TestHTTPClientGetReturnsAllErrorsIfRetriesFail(t *testing.T) {
 
 	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
 	defer server.Close()
-
-	backoffInterval := 1 * time.Millisecond
-	maximumJitterInterval := 1 * time.Millisecond
-
-	noOfRetries := 2
-	client.SetRetryCount(noOfRetries)
-	client.SetRetrier(NewRetrier(NewConstantBackoff(backoffInterval, maximumJitterInterval)))
 
 	response, err := client.Get(server.URL, http.Header{})
 	require.Error(t, err, "should have failed to make GET request")
@@ -262,10 +262,16 @@ func TestHTTPClientGetReturnsAllErrorsIfRetriesFail(t *testing.T) {
 }
 
 func TestHTTPClientGetReturnsNoErrorsIfRetrySucceeds(t *testing.T) {
-	client := NewHTTPClient(10 * time.Millisecond)
-
 	count := 0
 	countWhenCallSucceeds := 2
+	backoffInterval := 1 * time.Millisecond
+	maximumJitterInterval := 1 * time.Millisecond
+
+	client := NewClient(
+		WithHTTPTimeout(10*time.Millisecond),
+		WithRetryCount(3),
+		WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval))),
+	)
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
 		if count == countWhenCallSucceeds {
@@ -280,12 +286,6 @@ func TestHTTPClientGetReturnsNoErrorsIfRetrySucceeds(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
 	defer server.Close()
 
-	backoffInterval := 1 * time.Millisecond
-	maximumJitterInterval := 1 * time.Millisecond
-
-	client.SetRetryCount(3)
-	client.SetRetrier(NewRetrier(NewConstantBackoff(backoffInterval, maximumJitterInterval)))
-
 	response, err := client.Get(server.URL, http.Header{})
 	require.NoError(t, err, "should not have failed to make GET request")
 
@@ -295,7 +295,7 @@ func TestHTTPClientGetReturnsNoErrorsIfRetrySucceeds(t *testing.T) {
 }
 
 func TestHTTPClientGetReturnsErrorOnClientCallFailure(t *testing.T) {
-	client := NewHTTPClient(10 * time.Millisecond)
+	client := NewClient(WithHTTPTimeout(10 * time.Millisecond))
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -314,7 +314,7 @@ func TestHTTPClientGetReturnsErrorOnClientCallFailure(t *testing.T) {
 }
 
 func TestHTTPClientGetReturnsErrorOn5xxFailure(t *testing.T) {
-	client := NewHTTPClient(10 * time.Millisecond)
+	client := NewClient(WithHTTPTimeout(10 * time.Millisecond))
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -342,10 +342,11 @@ func (c *myHTTPClient) Do(request *http.Request) (*http.Response, error) {
 }
 
 func TestCustomHTTPClientHeaderSuccess(t *testing.T) {
-	client := NewHTTPClient(10 * time.Millisecond)
-
-	client.SetCustomHTTPClient(&myHTTPClient{
-		client: http.Client{Timeout: 25 * time.Millisecond}})
+	client := NewClient(
+		WithHTTPTimeout(10*time.Millisecond),
+		WithHTTPClient(&myHTTPClient{
+			client: http.Client{Timeout: 25 * time.Millisecond}}),
+	)
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "bar", r.Header.Get("foo"))

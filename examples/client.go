@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/gojektech/heimdall"
+	"github.com/gojektech/heimdall/httpclient"
+	"github.com/gojektech/heimdall/hystrix"
 	"github.com/pkg/errors"
 )
 
@@ -17,12 +19,13 @@ const (
 func httpClientUsage() error {
 	timeout := 100 * time.Millisecond
 
-	httpClient := heimdall.NewHTTPClient(timeout)
+	httpClient := httpclient.NewClient(
+		httpclient.WithHTTPTimeout(timeout),
+		httpclient.WithRetryCount(2),
+		httpclient.WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(10, 5))),
+	)
 	headers := http.Header{}
 	headers.Set("Content-Type", "application/json")
-
-	httpClient.SetRetryCount(2)
-	httpClient.SetRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(10, 5)))
 
 	response, err := httpClient.Get(baseURL, headers)
 	if err != nil {
@@ -42,16 +45,15 @@ func httpClientUsage() error {
 
 func hystrixClientUsage() error {
 	timeout := 100 * time.Millisecond
-
-	hystrixConfig := heimdall.NewHystrixConfig("MyCommand", heimdall.HystrixCommandConfig{
-		Timeout:                1100,
-		MaxConcurrentRequests:  100,
-		ErrorPercentThreshold:  25,
-		SleepWindow:            10,
-		RequestVolumeThreshold: 10,
-	})
-
-	hystrixClient := heimdall.NewHystrixHTTPClient(timeout, hystrixConfig)
+	hystrixClient := hystrix.NewClient(
+		hystrix.WithHTTPTimeout(timeout),
+		hystrix.WithCommandName("MyCommand"),
+		hystrix.WithHystrixTimeout(1100),
+		hystrix.WithMaxConcurrentRequests(100),
+		hystrix.WithErrorPercentThreshold(25),
+		hystrix.WithSleepWindow(10),
+		hystrix.WithRequestVolumeThreshold(10),
+	)
 	headers := http.Header{}
 	response, err := hystrixClient.Get(baseURL, headers)
 	if err != nil {
@@ -79,17 +81,18 @@ func (c *myHTTPClient) Do(request *http.Request) (*http.Response, error) {
 }
 
 func customHTTPClientUsage() error {
-	httpClient := heimdall.NewHTTPClient(0 * time.Millisecond)
-
-	// replace with custom HTTP client
-	httpClient.SetCustomHTTPClient(&myHTTPClient{
-		client: http.Client{Timeout: 25 * time.Millisecond}})
+	httpClient := httpclient.NewClient(
+		httpclient.WithHTTPTimeout(0*time.Millisecond),
+		httpclient.WithHTTPClient(&myHTTPClient{
+			// replace with custom HTTP client
+			client: http.Client{Timeout: 25 * time.Millisecond},
+		}),
+		httpclient.WithRetryCount(2),
+		httpclient.WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(10, 5))),
+	)
 
 	headers := http.Header{}
 	headers.Set("Content-Type", "application/json")
-
-	httpClient.SetRetryCount(2)
-	httpClient.SetRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(10, 5)))
 
 	response, err := httpClient.Get(baseURL, headers)
 	if err != nil {
@@ -110,18 +113,19 @@ func customHTTPClientUsage() error {
 func customHystrixClientUsage() error {
 	timeout := 0 * time.Millisecond
 
-	hystrixConfig := heimdall.NewHystrixConfig("MyCommand", heimdall.HystrixCommandConfig{
-		Timeout:                1100,
-		MaxConcurrentRequests:  100,
-		ErrorPercentThreshold:  25,
-		SleepWindow:            10,
-		RequestVolumeThreshold: 10,
-	})
-
-	hystrixClient := heimdall.NewHystrixHTTPClient(timeout, hystrixConfig)
-
-	hystrixClient.SetCustomHTTPClient(&myHTTPClient{
-		client: http.Client{Timeout: 25 * time.Millisecond}})
+	hystrixClient := hystrix.NewClient(
+		hystrix.WithHTTPTimeout(timeout),
+		hystrix.WithCommandName("MyCommand"),
+		hystrix.WithHystrixTimeout(1100),
+		hystrix.WithMaxConcurrentRequests(100),
+		hystrix.WithErrorPercentThreshold(25),
+		hystrix.WithSleepWindow(10),
+		hystrix.WithRequestVolumeThreshold(10),
+		hystrix.WithHTTPClient(&myHTTPClient{
+			// replace with custom HTTP client
+			client: http.Client{Timeout: 25 * time.Millisecond},
+		}),
+	)
 
 	headers := http.Header{}
 	response, err := hystrixClient.Get(baseURL, headers)
