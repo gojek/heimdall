@@ -1,4 +1,4 @@
-package heimdall
+package httpclient
 
 import (
 	"fmt"
@@ -9,46 +9,49 @@ import (
 	"bytes"
 	"io/ioutil"
 
+	"github.com/gojektech/heimdall"
 	"github.com/gojektech/valkyrie"
 	"github.com/pkg/errors"
 )
 
-const defaultRetryCount int = 0
-
-type httpClient struct {
-	client     Doer
+// Client is the http client implementation
+type Client struct {
+	client     heimdall.Doer
+	timeout    time.Duration
 	retryCount int
-	retrier    Retriable
+	retrier    heimdall.Retriable
 }
 
-// NewHTTPClient returns a new instance of HTTPClient
-func NewHTTPClient(timeout time.Duration) Client {
-	return &httpClient{
-		client: &http.Client{
-			Timeout: timeout,
-		},
+const (
+	defaultRetryCount  = 0
+	defaultHTTPTimeout = 30 * time.Second
+)
+
+var _ heimdall.Client = (*Client)(nil)
+
+// NewClient returns a new instance of http Client
+func NewClient(opts ...Option) *Client {
+	client := Client{
+		timeout:    defaultHTTPTimeout,
 		retryCount: defaultRetryCount,
-		retrier:    NewNoRetrier(),
+		retrier:    heimdall.NewNoRetrier(),
 	}
-}
 
-// SetRetryCount sets the retry count for the httpClient
-func (c *httpClient) SetRetryCount(count int) {
-	c.retryCount = count
-}
+	for _, opt := range opts {
+		opt(&client)
+	}
 
-// SetCustomHTTPClient sets custom HTTP client
-func (c *httpClient) SetCustomHTTPClient(customHTTPClient Doer) {
-	c.client = customHTTPClient
-}
+	if client.client == nil {
+		client.client = &http.Client{
+			Timeout: client.timeout,
+		}
+	}
 
-// SetRetrier sets the strategy for retrying
-func (c *httpClient) SetRetrier(retrier Retriable) {
-	c.retrier = retrier
+	return &client
 }
 
 // Get makes a HTTP GET request to provided URL
-func (c *httpClient) Get(url string, headers http.Header) (*http.Response, error) {
+func (c *Client) Get(url string, headers http.Header) (*http.Response, error) {
 	request, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "GET - request creation failed")
@@ -58,7 +61,7 @@ func (c *httpClient) Get(url string, headers http.Header) (*http.Response, error
 }
 
 // Post makes a HTTP POST request to provided URL and requestBody
-func (c *httpClient) Post(url string, body io.Reader, headers http.Header) (*http.Response, error) {
+func (c *Client) Post(url string, body io.Reader, headers http.Header) (*http.Response, error) {
 	request, err := http.NewRequest(http.MethodPost, url, body)
 	if err != nil {
 		return nil, errors.Wrap(err, "POST - request creation failed")
@@ -68,7 +71,7 @@ func (c *httpClient) Post(url string, body io.Reader, headers http.Header) (*htt
 }
 
 // Put makes a HTTP PUT request to provided URL and requestBody
-func (c *httpClient) Put(url string, body io.Reader, headers http.Header) (*http.Response, error) {
+func (c *Client) Put(url string, body io.Reader, headers http.Header) (*http.Response, error) {
 	request, err := http.NewRequest(http.MethodPut, url, body)
 	if err != nil {
 		return nil, errors.Wrap(err, "PUT - request creation failed")
@@ -78,7 +81,7 @@ func (c *httpClient) Put(url string, body io.Reader, headers http.Header) (*http
 }
 
 // Patch makes a HTTP PATCH request to provided URL and requestBody
-func (c *httpClient) Patch(url string, body io.Reader, headers http.Header) (*http.Response, error) {
+func (c *Client) Patch(url string, body io.Reader, headers http.Header) (*http.Response, error) {
 	request, err := http.NewRequest(http.MethodPatch, url, body)
 	if err != nil {
 		return nil, errors.Wrap(err, "PATCH - request creation failed")
@@ -88,7 +91,7 @@ func (c *httpClient) Patch(url string, body io.Reader, headers http.Header) (*ht
 }
 
 // Delete makes a HTTP DELETE request with provided URL
-func (c *httpClient) Delete(url string, headers http.Header) (*http.Response, error) {
+func (c *Client) Delete(url string, headers http.Header) (*http.Response, error) {
 	request, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "DELETE - request creation failed")
@@ -98,7 +101,7 @@ func (c *httpClient) Delete(url string, headers http.Header) (*http.Response, er
 }
 
 // Do makes an HTTP request with the native `http.Do` interface
-func (c *httpClient) Do(request *http.Request) (*http.Response, error) {
+func (c *Client) Do(request *http.Request) (*http.Response, error) {
 	request.Close = true
 
 	var reqBuffer []byte

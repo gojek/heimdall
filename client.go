@@ -19,8 +19,4 @@ type Client interface {
 	Patch(url string, body io.Reader, headers http.Header) (*http.Response, error)
 	Delete(url string, headers http.Header) (*http.Response, error)
 	Do(req *http.Request) (*http.Response, error)
-
-	SetRetryCount(count int)
-	SetRetrier(retrier Retriable)
-	SetCustomHTTPClient(customHTTPClient Doer)
 }
