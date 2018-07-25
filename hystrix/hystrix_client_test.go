@@ -41,7 +41,7 @@ func TestHystrixHTTPClientDoSuccess(t *testing.T) {
 		assert.Equal(t, "en", r.Header.Get("Accept-Language"))
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{ "response": "ok" }`))
+		_, _ = w.Write([]byte(`{ "response": "ok" }`))
 	}
 
 	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
@@ -78,7 +78,7 @@ func TestHystrixHTTPClientGetSuccess(t *testing.T) {
 		assert.Equal(t, "en", r.Header.Get("Accept-Language"))
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{ "response": "ok" }`))
+		_, _ = w.Write([]byte(`{ "response": "ok" }`))
 	}
 
 	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
@@ -119,7 +119,7 @@ func TestHystrixHTTPClientPostSuccess(t *testing.T) {
 		assert.Equal(t, requestBodyString, string(rBody))
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{ "response": "ok" }`))
+		_, _ = w.Write([]byte(`{ "response": "ok" }`))
 	}
 
 	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
@@ -155,7 +155,7 @@ func TestHystrixHTTPClientDeleteSuccess(t *testing.T) {
 		assert.Equal(t, "en", r.Header.Get("Accept-Language"))
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{ "response": "ok" }`))
+		_, _ = w.Write([]byte(`{ "response": "ok" }`))
 	}
 
 	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
@@ -196,7 +196,7 @@ func TestHystrixHTTPClientPutSuccess(t *testing.T) {
 		assert.Equal(t, requestBodyString, string(rBody))
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{ "response": "ok" }`))
+		_, _ = w.Write([]byte(`{ "response": "ok" }`))
 	}
 
 	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
@@ -239,7 +239,7 @@ func TestHystrixHTTPClientPatchSuccess(t *testing.T) {
 		assert.Equal(t, requestBodyString, string(rBody))
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{ "response": "ok" }`))
+		_, _ = w.Write([]byte(`{ "response": "ok" }`))
 	}
 
 	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
@@ -258,7 +258,7 @@ func TestHystrixHTTPClientPatchSuccess(t *testing.T) {
 	assert.Equal(t, "{ \"response\": \"ok\" }", respBody(t, response))
 }
 
-func TestHystrixHTTPClientRetriesOnFailure(t *testing.T) {
+func TestHystrixHTTPClientRetriesGetOnFailure(t *testing.T) {
 	count := 0
 	backoffInterval := 1 * time.Millisecond
 	maximumJitterInterval := 1 * time.Millisecond
@@ -277,7 +277,7 @@ func TestHystrixHTTPClientRetriesOnFailure(t *testing.T) {
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(`{ "response": "something went wrong" }`))
+		_, _ = w.Write([]byte(`{ "response": "something went wrong" }`))
 		count = count + 1
 	}
 
@@ -291,6 +291,41 @@ func TestHystrixHTTPClientRetriesOnFailure(t *testing.T) {
 
 	assert.Equal(t, http.StatusInternalServerError, response.StatusCode)
 	assert.Equal(t, "{ \"response\": \"something went wrong\" }", respBody(t, response))
+}
+
+func TestHystrixHTTPClientRetriesPostOnFailure(t *testing.T) {
+	count := 0
+	backoffInterval := 1 * time.Millisecond
+	maximumJitterInterval := 1 * time.Millisecond
+
+	client := NewClient(
+		WithHTTPTimeout(10*time.Millisecond),
+		WithCommandName("some_command_name"),
+		WithHystrixTimeout(10),
+		WithMaxConcurrentRequests(100),
+		WithErrorPercentThreshold(10),
+		WithSleepWindow(100),
+		WithRequestVolumeThreshold(10),
+		WithRetryCount(3),
+		WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval))),
+	)
+
+	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte(`{ "response": "something went wrong" }`))
+		count = count + 1
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+	defer server.Close()
+
+	response, err := client.Post(server.URL, strings.NewReader("a=1&b=2"), http.Header{})
+	require.Error(t, err)
+
+	assert.Equal(t, 4, count)
+
+	assert.Equal(t, http.StatusInternalServerError, response.StatusCode)
+	assert.JSONEq(t, `{ "response": "something went wrong" }`, respBody(t, response))
 }
 
 func TestHystrixHTTPClientReturnsFallbackFailureWithoutFallBackFunction(t *testing.T) {
@@ -388,7 +423,7 @@ func TestCustomHystrixHTTPClientDoSuccess(t *testing.T) {
 		assert.Equal(t, r.Header.Get("foo"), "bar")
 		assert.NotEqual(t, r.Header.Get("foo"), "baz")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{ "response": "ok" }`))
+		_, _ = w.Write([]byte(`{ "response": "ok" }`))
 	}
 
 	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
@@ -406,7 +441,9 @@ func TestCustomHystrixHTTPClientDoSuccess(t *testing.T) {
 
 func respBody(t *testing.T, response *http.Response) string {
 	if response.Body != nil {
-		defer response.Body.Close()
+		defer func() {
+			_ = response.Body.Close()
+		}()
 	}
 
 	respBody, err := ioutil.ReadAll(response.Body)
