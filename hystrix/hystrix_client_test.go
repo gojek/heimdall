@@ -26,13 +26,13 @@ func (c *myHTTPClient) Do(request *http.Request) (*http.Response, error) {
 
 func TestHystrixHTTPClientDoSuccess(t *testing.T) {
 	client := NewClient(
-		WithHTTPTimeout(10*time.Millisecond),
+		WithHTTPTimeout(50*time.Millisecond),
 		WithCommandName("some_command_name"),
 		WithHystrixTimeout(10),
 		WithMaxConcurrentRequests(100),
 		WithErrorPercentThreshold(10),
 		WithSleepWindow(100),
-		WithRequestVolumeThreshold(10),
+		WithRequestVolumeThreshold(20),
 	)
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
@@ -299,13 +299,13 @@ func TestHystrixHTTPClientRetriesPostOnFailure(t *testing.T) {
 	maximumJitterInterval := 1 * time.Millisecond
 
 	client := NewClient(
-		WithHTTPTimeout(10*time.Millisecond),
+		WithHTTPTimeout(50*time.Millisecond),
 		WithCommandName("some_command_name"),
 		WithHystrixTimeout(10),
 		WithMaxConcurrentRequests(100),
 		WithErrorPercentThreshold(10),
 		WithSleepWindow(100),
-		WithRequestVolumeThreshold(10),
+		WithRequestVolumeThreshold(20),
 		WithRetryCount(3),
 		WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval))),
 	)
