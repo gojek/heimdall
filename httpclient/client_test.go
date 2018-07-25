@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -228,6 +229,85 @@ func TestHTTPClientGetRetriesOnFailure(t *testing.T) {
 	require.Equal(t, "{ \"response\": \"something went wrong\" }", respBody(t, response))
 
 	assert.Equal(t, noOfCalls, count)
+}
+
+func BenchmarkHTTPClientGetRetriesOnFailure(b *testing.B) {
+	noOfRetries := 3
+	backoffInterval := 1 * time.Millisecond
+	maximumJitterInterval := 1 * time.Millisecond
+
+	client := NewClient(
+		WithHTTPTimeout(10*time.Millisecond),
+		WithRetryCount(noOfRetries),
+		WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval))),
+	)
+
+	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{ "response": "something went wrong" }`))
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+	defer server.Close()
+
+	for i := 0; i < b.N; i++ {
+		_, _ = client.Get(server.URL, http.Header{})
+	}
+}
+
+func TestHTTPClientPostRetriesOnFailure(t *testing.T) {
+	count := 0
+	noOfRetries := 3
+	noOfCalls := noOfRetries + 1
+	backoffInterval := 1 * time.Millisecond
+	maximumJitterInterval := 1 * time.Millisecond
+
+	client := NewClient(
+		WithHTTPTimeout(10*time.Millisecond),
+		WithRetryCount(noOfRetries),
+		WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval))),
+	)
+
+	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{ "response": "something went wrong" }`))
+		count++
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+	defer server.Close()
+
+	response, err := client.Post(server.URL, strings.NewReader("a=1"), http.Header{})
+	require.Error(t, err, "should have failed to make GET request")
+
+	require.Equal(t, http.StatusInternalServerError, response.StatusCode)
+	require.Equal(t, "{ \"response\": \"something went wrong\" }", respBody(t, response))
+
+	assert.Equal(t, noOfCalls, count)
+}
+
+func BenchmarkHTTPClientPostRetriesOnFailure(b *testing.B) {
+	noOfRetries := 3
+	backoffInterval := 1 * time.Millisecond
+	maximumJitterInterval := 1 * time.Millisecond
+
+	client := NewClient(
+		WithHTTPTimeout(10*time.Millisecond),
+		WithRetryCount(noOfRetries),
+		WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval))),
+	)
+
+	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{ "response": "something went wrong" }`))
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+	defer server.Close()
+
+	for i := 0; i < b.N; i++ {
+		_, _ = client.Post(server.URL, strings.NewReader("a=1"), http.Header{})
+	}
 }
 
 func TestHTTPClientGetReturnsAllErrorsIfRetriesFail(t *testing.T) {

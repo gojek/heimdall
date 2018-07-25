@@ -293,6 +293,35 @@ func TestHystrixHTTPClientRetriesGetOnFailure(t *testing.T) {
 	assert.Equal(t, "{ \"response\": \"something went wrong\" }", respBody(t, response))
 }
 
+func BenchmarkHystrixHTTPClientRetriesGetOnFailure(b *testing.B) {
+	backoffInterval := 1 * time.Millisecond
+	maximumJitterInterval := 1 * time.Millisecond
+
+	client := NewClient(
+		WithHTTPTimeout(10*time.Millisecond),
+		WithCommandName("some_command_name"),
+		WithHystrixTimeout(10),
+		WithMaxConcurrentRequests(100),
+		WithErrorPercentThreshold(10),
+		WithSleepWindow(100),
+		WithRequestVolumeThreshold(10),
+		WithRetryCount(3),
+		WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval))),
+	)
+
+	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte(`{ "response": "something went wrong" }`))
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+	defer server.Close()
+
+	for i := 0; i < b.N; i++ {
+		_, _ = client.Get(server.URL, http.Header{})
+	}
+}
+
 func TestHystrixHTTPClientRetriesPostOnFailure(t *testing.T) {
 	count := 0
 	backoffInterval := 1 * time.Millisecond
@@ -326,6 +355,35 @@ func TestHystrixHTTPClientRetriesPostOnFailure(t *testing.T) {
 
 	assert.Equal(t, http.StatusInternalServerError, response.StatusCode)
 	assert.JSONEq(t, `{ "response": "something went wrong" }`, respBody(t, response))
+}
+
+func BenchmarkHystrixHTTPClientRetriesPostOnFailure(b *testing.B) {
+	backoffInterval := 1 * time.Millisecond
+	maximumJitterInterval := 1 * time.Millisecond
+
+	client := NewClient(
+		WithHTTPTimeout(10*time.Millisecond),
+		WithCommandName("some_command_name"),
+		WithHystrixTimeout(10),
+		WithMaxConcurrentRequests(100),
+		WithErrorPercentThreshold(10),
+		WithSleepWindow(100),
+		WithRequestVolumeThreshold(10),
+		WithRetryCount(3),
+		WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval))),
+	)
+
+	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte(`{ "response": "something went wrong" }`))
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+	defer server.Close()
+
+	for i := 0; i < b.N; i++ {
+		_, _ = client.Post(server.URL, strings.NewReader("a=1&b=2"), http.Header{})
+	}
 }
 
 func TestHystrixHTTPClientReturnsFallbackFailureWithoutFallBackFunction(t *testing.T) {
