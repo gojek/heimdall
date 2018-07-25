@@ -120,25 +120,29 @@ func (c *Client) Delete(url string, headers http.Header) (*http.Response, error)
 func (c *Client) Do(request *http.Request) (*http.Response, error) {
 	request.Close = true
 
-	var reqBuffer []byte
+	var bodyReader *bytes.Reader
 
-	if request != nil && request.Body != nil {
-		var err error
-
-		// Storing request buffer to create new reader on each request
-		reqBuffer, err = ioutil.ReadAll(request.Body)
-
+	if request.Body != nil {
+		reqData, err := ioutil.ReadAll(request.Body)
 		if err != nil {
 			return nil, err
 		}
+		bodyReader = bytes.NewReader(reqData)
+		request.Body = ioutil.NopCloser(bodyReader) // prevents closing the body between retries
 	}
+
 	multiErr := &valkyrie.MultiError{}
 	var response *http.Response
 
 	for i := 0; i <= c.retryCount; i++ {
 		var err error
-		request.Body = ioutil.NopCloser(bytes.NewBuffer(reqBuffer))
 		response, err = c.client.Do(request)
+		if bodyReader != nil {
+			// Reset the body reader after the request since at this point it's already read
+			// Note that it's safe to ignore the error here since the 0,0 position is always valid
+			_, _ = bodyReader.Seek(0, 0)
+		}
+
 		if err != nil {
 			multiErr.Push(err.Error())
 
