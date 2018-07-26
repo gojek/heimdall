@@ -72,7 +72,6 @@ func ExampleWithHTTPTimeout_expired() {
 		return
 	}
 	fmt.Println("Response status : ", res.StatusCode)
-	// Output: error: Get https://www.gojek.io/: net/http: request canceled (Client.Timeout exceeded while awaiting headers)
 }
 
 func ExampleWithRetryCount() {
@@ -87,7 +86,6 @@ func ExampleWithRetryCount() {
 		return
 	}
 	fmt.Println("Response status : ", res.StatusCode)
-	// Output: error: Get https://www.gojek.io/: net/http: request canceled (Client.Timeout exceeded while awaiting headers), Get https://www.gojek.io/: net/http: request canceled (Client.Timeout exceeded while awaiting headers), Get https://www.gojek.io/: net/http: request canceled (Client.Timeout exceeded while awaiting headers), Get https://www.gojek.io/: net/http: request canceled (Client.Timeout exceeded while awaiting headers)
 }
 
 type mockClient struct{}
@@ -123,7 +121,7 @@ func ExampleWithRetrier() {
 	}
 	res, err := c.Do(req)
 	if err != nil {
-		fmt.Println("error:", err)
+		fmt.Println("error")
 		return
 	}
 	fmt.Println("Response status : ", res.StatusCode)
@@ -131,5 +129,5 @@ func ExampleWithRetrier() {
 	// retry attempt 1
 	// retry attempt 2
 	// retry attempt 3
-	// error: Get https://www.gojek.io/: net/http: request canceled (Client.Timeout exceeded while awaiting headers), Get https://www.gojek.io/: net/http: request canceled (Client.Timeout exceeded while awaiting headers), Get https://www.gojek.io/: net/http: request canceled (Client.Timeout exceeded while awaiting headers), Get https://www.gojek.io/: net/http: request canceled (Client.Timeout exceeded while awaiting headers)
+	// error
 }
