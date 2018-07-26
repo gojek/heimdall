@@ -114,7 +114,7 @@ func (m *mockRetrier) NextInterval(attempt int) time.Duration {
 }
 
 func ExampleWithRetrier() {
-	c := NewClient(WithHTTPTimeout(10*time.Millisecond), WithRetryCount(3), WithRetrier(&mockRetrier{}))
+	c := NewClient(WithHTTPTimeout(1*time.Millisecond), WithRetryCount(3), WithRetrier(&mockRetrier{}))
 	req, err := http.NewRequest(http.MethodGet, "https://www.gojek.io/", nil)
 	if err != nil {
 		panic(err)

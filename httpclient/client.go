@@ -143,6 +143,7 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 			response.Body.Close()
 		}
 
+		c.reportRequestStart(request)
 		var err error
 		response, err = c.client.Do(request)
 		if bodyReader != nil {
