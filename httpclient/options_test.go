@@ -1,6 +1,7 @@
 package httpclient
 
 import (
+	"fmt"
 	"net/http"
 	"testing"
 	"time"
@@ -43,4 +44,92 @@ func TestOptionsHaveDefaults(t *testing.T) {
 	assert.Equal(t, httpTimeout, c.timeout)
 	assert.Equal(t, retrier, c.retrier)
 	assert.Equal(t, noOfRetries, c.retryCount)
+}
+
+func ExampleWithHTTPTimeout() {
+	c := NewClient(WithHTTPTimeout(5 * time.Second))
+	req, err := http.NewRequest(http.MethodGet, "https://www.gojek.io/", nil)
+	if err != nil {
+		panic(err)
+	}
+	res, err := c.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("Response status : ", res.StatusCode)
+	// Output: Response status :  200
+}
+
+func ExampleWithHTTPTimeout_expired() {
+	c := NewClient(WithHTTPTimeout(1 * time.Millisecond))
+	req, err := http.NewRequest(http.MethodGet, "https://www.gojek.io/", nil)
+	if err != nil {
+		panic(err)
+	}
+	res, err := c.Do(req)
+	if err != nil {
+		fmt.Println("error:", err)
+		return
+	}
+	fmt.Println("Response status : ", res.StatusCode)
+	// Output: error: Get https://www.gojek.io/: net/http: request canceled (Client.Timeout exceeded while awaiting headers)
+}
+
+func ExampleWithRetryCount() {
+	c := NewClient(WithHTTPTimeout(1*time.Millisecond), WithRetryCount(3))
+	req, err := http.NewRequest(http.MethodGet, "https://www.gojek.io/", nil)
+	if err != nil {
+		panic(err)
+	}
+	res, err := c.Do(req)
+	if err != nil {
+		fmt.Println("error:", err)
+		return
+	}
+	fmt.Println("Response status : ", res.StatusCode)
+	// Output: error: Get https://www.gojek.io/: net/http: request canceled (Client.Timeout exceeded while awaiting headers), Get https://www.gojek.io/: net/http: request canceled (Client.Timeout exceeded while awaiting headers), Get https://www.gojek.io/: net/http: request canceled (Client.Timeout exceeded while awaiting headers), Get https://www.gojek.io/: net/http: request canceled (Client.Timeout exceeded while awaiting headers)
+}
+
+type mockClient struct{}
+
+func (m *mockClient) Do(r *http.Request) (*http.Response, error) {
+	fmt.Println("mock client called")
+	return &http.Response{}, nil
+}
+
+func ExampleWithHTTPClient() {
+	m := &mockClient{}
+	c := NewClient(WithHTTPClient(m))
+	req, err := http.NewRequest(http.MethodGet, "https://www.gojek.io/", nil)
+	if err != nil {
+		panic(err)
+	}
+	_, _ = c.Do(req)
+	// Output: mock client called
+}
+
+type mockRetrier struct{}
+
+func (m *mockRetrier) NextInterval(attempt int) time.Duration {
+	fmt.Println("retry attempt", attempt)
+	return time.Millisecond
+}
+
+func ExampleWithRetrier() {
+	c := NewClient(WithHTTPTimeout(10*time.Millisecond), WithRetryCount(3), WithRetrier(&mockRetrier{}))
+	req, err := http.NewRequest(http.MethodGet, "https://www.gojek.io/", nil)
+	if err != nil {
+		panic(err)
+	}
+	res, err := c.Do(req)
+	if err != nil {
+		fmt.Println("error:", err)
+		return
+	}
+	fmt.Println("Response status : ", res.StatusCode)
+	// Output: retry attempt 0
+	// retry attempt 1
+	// retry attempt 2
+	// retry attempt 3
+	// error: Get https://www.gojek.io/: net/http: request canceled (Client.Timeout exceeded while awaiting headers), Get https://www.gojek.io/: net/http: request canceled (Client.Timeout exceeded while awaiting headers), Get https://www.gojek.io/: net/http: request canceled (Client.Timeout exceeded while awaiting headers), Get https://www.gojek.io/: net/http: request canceled (Client.Timeout exceeded while awaiting headers)
 }
