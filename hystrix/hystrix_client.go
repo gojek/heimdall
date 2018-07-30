@@ -1,8 +1,10 @@
 package hystrix
 
 import (
+	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -147,9 +149,26 @@ func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
 	var response *http.Response
 	var err error
 
+	var bodyReader *bytes.Reader
+
+	if request.Body != nil {
+		reqData, err := ioutil.ReadAll(request.Body)
+		if err != nil {
+			return nil, err
+		}
+		bodyReader = bytes.NewReader(reqData)
+		request.Body = ioutil.NopCloser(bodyReader) // prevents closing the body between retries
+	}
+
 	for i := 0; i <= hhc.retryCount; i++ {
 		err = hystrix.Do(hhc.hystrixCommandName, func() error {
 			response, err = hhc.client.Do(request)
+			if bodyReader != nil {
+				// Reset the body reader after the request since at this point it's already read
+				// Note that it's safe to ignore the error here since the 0,0 position is always valid
+				_, _ = bodyReader.Seek(0, 0)
+			}
+
 			if err != nil {
 				return err
 			}
