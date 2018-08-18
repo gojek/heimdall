@@ -161,6 +161,10 @@ func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
 	}
 
 	for i := 0; i <= hhc.retryCount; i++ {
+		if response != nil {
+			response.Body.Close()
+		}
+
 		err = hystrix.Do(hhc.hystrixCommandName, func() error {
 			response, err = hhc.client.Do(request)
 			if bodyReader != nil {
