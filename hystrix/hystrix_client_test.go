@@ -259,13 +259,35 @@ func TestHystrixHTTPClientPatchSuccess(t *testing.T) {
 }
 
 func TestHystrixHTTPClientRetriesGetOnFailure(t *testing.T) {
-	count := 0
 	backoffInterval := 1 * time.Millisecond
 	maximumJitterInterval := 1 * time.Millisecond
 
 	client := NewClient(
 		WithHTTPTimeout(10*time.Millisecond),
 		WithCommandName("some_command_name"),
+		WithHystrixTimeout(10),
+		WithMaxConcurrentRequests(100),
+		WithErrorPercentThreshold(10),
+		WithSleepWindow(100),
+		WithRequestVolumeThreshold(10),
+		WithRetryCount(3),
+		WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval))),
+	)
+
+	response, err := client.Get("url_doesnt_exist", http.Header{})
+	require.EqualError(t, err, `Get url_doesnt_exist: unsupported protocol scheme ""`)
+
+	assert.Nil(t, response)
+}
+
+func TestHystrixHTTPClientRetriesGetOnFailure5xx(t *testing.T) {
+	count := 0
+	backoffInterval := 1 * time.Millisecond
+	maximumJitterInterval := 1 * time.Millisecond
+
+	client := NewClient(
+		WithHTTPTimeout(10*time.Millisecond),
+		WithCommandName("some_command_name_5xx"),
 		WithHystrixTimeout(10),
 		WithMaxConcurrentRequests(100),
 		WithErrorPercentThreshold(10),
@@ -285,7 +307,7 @@ func TestHystrixHTTPClientRetriesGetOnFailure(t *testing.T) {
 	defer server.Close()
 
 	response, err := client.Get(server.URL, http.Header{})
-	require.Error(t, err)
+	require.NoError(t, err)
 
 	assert.Equal(t, 4, count)
 
@@ -349,10 +371,9 @@ func TestHystrixHTTPClientRetriesPostOnFailure(t *testing.T) {
 	defer server.Close()
 
 	response, err := client.Post(server.URL, strings.NewReader("a=1&b=2"), http.Header{})
-	require.Error(t, err)
+	require.NoError(t, err)
 
 	assert.Equal(t, 4, count)
-
 	assert.Equal(t, http.StatusInternalServerError, response.StatusCode)
 	assert.JSONEq(t, `{ "response": "something went wrong" }`, respBody(t, response))
 }

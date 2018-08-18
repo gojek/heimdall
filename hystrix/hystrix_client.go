@@ -2,7 +2,6 @@ package hystrix
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -42,6 +41,7 @@ const (
 )
 
 var _ heimdall.Client = (*Client)(nil)
+var err5xx = errors.New("server returned 5xx status code")
 
 // NewClient returns a new instance of hystrix Client
 func NewClient(opts ...Option) *Client {
@@ -178,7 +178,7 @@ func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
 			}
 
 			if response.StatusCode >= http.StatusInternalServerError {
-				return fmt.Errorf("Server is down: returned status code: %d", response.StatusCode)
+				return err5xx
 			}
 			return nil
 		}, hhc.fallbackFunc)
@@ -190,6 +190,10 @@ func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
 		}
 
 		break
+	}
+
+	if err == err5xx {
+		return response, nil
 	}
 
 	return response, err

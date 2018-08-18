@@ -1,13 +1,11 @@
 package httpclient
 
 import (
-	"fmt"
+	"bytes"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"time"
-
-	"bytes"
-	"io/ioutil"
 
 	"github.com/gojektech/heimdall"
 	"github.com/gojektech/valkyrie"
@@ -156,8 +154,6 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 		}
 
 		if response.StatusCode >= http.StatusInternalServerError {
-			multiErr.Push(fmt.Sprintf("server error: %d", response.StatusCode))
-
 			backoffTime := c.retrier.NextInterval(i)
 			time.Sleep(backoffTime)
 			continue
