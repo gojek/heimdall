@@ -223,7 +223,7 @@ func TestHTTPClientGetRetriesOnFailure(t *testing.T) {
 	defer server.Close()
 
 	response, err := client.Get(server.URL, http.Header{})
-	require.Error(t, err, "should have failed to make GET request")
+	require.NoError(t, err, "should have failed to make GET request")
 
 	require.Equal(t, http.StatusInternalServerError, response.StatusCode)
 	require.Equal(t, "{ \"response\": \"something went wrong\" }", respBody(t, response))
@@ -278,7 +278,7 @@ func TestHTTPClientPostRetriesOnFailure(t *testing.T) {
 	defer server.Close()
 
 	response, err := client.Post(server.URL, strings.NewReader("a=1"), http.Header{})
-	require.Error(t, err, "should have failed to make GET request")
+	require.NoError(t, err, "should have failed to make GET request")
 
 	require.Equal(t, http.StatusInternalServerError, response.StatusCode)
 	require.Equal(t, "{ \"response\": \"something went wrong\" }", respBody(t, response))
@@ -310,7 +310,7 @@ func BenchmarkHTTPClientPostRetriesOnFailure(b *testing.B) {
 	}
 }
 
-func TestHTTPClientGetReturnsAllErrorsIfRetriesFail(t *testing.T) {
+func TestHTTPClientGetReturnsNoErrorsIfRetriesFailWith5xx(t *testing.T) {
 	count := 0
 	noOfRetries := 2
 	backoffInterval := 1 * time.Millisecond
@@ -332,13 +332,11 @@ func TestHTTPClientGetReturnsAllErrorsIfRetriesFail(t *testing.T) {
 	defer server.Close()
 
 	response, err := client.Get(server.URL, http.Header{})
-	require.Error(t, err, "should have failed to make GET request")
+	require.NoError(t, err)
 
 	require.Equal(t, noOfRetries+1, count)
 	require.Equal(t, http.StatusInternalServerError, response.StatusCode)
 	require.Equal(t, "{ \"response\": \"something went wrong\" }", respBody(t, response))
-
-	assert.Equal(t, "server error: 500, server error: 500, server error: 500", err.Error())
 }
 
 func TestHTTPClientGetReturnsNoErrorsIfRetrySucceeds(t *testing.T) {
@@ -393,7 +391,7 @@ func TestHTTPClientGetReturnsErrorOnClientCallFailure(t *testing.T) {
 	assert.Equal(t, "Get : unsupported protocol scheme \"\"", err.Error())
 }
 
-func TestHTTPClientGetReturnsErrorOn5xxFailure(t *testing.T) {
+func TestHTTPClientGetReturnsNoErrorOn5xxFailure(t *testing.T) {
 	client := NewClient(WithHTTPTimeout(10 * time.Millisecond))
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
@@ -405,11 +403,18 @@ func TestHTTPClientGetReturnsErrorOn5xxFailure(t *testing.T) {
 	defer server.Close()
 
 	response, err := client.Get(server.URL, http.Header{})
-	require.Error(t, err, "should have failed to make GET request")
-
+	require.NoError(t, err)
 	require.Equal(t, http.StatusInternalServerError, response.StatusCode)
 
-	assert.Equal(t, "server error: 500", err.Error())
+}
+
+func TestHTTPClientGetReturnsErrorOnFailure(t *testing.T) {
+	client := NewClient(WithHTTPTimeout(10 * time.Millisecond))
+
+	response, err := client.Get("url_doenst_exist", http.Header{})
+	require.EqualError(t, err, "Get url_doenst_exist: unsupported protocol scheme \"\"")
+	require.Nil(t, response)
+
 }
 
 type myHTTPClient struct {
