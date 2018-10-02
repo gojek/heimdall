@@ -22,7 +22,7 @@ func httpClientUsage() error {
 	httpClient := httpclient.NewClient(
 		httpclient.WithHTTPTimeout(timeout),
 		httpclient.WithRetryCount(2),
-		httpclient.WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(10, 5))),
+		httpclient.WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(10, 50*time.Millisecond))),
 	)
 	headers := http.Header{}
 	headers.Set("Content-Type", "application/json")
@@ -88,7 +88,7 @@ func customHTTPClientUsage() error {
 			client: http.Client{Timeout: 25 * time.Millisecond},
 		}),
 		httpclient.WithRetryCount(2),
-		httpclient.WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(10, 5))),
+		httpclient.WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(10, 50*time.Millisecond))),
 	)
 
 	headers := http.Header{}

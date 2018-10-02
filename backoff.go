@@ -21,6 +21,7 @@ func init() {
 }
 
 // NewConstantBackoff returns an instance of ConstantBackoff
+// The maximum jitter interval must be more than 1*time.Millisecond
 func NewConstantBackoff(backoffInterval, maximumJitterInterval time.Duration) Backoff {
 	return &constantBackoff{
 		backoffInterval:       int64(backoffInterval / time.Millisecond),
@@ -33,7 +34,6 @@ func (cb *constantBackoff) Next(retry int) time.Duration {
 	if retry <= 0 {
 		return 0 * time.Millisecond
 	}
-
 	return (time.Duration(cb.backoffInterval) * time.Millisecond) + (time.Duration(rand.Int63n(cb.maximumJitterInterval)) * time.Millisecond)
 }
 
@@ -45,6 +45,7 @@ type exponentialBackoff struct {
 }
 
 // NewExponentialBackoff returns an instance of ExponentialBackoff
+// The maximum jitter interval must be more than 1*time.Millisecond
 func NewExponentialBackoff(initialTimeout, maxTimeout time.Duration, exponentFactor float64, maximumJitterInterval time.Duration) Backoff {
 	return &exponentialBackoff{
 		exponentFactor:        exponentFactor,
@@ -59,6 +60,5 @@ func (eb *exponentialBackoff) Next(retry int) time.Duration {
 	if retry <= 0 {
 		return 0 * time.Millisecond
 	}
-
 	return time.Duration(math.Min(eb.initialTimeout+math.Pow(eb.exponentFactor, float64(retry)), eb.maxTimeout)+float64(rand.Int63n(eb.maximumJitterInterval))) * time.Millisecond
 }

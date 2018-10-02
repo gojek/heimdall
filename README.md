@@ -141,6 +141,7 @@ In the above example, the `fallbackFunc` is a function which posts to channel tw
 ```go
 // First set a backoff mechanism. Constant backoff increases the backoff at a constant rate
 backoffInterval := 2 * time.Millisecond
+// Define a maximum jitter interval. It must be more than 1*time.Millisecond
 maximumJitterInterval := 5 * time.Millisecond
 
 backoff := heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval)
@@ -166,7 +167,7 @@ Or create client with exponential backoff
 initalTimeout := 2*time.Millisecond            // Inital timeout
 maxTimeout := 9*time.Millisecond               // Max time out
 exponentFactor := 2                            // Multiplier
-maximumJitterInterval := 2*time.Millisecond    // Max jitter interval
+maximumJitterInterval := 2*time.Millisecond    // Max jitter interval. It must be more than 1*time.Millisecond
 
 backoff := heimdall.NewExponentialBackoff(initalTimeout, maxTimeout, exponentFactor, maximumJitterInterval)
 
