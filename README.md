@@ -41,7 +41,7 @@ The below example will print the contents of the google home page:
 ```go
 // Create a new HTTP client with a default timeout
 timeout := 1000 * time.Millisecond
-client := httpclient.NewClient(httpclient.WithTimeout(timeout))
+client := httpclient.NewClient(httpclient.WithHTTPTimeout(timeout))
 
 // Use the clients GET method to create and execute the request
 res, err := client.Get("http://google.com", nil)
@@ -58,7 +58,7 @@ You can also use the `*http.Request` object with the `http.Do` interface :
 
 ```go
 timeout := 1000 * time.Millisecond
-client := httpclient.NewClient(httpclient.WithTimeout(timeout))
+client := httpclient.NewClient(httpclient.WithHTTPTimeout(timeout))
 
 // Create an http.Request instance
 req, _ := http.NewRequest(http.MethodGet, "http://google.com", nil)
@@ -79,12 +79,12 @@ You can use the `hystrix.NewClient` function to create a client wrapped in a hys
 ```go
 // Create a new hystrix-wrapped HTTP client with the command name, along with other required options
 client := hystrix.NewClient(
-	hystrix.WithTimeout(10 * time.Millisecond),
+	hystrix.WithHTTPTimeout(10 * time.Millisecond),
 	hystrix.WithCommandName("google_get_request"),
 	hystrix.WithHystrixTimeout(1000),
 	hystrix.WithMaxConcurrentRequests(30),
 	hystrix.WithErrorPercentThreshold(20),
-})
+)
 
 // The rest is the same as the previous example
 ```
@@ -121,7 +121,7 @@ timeout := 10 * time.Millisecond
 
 // Create a new hystrix-wrapped HTTP client with the fallbackFunc as fall-back function
 client := hystrix.NewClient(
-	hystrix.WithTimeout(timeout),
+	hystrix.WithHTTPTimeout(timeout),
 	hystrix.WithCommandName("MyCommand"),
 	hystrix.WithHystrixTimeout(1100),
 	hystrix.WithMaxConcurrentRequests(100),
@@ -151,7 +151,7 @@ retrier := heimdall.NewRetrier(backoff)
 timeout := 1000 * time.Millisecond
 // Create a new client, sets the retry mechanism, and the number of times you would like to retry
 client := httpclient.NewClient(
-	httpclient.WithTimeout(timeout),
+	httpclient.WithHTTPTimeout(timeout),
 	httpclient.WithRetrier(retrier),
 	httpclient.WithRetryCount(4),
 )
@@ -176,7 +176,7 @@ retrier := heimdall.NewRetrier(backoff)
 timeout := 1000 * time.Millisecond
 // Create a new client, sets the retry mechanism, and the number of times you would like to retry
 client := httpclient.NewClient(
-	httpclient.WithTimeout(timeout),
+	httpclient.WithHTTPTimeout(timeout),
 	httpclient.WithRetrier(retrier),
 	httpclient.WithRetryCount(4),
 )
@@ -222,7 +222,7 @@ retrier := heimdall.NewRetrier(backoff)
 timeout := 1000 * time.Millisecond
 // Create a new client, sets the retry mechanism, and the number of times you would like to retry
 client := httpclient.NewClient(
-	httpclient.WithTimeout(timeout),
+	httpclient.WithHTTPTimeout(timeout),
 	httpclient.WithRetrier(retrier),
 	httpclient.WithRetryCount(4),
 )
@@ -241,7 +241,7 @@ linearRetrier := NewRetrierFunc(func(retry int) time.Duration {
 
 timeout := 1000 * time.Millisecond
 client := httpclient.NewClient(
-	httpclient.WithTimeout(timeout),
+	httpclient.WithHTTPTimeout(timeout),
 	httpclient.WithRetrier(linearRetrier),
 	httpclient.WithRetryCount(4),
 )
