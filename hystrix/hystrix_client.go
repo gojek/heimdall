@@ -144,8 +144,6 @@ func (hhc *Client) Delete(url string, headers http.Header) (*http.Response, erro
 
 // Do makes an HTTP request with the native `http.Do` interface
 func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
-	request.Close = true
-
 	var response *http.Response
 	var err error
 
