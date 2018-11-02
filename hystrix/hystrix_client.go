@@ -67,7 +67,7 @@ func NewClient(opts ...Option) *Client {
 	}
 
 	hystrix.ConfigureCommand(client.hystrixCommandName, hystrix.CommandConfig{
-		Timeout:                int(client.hystrixTimeout),
+		Timeout:                int(client.hystrixTimeout / 1000000),
 		MaxConcurrentRequests:  client.maxConcurrentRequests,
 		RequestVolumeThreshold: client.requestVolumeThreshold,
 		SleepWindow:            client.sleepWindow,
