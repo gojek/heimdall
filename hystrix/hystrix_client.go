@@ -38,6 +38,9 @@ const (
 	defaultErrorPercentThreshold  = 25
 	defaultSleepWindow            = 10
 	defaultRequestVolumeThreshold = 10
+
+	maxUint = ^uint(0)
+	maxInt  = int(maxUint >> 1)
 )
 
 var _ heimdall.Client = (*Client)(nil)
@@ -67,7 +70,7 @@ func NewClient(opts ...Option) *Client {
 	}
 
 	hystrix.ConfigureCommand(client.hystrixCommandName, hystrix.CommandConfig{
-		Timeout:                int(client.hystrixTimeout / 1000000),
+		Timeout:                durationToInt(client.hystrixTimeout, time.Millisecond),
 		MaxConcurrentRequests:  client.maxConcurrentRequests,
 		RequestVolumeThreshold: client.requestVolumeThreshold,
 		SleepWindow:            client.sleepWindow,
@@ -75,6 +78,18 @@ func NewClient(opts ...Option) *Client {
 	})
 
 	return &client
+}
+
+func durationToInt(duration, unit time.Duration) int {
+	durationAsNumber := duration / unit
+
+	if int64(durationAsNumber) > int64(maxInt) {
+		// Returning max possible value seems like best possible solution here
+		// the alternative is to panic as there is no way of returning an error
+		// without changing the NewClient API
+		return maxInt
+	}
+	return int(durationAsNumber)
 }
 
 // Get makes a HTTP GET request to provided URL

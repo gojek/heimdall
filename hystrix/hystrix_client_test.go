@@ -530,3 +530,19 @@ func respBody(t *testing.T, response *http.Response) string {
 
 	return string(respBody)
 }
+
+func TestDurationToInt(t *testing.T) {
+	t.Run("1sec should return 1 when unit is second", func(t *testing.T) {
+		timeout := 1 * time.Second
+		timeoutInSec := durationToInt(timeout, time.Second)
+
+		assert.Equal(t, 1, timeoutInSec)
+	})
+
+	t.Run("30sec should return 30000 when unit is millisecond", func(t *testing.T) {
+		timeout := 30 * time.Second
+		timeoutInMs := durationToInt(timeout, time.Millisecond)
+
+		assert.Equal(t, 30000, timeoutInMs)
+	})
+}
