@@ -6,7 +6,7 @@ ALL_PACKAGES=$(shell go list ./... | grep -v "vendor")
 setup:
 	mkdir -p $(GOPATH)/bin
 	go get -u github.com/golang/dep/cmd/dep
-	go get -u github.com/golang/lint/golint
+	go get -u golang.org/x/lint/golint
 
 build-deps:
 	dep ensure
