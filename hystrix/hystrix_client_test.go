@@ -28,7 +28,7 @@ func TestHystrixHTTPClientDoSuccess(t *testing.T) {
 	client := NewClient(
 		WithHTTPTimeout(50*time.Millisecond),
 		WithCommandName("some_command_name"),
-		WithHystrixTimeout(10),
+		WithHystrixTimeout(10*time.Millisecond),
 		WithMaxConcurrentRequests(100),
 		WithErrorPercentThreshold(10),
 		WithSleepWindow(100),
@@ -352,7 +352,7 @@ func TestHystrixHTTPClientRetriesPostOnFailure(t *testing.T) {
 	client := NewClient(
 		WithHTTPTimeout(50*time.Millisecond),
 		WithCommandName("some_command_name"),
-		WithHystrixTimeout(10),
+		WithHystrixTimeout(10*time.Millisecond),
 		WithMaxConcurrentRequests(100),
 		WithErrorPercentThreshold(10),
 		WithSleepWindow(100),
