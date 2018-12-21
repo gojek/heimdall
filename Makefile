@@ -9,7 +9,7 @@ setup:
 
 compile:
 	mkdir -p out/
-	go build -race ./...
+	env GO111MODULE=on go build -race ./...
 
 build: compile fmt vet lint
 
