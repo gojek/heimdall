@@ -14,16 +14,16 @@ compile:
 build: compile fmt vet lint
 
 fmt:
-	go fmt ./...
+	env GO111MODULE=on go fmt ./...
 
 vet:
-	go vet ./...
+	env GO111MODULE=on go vet ./...
 
 lint:
-	golint -set_exit_status $(ALL_PACKAGES)
+	env GO111MODULE=on golint -set_exit_status $(ALL_PACKAGES)
 
 test: fmt vet build
-	ENVIRONMENT=test go test -race ./...
+	GO111MODULE=on ENVIRONMENT=test go test -race ./...
 
 test-cover-html:
 	@echo "mode: count" > coverage-all.out
