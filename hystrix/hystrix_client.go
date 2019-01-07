@@ -33,7 +33,7 @@ type Client struct {
 const (
 	defaultHystrixRetryCount      = 0
 	defaultHTTPTimeout            = 30 * time.Second
-	defaultHystriximeout          = 30 * time.Second
+	defaultHystrixTimeout         = 30 * time.Second
 	defaultMaxConcurrentRequests  = 100
 	defaultErrorPercentThreshold  = 25
 	defaultSleepWindow            = 10
@@ -50,7 +50,7 @@ var err5xx = errors.New("server returned 5xx status code")
 func NewClient(opts ...Option) *Client {
 	client := Client{
 		timeout:                defaultHTTPTimeout,
-		hystrixTimeout:         defaultHystriximeout,
+		hystrixTimeout:         defaultHystrixTimeout,
 		maxConcurrentRequests:  defaultMaxConcurrentRequests,
 		errorPercentThreshold:  defaultErrorPercentThreshold,
 		sleepWindow:            defaultSleepWindow,
