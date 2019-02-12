@@ -35,6 +35,14 @@ go get -u github.com/gojektech/heimdall
 
 ## Usage
 
+### Importing the package
+
+This package can be used by adding the following import statement to your `.go` files.
+
+```go
+import "github.com/gojektech/heimdall/httpclient"
+```
+
 ### Making a simple `GET` request
 The below example will print the contents of the google home page:
 
