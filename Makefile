@@ -1,11 +1,12 @@
-.PHONY: all
-all: build test
+.PHONYthub.com/mattn/goveralls: all
+all: build test coverage
 
 ALL_PACKAGES=$(shell go list ./... | grep -v "vendor")
 
 setup:
 	mkdir -p $(GOPATH)/bin
 	go get -u golang.org/x/lint/golint
+	go get github.com/mattn/goveralls
 
 compile:
 	mkdir -p out/
@@ -24,6 +25,9 @@ lint:
 
 test: fmt vet build
 	GO111MODULE=on ENVIRONMENT=test go test -race ./...
+
+coverage:
+	goveralls -service=travis-ci
 
 test-cover-html:
 	@echo "mode: count" > coverage-all.out
