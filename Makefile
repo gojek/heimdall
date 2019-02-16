@@ -27,7 +27,7 @@ test: fmt vet build
 	GO111MODULE=on ENVIRONMENT=test go test -race ./...
 
 coverage:
-	goveralls -service=travis-ci
+	GO111MODULE=on ENVIRONMENT=test goveralls -service=travis-ci
 
 test-cover-html:
 	@echo "mode: count" > coverage-all.out
