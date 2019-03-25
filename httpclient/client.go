@@ -14,8 +14,7 @@ import (
 
 // Client is the http client implementation
 type Client struct {
-	client heimdall.Doer
-
+	client     heimdall.Doer
 	timeout    time.Duration
 	retryCount int
 	retrier    heimdall.Retriable
@@ -51,66 +50,51 @@ func NewClient(opts ...Option) *Client {
 
 // Get makes a HTTP GET request to provided URL
 func (c *Client) Get(url string, headers http.Header) (*http.Response, error) {
-	var response *http.Response
 	request, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return response, errors.Wrap(err, "GET - request creation failed")
+		return nil, errors.Wrap(err, "GET - request creation failed")
 	}
-
 	request.Header = headers
-
 	return c.Do(request)
 }
 
 // Post makes a HTTP POST request to provided URL and requestBody
 func (c *Client) Post(url string, body io.Reader, headers http.Header) (*http.Response, error) {
-	var response *http.Response
 	request, err := http.NewRequest(http.MethodPost, url, body)
 	if err != nil {
-		return response, errors.Wrap(err, "POST - request creation failed")
+		return nil, errors.Wrap(err, "POST - request creation failed")
 	}
-
 	request.Header = headers
-
 	return c.Do(request)
 }
 
 // Put makes a HTTP PUT request to provided URL and requestBody
 func (c *Client) Put(url string, body io.Reader, headers http.Header) (*http.Response, error) {
-	var response *http.Response
 	request, err := http.NewRequest(http.MethodPut, url, body)
 	if err != nil {
-		return response, errors.Wrap(err, "PUT - request creation failed")
+		return nil, errors.Wrap(err, "PUT - request creation failed")
 	}
-
 	request.Header = headers
-
 	return c.Do(request)
 }
 
 // Patch makes a HTTP PATCH request to provided URL and requestBody
 func (c *Client) Patch(url string, body io.Reader, headers http.Header) (*http.Response, error) {
-	var response *http.Response
 	request, err := http.NewRequest(http.MethodPatch, url, body)
 	if err != nil {
-		return response, errors.Wrap(err, "PATCH - request creation failed")
+		return nil, errors.Wrap(err, "PATCH - request creation failed")
 	}
-
 	request.Header = headers
-
 	return c.Do(request)
 }
 
 // Delete makes a HTTP DELETE request with provided URL
 func (c *Client) Delete(url string, headers http.Header) (*http.Response, error) {
-	var response *http.Response
 	request, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
-		return response, errors.Wrap(err, "DELETE - request creation failed")
+		return nil, errors.Wrap(err, "DELETE - request creation failed")
 	}
-
 	request.Header = headers
-
 	return c.Do(request)
 }
 
@@ -119,7 +103,6 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 	request.Close = true
 
 	var bodyReader *bytes.Reader
-
 	if request.Body != nil {
 		reqData, err := ioutil.ReadAll(request.Body)
 		if err != nil {
@@ -129,8 +112,10 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 		request.Body = ioutil.NopCloser(bodyReader) // prevents closing the body between retries
 	}
 
-	multiErr := &valkyrie.MultiError{}
-	var response *http.Response
+	var (
+		response *http.Response
+		multiErr = &valkyrie.MultiError{}
+	)
 
 	for i := 0; i <= c.retryCount; i++ {
 		if response != nil {
@@ -158,10 +143,7 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 			time.Sleep(backoffTime)
 			continue
 		}
-
-		multiErr = &valkyrie.MultiError{} // Clear errors if any iteration succeeds
-		break
+		return response, nil
 	}
-
 	return response, multiErr.HasError()
 }

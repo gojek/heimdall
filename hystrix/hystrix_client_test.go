@@ -15,15 +15,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type myHTTPClient struct {
-	client http.Client
-}
-
-func (c *myHTTPClient) Do(request *http.Request) (*http.Response, error) {
-	request.Header.Set("foo", "bar")
-	return c.client.Do(request)
-}
-
 func TestHystrixHTTPClientDoSuccess(t *testing.T) {
 	client := NewClient(
 		WithHTTPTimeout(50*time.Millisecond),
@@ -259,6 +250,7 @@ func TestHystrixHTTPClientPatchSuccess(t *testing.T) {
 }
 
 func TestHystrixHTTPClientRetriesGetOnFailure(t *testing.T) {
+	noOfRetries := 3
 	backoffInterval := 1 * time.Millisecond
 	maximumJitterInterval := 1 * time.Millisecond
 
@@ -270,7 +262,7 @@ func TestHystrixHTTPClientRetriesGetOnFailure(t *testing.T) {
 		WithErrorPercentThreshold(10),
 		WithSleepWindow(100),
 		WithRequestVolumeThreshold(10),
-		WithRetryCount(3),
+		WithRetryCount(noOfRetries),
 		WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval))),
 	)
 
@@ -282,6 +274,7 @@ func TestHystrixHTTPClientRetriesGetOnFailure(t *testing.T) {
 
 func TestHystrixHTTPClientRetriesGetOnFailure5xx(t *testing.T) {
 	count := 0
+	noOfRetries := 3
 	backoffInterval := 1 * time.Millisecond
 	maximumJitterInterval := 1 * time.Millisecond
 
@@ -293,7 +286,7 @@ func TestHystrixHTTPClientRetriesGetOnFailure5xx(t *testing.T) {
 		WithErrorPercentThreshold(10),
 		WithSleepWindow(100),
 		WithRequestVolumeThreshold(10),
-		WithRetryCount(3),
+		WithRetryCount(noOfRetries),
 		WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval))),
 	)
 
@@ -316,6 +309,7 @@ func TestHystrixHTTPClientRetriesGetOnFailure5xx(t *testing.T) {
 }
 
 func BenchmarkHystrixHTTPClientRetriesGetOnFailure(b *testing.B) {
+	noOfRetries := 3
 	backoffInterval := 1 * time.Millisecond
 	maximumJitterInterval := 1 * time.Millisecond
 
@@ -327,7 +321,7 @@ func BenchmarkHystrixHTTPClientRetriesGetOnFailure(b *testing.B) {
 		WithErrorPercentThreshold(10),
 		WithSleepWindow(100),
 		WithRequestVolumeThreshold(10),
-		WithRetryCount(3),
+		WithRetryCount(noOfRetries),
 		WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval))),
 	)
 
@@ -346,6 +340,7 @@ func BenchmarkHystrixHTTPClientRetriesGetOnFailure(b *testing.B) {
 
 func TestHystrixHTTPClientRetriesPostOnFailure(t *testing.T) {
 	count := 0
+	noOfRetries := 3
 	backoffInterval := 1 * time.Millisecond
 	maximumJitterInterval := 1 * time.Millisecond
 
@@ -357,7 +352,7 @@ func TestHystrixHTTPClientRetriesPostOnFailure(t *testing.T) {
 		WithErrorPercentThreshold(10),
 		WithSleepWindow(100),
 		WithRequestVolumeThreshold(20),
-		WithRetryCount(3),
+		WithRetryCount(noOfRetries),
 		WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval))),
 	)
 
@@ -379,6 +374,7 @@ func TestHystrixHTTPClientRetriesPostOnFailure(t *testing.T) {
 }
 
 func BenchmarkHystrixHTTPClientRetriesPostOnFailure(b *testing.B) {
+	noOfRetries := 3
 	backoffInterval := 1 * time.Millisecond
 	maximumJitterInterval := 1 * time.Millisecond
 
@@ -390,7 +386,7 @@ func BenchmarkHystrixHTTPClientRetriesPostOnFailure(b *testing.B) {
 		WithErrorPercentThreshold(10),
 		WithSleepWindow(100),
 		WithRequestVolumeThreshold(10),
-		WithRetryCount(3),
+		WithRetryCount(noOfRetries),
 		WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval))),
 	)
 
@@ -483,6 +479,15 @@ func TestHystrixHTTPClientReturnsFallbackFailureWithAFallBackFunctionWhichReturn
 
 	_, err := client.Get("http://foobar.example", http.Header{})
 	assert.Nil(t, err)
+}
+
+type myHTTPClient struct {
+	client http.Client
+}
+
+func (c *myHTTPClient) Do(request *http.Request) (*http.Response, error) {
+	request.Header.Set("foo", "bar")
+	return c.client.Do(request)
 }
 
 func TestCustomHystrixHTTPClientDoSuccess(t *testing.T) {

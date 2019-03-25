@@ -341,13 +341,14 @@ func TestHTTPClientGetReturnsNoErrorsIfRetriesFailWith5xx(t *testing.T) {
 
 func TestHTTPClientGetReturnsNoErrorsIfRetrySucceeds(t *testing.T) {
 	count := 0
+	noOfRetries := 3
 	countWhenCallSucceeds := 2
 	backoffInterval := 1 * time.Millisecond
 	maximumJitterInterval := 1 * time.Millisecond
 
 	client := NewClient(
 		WithHTTPTimeout(10*time.Millisecond),
-		WithRetryCount(3),
+		WithRetryCount(noOfRetries),
 		WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval))),
 	)
 
