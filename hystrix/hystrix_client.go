@@ -2,7 +2,6 @@ package hystrix
 
 import (
 	"bytes"
-	"fmt"
 	"github.com/gojektech/heimdall/httpclient"
 	"io"
 	"io/ioutil"
