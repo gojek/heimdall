@@ -1,4 +1,4 @@
-package heimdall
+package httpclient
 
 import (
 	"net/http"
