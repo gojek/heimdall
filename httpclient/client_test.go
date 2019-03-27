@@ -420,7 +420,7 @@ func TestHTTPClientGetReturnsErrorOnFailure(t *testing.T) {
 
 func TestPluginMethodsCalled(t *testing.T) {
 	client := NewClient(WithHTTPTimeout(10 * time.Millisecond))
-	mockPlugin := &heimdall.MockPlugin{}
+	mockPlugin := &MockPlugin{}
 	client.AddPlugin(mockPlugin)
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
@@ -451,7 +451,7 @@ func TestPluginMethodsCalled(t *testing.T) {
 
 func TestPluginErrorMethodCalled(t *testing.T) {
 	client := NewClient(WithHTTPTimeout(10 * time.Millisecond))
-	mockPlugin := &heimdall.MockPlugin{}
+	mockPlugin := &MockPlugin{}
 	client.AddPlugin(mockPlugin)
 
 	mockPlugin.On("OnRequestStart", mock.Anything)

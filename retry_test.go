@@ -35,3 +35,9 @@ func TestRetrierFunc(t *testing.T) {
 
 	assert.True(t, 3*time.Millisecond <= linearRetrier.NextInterval(4))
 }
+
+func TestNoRetrier(t *testing.T) {
+	noRetrier := NewNoRetrier()
+	nextInterval := noRetrier.NextInterval(1)
+	assert.Equal(t, time.Duration(0), nextInterval)
+}
