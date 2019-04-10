@@ -179,7 +179,7 @@ func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
 		}
 
 		err = hystrix.Do(hhc.hystrixCommandName, func() error {
-			response, err = hhc.client.Do(request)
+			resp, err := hhc.client.Do(request)
 			if bodyReader != nil {
 				// Reset the body reader after the request since at this point it's already read
 				// Note that it's safe to ignore the error here since the 0,0 position is always valid
@@ -190,9 +190,12 @@ func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
 				return err
 			}
 
-			if response.StatusCode >= http.StatusInternalServerError {
+			response = resp
+
+			if resp.StatusCode >= http.StatusInternalServerError {
 				return err5xx
 			}
+
 			return nil
 		}, hhc.fallbackFunc)
 
