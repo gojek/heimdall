@@ -283,7 +283,7 @@ Now, each sent request will have the `Authorization` header to use HTTP basic au
 
 This can be done for the hystrix client as well
 
-```
+```go
 client := httpclient.NewClient(
 	httpclient.WithHTTPClient(&myHTTPClient{
 		client: http.Client{Timeout: 25 * time.Millisecond},
