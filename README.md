@@ -286,9 +286,8 @@ This can be done for the hystrix client as well
 ```
 client := httpclient.NewClient(
 	httpclient.WithHTTPClient(&myHTTPClient{
-    		client: http.Client{Timeout: 25 * time.Millisecond}
-		}
-	)
+		client: http.Client{Timeout: 25 * time.Millisecond},
+	}),
 )
 
 // The rest is the same as the first example
