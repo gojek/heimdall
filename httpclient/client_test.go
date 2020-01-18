@@ -388,7 +388,7 @@ func TestHTTPClientGetReturnsErrorOnClientCallFailure(t *testing.T) {
 
 	require.Nil(t, response)
 
-	assert.Equal(t, "Get : unsupported protocol scheme \"\"", err.Error())
+	assert.Equal(t, `Get "": unsupported protocol scheme ""`, err.Error())
 }
 
 func TestHTTPClientGetReturnsNoErrorOn5xxFailure(t *testing.T) {
@@ -412,7 +412,7 @@ func TestHTTPClientGetReturnsErrorOnFailure(t *testing.T) {
 	client := NewClient(WithHTTPTimeout(10 * time.Millisecond))
 
 	response, err := client.Get("url_doesnt_exist", http.Header{})
-	require.EqualError(t, err, "Get url_doesnt_exist: unsupported protocol scheme \"\"")
+	require.EqualError(t, err, `Get "url_doesnt_exist": unsupported protocol scheme ""`)
 	require.Nil(t, response)
 
 }
