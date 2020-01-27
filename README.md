@@ -5,7 +5,7 @@
   <a href="https://travis-ci.com/gojek/heimdall"><img src="https://travis-ci.com/gojek/heimdall.svg?branch=master" alt="Build Status"></img></a>
   <a href="https://goreportcard.com/report/github.com/gojektech/heimdall"><img src="https://goreportcard.com/badge/github.com/gojektech/heimdall"></img></a>
   <a href="https://golangci.com"><img src="https://golangci.com/badges/github.com/gojektech/heimdall.svg"></img></a>
-  <a href="https://coveralls.io/github/gojektech/heimdall?branch=master"><img src="https://coveralls.io/repos/github/gojektech/heimdall/badge.svg?branch=master"></img></a>
+  <a href="https://coveralls.io/github/gojek/heimdall?branch=master"><img src="https://coveralls.io/repos/github/gojek/heimdall/badge.svg?branch=master"></img></a>
 </p>
 
 * [Description](#description)
