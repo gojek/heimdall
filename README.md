@@ -92,7 +92,7 @@ You can use the `hystrix.NewClient` function to create a client wrapped in a hys
 client := hystrix.NewClient(
 	hystrix.WithHTTPTimeout(10 * time.Millisecond),
 	hystrix.WithCommandName("google_get_request"),
-	hystrix.WithHystrixTimeout(1000),
+	hystrix.WithHystrixTimeout(1000 * time.Millisecond),
 	hystrix.WithMaxConcurrentRequests(30),
 	hystrix.WithErrorPercentThreshold(20),
 )
@@ -134,7 +134,7 @@ timeout := 10 * time.Millisecond
 client := hystrix.NewClient(
 	hystrix.WithHTTPTimeout(timeout),
 	hystrix.WithCommandName("MyCommand"),
-	hystrix.WithHystrixTimeout(1100),
+	hystrix.WithHystrixTimeout(1100 * time.Millisecond),
 	hystrix.WithMaxConcurrentRequests(100),
 	hystrix.WithErrorPercentThreshold(20),
 	hystrix.WithSleepWindow(10),
