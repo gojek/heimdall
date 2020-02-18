@@ -48,7 +48,7 @@ func hystrixClientUsage() error {
 	hystrixClient := hystrix.NewClient(
 		hystrix.WithHTTPTimeout(timeout),
 		hystrix.WithCommandName("MyCommand"),
-		hystrix.WithHystrixTimeout(1100),
+		hystrix.WithHystrixTimeout(1100*time.Millisecond),
 		hystrix.WithMaxConcurrentRequests(100),
 		hystrix.WithErrorPercentThreshold(25),
 		hystrix.WithSleepWindow(10),
@@ -116,7 +116,7 @@ func customHystrixClientUsage() error {
 	hystrixClient := hystrix.NewClient(
 		hystrix.WithHTTPTimeout(timeout),
 		hystrix.WithCommandName("MyCommand"),
-		hystrix.WithHystrixTimeout(1100),
+		hystrix.WithHystrixTimeout(1100*time.Millisecond),
 		hystrix.WithMaxConcurrentRequests(100),
 		hystrix.WithErrorPercentThreshold(25),
 		hystrix.WithSleepWindow(10),
