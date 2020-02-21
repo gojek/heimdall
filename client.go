@@ -19,4 +19,5 @@ type Client interface {
 	Patch(url string, body io.Reader, headers http.Header) (*http.Response, error)
 	Delete(url string, headers http.Header) (*http.Response, error)
 	Do(req *http.Request) (*http.Response, error)
+	AddPlugin(p Plugin)
 }

@@ -11,6 +11,7 @@ import (
 
 	"github.com/gojektech/heimdall"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -415,6 +416,60 @@ func TestHTTPClientGetReturnsErrorOnFailure(t *testing.T) {
 	require.EqualError(t, err, "Get url_doenst_exist: unsupported protocol scheme \"\"")
 	require.Nil(t, response)
 
+}
+
+func TestPluginMethodsCalled(t *testing.T) {
+	client := NewClient(WithHTTPTimeout(10 * time.Millisecond))
+	mockPlugin := &MockPlugin{}
+	client.AddPlugin(mockPlugin)
+
+	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{ "response": "something went wrong" }`))
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+	defer server.Close()
+
+	mockPlugin.On("OnRequestStart", mock.Anything)
+	mockPlugin.On("OnRequestEnd", mock.Anything, mock.Anything)
+
+	_, err := client.Get(server.URL, http.Header{})
+
+	require.NoError(t, err)
+	mockPlugin.AssertNumberOfCalls(t, "OnRequestStart", 1)
+	pluginRequest, ok := mockPlugin.Calls[0].Arguments[0].(*http.Request)
+	require.True(t, ok)
+	assert.Equal(t, http.MethodGet, pluginRequest.Method)
+	assert.Equal(t, server.URL, pluginRequest.URL.String())
+
+	mockPlugin.AssertNumberOfCalls(t, "OnRequestEnd", 1)
+	pluginResponse, ok := mockPlugin.Calls[1].Arguments[1].(*http.Response)
+	require.True(t, ok)
+	assert.Equal(t, http.StatusOK, pluginResponse.StatusCode)
+}
+
+func TestPluginErrorMethodCalled(t *testing.T) {
+	client := NewClient(WithHTTPTimeout(10 * time.Millisecond))
+	mockPlugin := &MockPlugin{}
+	client.AddPlugin(mockPlugin)
+
+	mockPlugin.On("OnRequestStart", mock.Anything)
+	mockPlugin.On("OnError", mock.Anything, mock.Anything)
+
+	serverURL := "does_not_exist"
+	_, err := client.Get(serverURL, http.Header{})
+
+	mockPlugin.AssertNumberOfCalls(t, "OnRequestStart", 1)
+	pluginRequest, ok := mockPlugin.Calls[0].Arguments[0].(*http.Request)
+	require.True(t, ok)
+	assert.Equal(t, http.MethodGet, pluginRequest.Method)
+	assert.Equal(t, serverURL, pluginRequest.URL.String())
+
+	mockPlugin.AssertNumberOfCalls(t, "OnError", 1)
+	err, ok = mockPlugin.Calls[1].Arguments[1].(error)
+	require.True(t, ok)
+	assert.EqualError(t, err, "Get does_not_exist: unsupported protocol scheme \"\"")
 }
 
 type myHTTPClient struct {
