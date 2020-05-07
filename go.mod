@@ -1,4 +1,6 @@
-module github.com/gojektech/heimdall
+module github.com/gojektech/heimdall/v6
+
+go 1.11
 
 require (
 	github.com/afex/hystrix-go v0.0.0-20180209013831-27fae8d30f1a

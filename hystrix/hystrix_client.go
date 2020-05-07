@@ -2,14 +2,14 @@ package hystrix
 
 import (
 	"bytes"
-	"github.com/gojektech/heimdall/httpclient"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"time"
 
 	"github.com/afex/hystrix-go/hystrix"
-	"github.com/gojektech/heimdall"
+	"github.com/gojektech/heimdall/v6"
+	"github.com/gojektech/heimdall/v6/httpclient"
 	"github.com/pkg/errors"
 )
 
