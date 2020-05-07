@@ -1,10 +1,10 @@
 package hystrix
 
 import (
-	"github.com/gojektech/heimdall/httpclient"
 	"time"
 
-	"github.com/gojektech/heimdall"
+	"github.com/gojektech/heimdall/v6"
+	"github.com/gojektech/heimdall/v6/httpclient"
 )
 
 // Option represents the hystrix client options
