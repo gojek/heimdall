@@ -43,7 +43,8 @@ go get -u github.com/gojektech/heimdall/v6
 This package can be used by adding the following import statement to your `.go` files.
 
 ```go
-import "github.com/gojektech/heimdall/v6/httpclient"
+import "github.com/gojektech/heimdall/v6/httpclient" // with go modules enabled (GO111MODULE=on or outside GOPATH)
+import "github.com/gojektech/heimdall/httpclient" // with go modules disabled
 ```
 
 ### Making a simple `GET` request
@@ -84,6 +85,13 @@ fmt.Println(string(body))
 ```
 
 ### Creating a hystrix-like circuit breaker
+
+To import hystrix package of heimdall.
+
+```go
+import "github.com/gojektech/heimdall/v6/hystrix" // with go modules enabled (GO111MODULE=on or outside GOPATH)
+import "github.com/gojektech/heimdall/hystrix" // with go modules disabled
+```
 
 You can use the `hystrix.NewClient` function to create a client wrapped in a hystrix-like circuit breaker:
 
