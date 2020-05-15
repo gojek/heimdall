@@ -33,7 +33,7 @@ All HTTP methods are exposed as a fluent interface.
 
 ## Installation
 ```
-go get -u github.com/gojektech/heimdall
+go get -u github.com/gojektech/heimdall/v6
 ```
 
 ## Usage
@@ -43,7 +43,7 @@ go get -u github.com/gojektech/heimdall
 This package can be used by adding the following import statement to your `.go` files.
 
 ```go
-import "github.com/gojektech/heimdall/httpclient"
+import "github.com/gojektech/heimdall/v6/httpclient"
 ```
 
 ### Making a simple `GET` request
@@ -303,7 +303,7 @@ To add a plugin to an existing client, use the `AddPlugin` method of the client.
 An example, with the [request logger plugin](/plugins/request_logger.go):
 
 ```go
-// import "github.com/gojektech/heimdall/plugins"
+// import "github.com/gojektech/heimdall/v6/plugins"
 
 client := heimdall.NewHTTPClient(timeout)
 requestLogger := plugins.NewRequestLogger(nil, nil)
