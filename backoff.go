@@ -31,9 +31,6 @@ func NewConstantBackoff(backoffInterval, maximumJitterInterval time.Duration) Ba
 
 // Next returns next time for retrying operation with constant strategy
 func (cb *constantBackoff) Next(retry int) time.Duration {
-	if retry <= 0 {
-		return 0 * time.Millisecond
-	}
 	return (time.Duration(cb.backoffInterval) * time.Millisecond) + (time.Duration(rand.Int63n(cb.maximumJitterInterval)) * time.Millisecond)
 }
 
@@ -57,8 +54,5 @@ func NewExponentialBackoff(initialTimeout, maxTimeout time.Duration, exponentFac
 
 // Next returns next time for retrying operation with exponential strategy
 func (eb *exponentialBackoff) Next(retry int) time.Duration {
-	if retry <= 0 {
-		return 0 * time.Millisecond
-	}
-	return time.Duration(math.Min(eb.initialTimeout+math.Pow(eb.exponentFactor, float64(retry)), eb.maxTimeout)+float64(rand.Int63n(eb.maximumJitterInterval))) * time.Millisecond
+	return time.Duration(math.Min(eb.initialTimeout*math.Pow(eb.exponentFactor, float64(retry)), eb.maxTimeout)+float64(rand.Int63n(eb.maximumJitterInterval))) * time.Millisecond
 }
