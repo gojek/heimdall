@@ -21,8 +21,10 @@ func init() {
 }
 
 // NewConstantBackoff returns an instance of ConstantBackoff
-// The maximum jitter interval must be more than 1*time.Millisecond
 func NewConstantBackoff(backoffInterval, maximumJitterInterval time.Duration) Backoff {
+	if maximumJitterInterval < 0 {
+		maximumJitterInterval = 0
+	}
 	return &constantBackoff{
 		backoffInterval:       int64(backoffInterval / time.Millisecond),
 		maximumJitterInterval: int64(maximumJitterInterval / time.Millisecond),
@@ -31,7 +33,7 @@ func NewConstantBackoff(backoffInterval, maximumJitterInterval time.Duration) Ba
 
 // Next returns next time for retrying operation with constant strategy
 func (cb *constantBackoff) Next(retry int) time.Duration {
-	return (time.Duration(cb.backoffInterval) * time.Millisecond) + (time.Duration(rand.Int63n(cb.maximumJitterInterval)) * time.Millisecond)
+	return (time.Duration(cb.backoffInterval) * time.Millisecond) + (time.Duration(rand.Int63n(cb.maximumJitterInterval+1)) * time.Millisecond)
 }
 
 type exponentialBackoff struct {
@@ -42,8 +44,10 @@ type exponentialBackoff struct {
 }
 
 // NewExponentialBackoff returns an instance of ExponentialBackoff
-// The maximum jitter interval must be more than 1*time.Millisecond
 func NewExponentialBackoff(initialTimeout, maxTimeout time.Duration, exponentFactor float64, maximumJitterInterval time.Duration) Backoff {
+	if maximumJitterInterval < 0 {
+		maximumJitterInterval = 0 // protect against panic when generating random jitter
+	}
 	return &exponentialBackoff{
 		exponentFactor:        exponentFactor,
 		initialTimeout:        float64(initialTimeout / time.Millisecond),
@@ -54,5 +58,8 @@ func NewExponentialBackoff(initialTimeout, maxTimeout time.Duration, exponentFac
 
 // Next returns next time for retrying operation with exponential strategy
 func (eb *exponentialBackoff) Next(retry int) time.Duration {
-	return time.Duration(math.Min(eb.initialTimeout*math.Pow(eb.exponentFactor, float64(retry)), eb.maxTimeout)+float64(rand.Int63n(eb.maximumJitterInterval))) * time.Millisecond
+	if retry < 0 {
+		retry = 0
+	}
+	return time.Duration(math.Min(eb.initialTimeout*math.Pow(eb.exponentFactor, float64(retry)), eb.maxTimeout)+float64(rand.Int63n(eb.maximumJitterInterval+1))) * time.Millisecond
 }
