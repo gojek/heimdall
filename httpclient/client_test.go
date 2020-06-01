@@ -389,7 +389,7 @@ func TestHTTPClientGetReturnsErrorOnClientCallFailure(t *testing.T) {
 
 	require.Nil(t, response)
 
-	assert.Equal(t, "Get : unsupported protocol scheme \"\"", err.Error())
+	assert.Contains(t, err.Error(), "unsupported protocol scheme")
 }
 
 func TestHTTPClientGetReturnsNoErrorOn5xxFailure(t *testing.T) {
@@ -413,9 +413,8 @@ func TestHTTPClientGetReturnsErrorOnFailure(t *testing.T) {
 	client := NewClient(WithHTTPTimeout(10 * time.Millisecond))
 
 	response, err := client.Get("url_doenst_exist", http.Header{})
-	require.EqualError(t, err, "Get url_doenst_exist: unsupported protocol scheme \"\"")
-	require.Nil(t, response)
-
+	assert.Contains(t, err.Error(), "unsupported protocol scheme")
+	assert.Nil(t, response)
 }
 
 func TestPluginMethodsCalled(t *testing.T) {
@@ -469,7 +468,7 @@ func TestPluginErrorMethodCalled(t *testing.T) {
 	mockPlugin.AssertNumberOfCalls(t, "OnError", 1)
 	err, ok = mockPlugin.Calls[1].Arguments[1].(error)
 	require.True(t, ok)
-	assert.EqualError(t, err, "Get does_not_exist: unsupported protocol scheme \"\"")
+	assert.Contains(t, err.Error(), "unsupported protocol scheme")
 }
 
 type myHTTPClient struct {

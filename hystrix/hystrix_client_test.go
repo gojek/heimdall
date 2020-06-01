@@ -274,8 +274,8 @@ func TestHystrixHTTPClientRetriesGetOnFailure(t *testing.T) {
 	)
 
 	response, err := client.Get("url_doesnt_exist", http.Header{})
-	require.EqualError(t, err, `Get url_doesnt_exist: unsupported protocol scheme ""`)
 
+	assert.Contains(t, err.Error(), "unsupported protocol scheme")
 	assert.Nil(t, response)
 }
 
