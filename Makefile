@@ -10,24 +10,24 @@ setup:
 
 compile:
 	mkdir -p out/
-	env GO111MODULE=on go build -race ./...
+	go build -race ./...
 
 build: compile fmt vet lint
 
 fmt:
-	env GO111MODULE=on go fmt ./...
+	go fmt ./...
 
 vet:
-	env GO111MODULE=on go vet ./...
+	go vet ./...
 
 lint:
-	env GO111MODULE=on golint -set_exit_status $(ALL_PACKAGES)
+	golint -set_exit_status $(ALL_PACKAGES)
 
 test: fmt vet build
-	GO111MODULE=on ENVIRONMENT=test go test -race ./...
+	ENVIRONMENT=test go test -race ./...
 
 coverage:
-	GO111MODULE=on ENVIRONMENT=test goveralls -service=travis-ci
+	ENVIRONMENT=test goveralls -service=travis-ci
 
 test-cover-html:
 	@echo "mode: count" > coverage-all.out
