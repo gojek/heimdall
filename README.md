@@ -372,7 +372,7 @@ Although Heimdall was made keeping large scale systems in mind, it's interface i
 ## License
 
 ```
-Copyright 2018, GO-JEK Tech (http://gojek.tech)
+Copyright 2018-2020, GO-JEK Tech (http://gojek.tech)
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
