@@ -22,9 +22,11 @@ func init() {
 
 // NewConstantBackoff returns an instance of ConstantBackoff
 func NewConstantBackoff(backoffInterval, maximumJitterInterval time.Duration) Backoff {
+	// protect against panic when generating random jitter
 	if maximumJitterInterval < 0 {
 		maximumJitterInterval = 0
 	}
+
 	return &constantBackoff{
 		backoffInterval:       int64(backoffInterval / time.Millisecond),
 		maximumJitterInterval: int64(maximumJitterInterval / time.Millisecond),
@@ -45,9 +47,11 @@ type exponentialBackoff struct {
 
 // NewExponentialBackoff returns an instance of ExponentialBackoff
 func NewExponentialBackoff(initialTimeout, maxTimeout time.Duration, exponentFactor float64, maximumJitterInterval time.Duration) Backoff {
+	// protect against panic when generating random jitter
 	if maximumJitterInterval < 0 {
-		maximumJitterInterval = 0 // protect against panic when generating random jitter
+		maximumJitterInterval = 0
 	}
+
 	return &exponentialBackoff{
 		exponentFactor:        exponentFactor,
 		initialTimeout:        float64(initialTimeout / time.Millisecond),
