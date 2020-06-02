@@ -103,12 +103,15 @@ client := hystrix.NewClient(
 	hystrix.WithHystrixTimeout(1000 * time.Millisecond),
 	hystrix.WithMaxConcurrentRequests(30),
 	hystrix.WithErrorPercentThreshold(20),
+	hystrix.WithStatsDCollector("localhost:8125", "myapp.hystrix"),
 )
 
 // The rest is the same as the previous example
 ```
 
 In the above example, there are two timeout values used: one for the hystrix configuration, and one for the HTTP client configuration. The former determines the time at which hystrix should register an error, while the latter determines when the client itself should return a timeout error. Unless you have any special requirements, both of these would have the same values.
+
+You can choose to export hystrix metrics to a statsD collector with the `hystrix.WithStatsDCollector(<statsd addr>, <metrics-prefix>)` option when initializing the client as shown above.
 
 ### Creating a hystrix-like circuit breaker with fallbacks
 
