@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/afex/hystrix-go/hystrix"
+	metricCollector "github.com/afex/hystrix-go/hystrix/metric_collector"
+	"github.com/afex/hystrix-go/plugins"
 	"github.com/gojektech/heimdall/v6"
 	"github.com/gojektech/heimdall/v6/httpclient"
 	"github.com/pkg/errors"
@@ -29,6 +31,7 @@ type Client struct {
 	retryCount             int
 	retrier                heimdall.Retriable
 	fallbackFunc           func(err error) error
+	statsD                 *plugins.StatsdCollectorConfig
 }
 
 const (
@@ -63,6 +66,15 @@ func NewClient(opts ...Option) *Client {
 
 	for _, opt := range opts {
 		opt(&client)
+	}
+
+	if client.statsD != nil {
+		c, err := plugins.InitializeStatsdCollector(client.statsD)
+		if err != nil {
+			panic(err)
+		}
+
+		metricCollector.Registry.Register(c.NewStatsdCollector)
 	}
 
 	hystrix.ConfigureCommand(client.hystrixCommandName, hystrix.CommandConfig{
