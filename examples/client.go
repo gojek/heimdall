@@ -53,6 +53,7 @@ func hystrixClientUsage() error {
 		hystrix.WithErrorPercentThreshold(25),
 		hystrix.WithSleepWindow(10),
 		hystrix.WithRequestVolumeThreshold(10),
+		hystrix.WithStatsDCollector("localhost:8125", "myapp.hystrix"),
 	)
 	headers := http.Header{}
 	response, err := hystrixClient.Get(baseURL, headers)

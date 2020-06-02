@@ -3,6 +3,7 @@ package hystrix
 import (
 	"time"
 
+	"github.com/afex/hystrix-go/plugins"
 	"github.com/gojektech/heimdall/v6"
 	"github.com/gojektech/heimdall/v6/httpclient"
 )
@@ -85,5 +86,12 @@ func WithHTTPClient(client heimdall.Doer) Option {
 	return func(c *Client) {
 		opt := httpclient.WithHTTPClient(client)
 		opt(c.client)
+	}
+}
+
+// WithStatsDCollector exports hystrix metrics to a statsD backend
+func WithStatsDCollector(addr, prefix string) Option {
+	return func(c *Client) {
+		c.statsD = &plugins.StatsdCollectorConfig{StatsdAddr: addr, Prefix: prefix}
 	}
 }

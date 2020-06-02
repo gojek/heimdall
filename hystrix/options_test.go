@@ -18,6 +18,7 @@ func TestOptionsAreSet(t *testing.T) {
 		WithErrorPercentThreshold(30),
 		WithSleepWindow(5),
 		WithRequestVolumeThreshold(5),
+		WithStatsDCollector("localhost:8125", "myapp.hystrix"),
 	)
 
 	assert.Equal(t, 10*time.Second, c.timeout)
@@ -27,6 +28,8 @@ func TestOptionsAreSet(t *testing.T) {
 	assert.Equal(t, 30, c.errorPercentThreshold)
 	assert.Equal(t, 5, c.sleepWindow)
 	assert.Equal(t, 5, c.requestVolumeThreshold)
+	assert.Equal(t, "localhost:8125", c.statsD.StatsdAddr)
+	assert.Equal(t, "myapp.hystrix", c.statsD.Prefix)
 }
 
 func TestOptionsHaveDefaults(t *testing.T) {
@@ -39,6 +42,7 @@ func TestOptionsHaveDefaults(t *testing.T) {
 	assert.Equal(t, 25, c.errorPercentThreshold)
 	assert.Equal(t, 10, c.sleepWindow)
 	assert.Equal(t, 10, c.requestVolumeThreshold)
+	assert.Nil(t, c.statsD)
 }
 
 func ExampleWithHTTPTimeout() {
@@ -125,4 +129,18 @@ func ExampleWithRetrier() {
 	// retry attempt 2
 	// retry attempt 3
 	// error
+}
+
+func ExampleWithStatsDCollector() {
+	c := NewClient(WithStatsDCollector("localhost:8125", "myapp.hystrix"))
+	req, err := http.NewRequest(http.MethodGet, "https://www.gojek.io/", nil)
+	if err != nil {
+		panic(err)
+	}
+	res, err := c.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("Response status : ", res.StatusCode)
+	// Output: Response status :  200
 }
