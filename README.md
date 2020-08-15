@@ -370,7 +370,7 @@ Although Heimdall was made keeping large scale systems in mind, it's interface i
 
 **Can I contribute to make Heimdall better?**
 
-[Please do!](https://github.com/gojektech/heimdall/blob/master/CONTRIBUTING.md) We are looking for any kind of contribution to improve Heimdalls core funtionality and documentation. When in doubt, make a PR!
+[Please do!](https://github.com/gojektech/heimdall/blob/master/CONTRIBUTING.md) We are looking for any kind of contribution to improve Heimdalls core functionality and documentation. When in doubt, make a PR!
 
 ## License
 
