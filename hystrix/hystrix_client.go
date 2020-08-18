@@ -205,6 +205,14 @@ func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
 		}, hhc.fallbackFunc)
 
 		if err != nil {
+			// If the request context has already been cancelled, don't retry
+			ctx := request.Context()
+			select {
+			case <-ctx.Done():
+				return nil, err
+			default:
+			}
+
 			backoffTime := hhc.retrier.NextInterval(i)
 			time.Sleep(backoffTime)
 			continue
