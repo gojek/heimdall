@@ -2,6 +2,7 @@ package hystrix
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -181,6 +182,7 @@ func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
 		request.Body = ioutil.NopCloser(bodyReader) // prevents closing the body between retries
 	}
 
+outter:
 	for i := 0; i <= hhc.retryCount; i++ {
 		if response != nil {
 			response.Body.Close()
@@ -205,17 +207,22 @@ func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
 		}, hhc.fallbackFunc)
 
 		if err != nil {
-			// If the request context has already been cancelled, don't retry
-			ctx := request.Context()
-			select {
-			case <-ctx.Done():
-				return nil, err
-			default:
-			}
-
 			backoffTime := hhc.retrier.NextInterval(i)
-			time.Sleep(backoffTime)
-			continue
+			ctx, cancel := context.WithTimeout(context.Background(), backoffTime)
+
+			select {
+			case <-request.Context().Done():
+				cancel()
+
+				// If the request context has been cancelled, don't retry
+				err = request.Context().Err()
+				break outter
+
+			case <-ctx.Done():
+				cancel()
+
+				continue
+			}
 		}
 
 		break
