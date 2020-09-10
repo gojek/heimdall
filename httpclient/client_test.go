@@ -20,6 +20,8 @@ import (
 )
 
 func TestHTTPClientDoSuccess(t *testing.T) {
+	t.Parallel()
+
 	client := NewClient(WithHTTPTimeout(10 * time.Millisecond))
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
@@ -49,6 +51,8 @@ func TestHTTPClientDoSuccess(t *testing.T) {
 }
 
 func TestHTTPClientGetSuccess(t *testing.T) {
+	t.Parallel()
+
 	client := NewClient(WithHTTPTimeout(10 * time.Millisecond))
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
@@ -75,6 +79,8 @@ func TestHTTPClientGetSuccess(t *testing.T) {
 }
 
 func TestHTTPClientPostSuccess(t *testing.T) {
+	t.Parallel()
+
 	client := NewClient(WithHTTPTimeout(10 * time.Millisecond))
 
 	requestBodyString := `{ "name": "heimdall" }`
@@ -110,6 +116,8 @@ func TestHTTPClientPostSuccess(t *testing.T) {
 }
 
 func TestHTTPClientDeleteSuccess(t *testing.T) {
+	t.Parallel()
+
 	client := NewClient(WithHTTPTimeout(10 * time.Millisecond))
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
@@ -136,6 +144,8 @@ func TestHTTPClientDeleteSuccess(t *testing.T) {
 }
 
 func TestHTTPClientPutSuccess(t *testing.T) {
+	t.Parallel()
+
 	client := NewClient(WithHTTPTimeout(10 * time.Millisecond))
 
 	requestBodyString := `{ "name": "heimdall" }`
@@ -171,6 +181,8 @@ func TestHTTPClientPutSuccess(t *testing.T) {
 }
 
 func TestHTTPClientPatchSuccess(t *testing.T) {
+	t.Parallel()
+
 	client := NewClient(WithHTTPTimeout(10 * time.Millisecond))
 
 	requestBodyString := `{ "name": "heimdall" }`
@@ -261,6 +273,8 @@ func BenchmarkHTTPClientGetRetriesOnFailure(b *testing.B) {
 }
 
 func TestHTTPClientPostRetriesOnFailure(t *testing.T) {
+	t.Parallel()
+
 	count := 0
 	noOfRetries := 3
 	noOfCalls := noOfRetries + 1
@@ -316,6 +330,8 @@ func BenchmarkHTTPClientPostRetriesOnFailure(b *testing.B) {
 }
 
 func TestHTTPClientGetReturnsNoErrorsIfRetriesFailWith5xx(t *testing.T) {
+	t.Parallel()
+
 	count := 0
 	noOfRetries := 2
 	backoffInterval := 1 * time.Millisecond
@@ -345,6 +361,8 @@ func TestHTTPClientGetReturnsNoErrorsIfRetriesFailWith5xx(t *testing.T) {
 }
 
 func TestHTTPClientGetReturnsNoErrorsIfRetrySucceeds(t *testing.T) {
+	t.Parallel()
+
 	count := 0
 	countWhenCallSucceeds := 2
 	backoffInterval := 1 * time.Millisecond
@@ -378,6 +396,8 @@ func TestHTTPClientGetReturnsNoErrorsIfRetrySucceeds(t *testing.T) {
 }
 
 func TestHTTPClientGetReturnsErrorOnClientCallFailure(t *testing.T) {
+	t.Parallel()
+
 	client := NewClient(WithHTTPTimeout(10 * time.Millisecond))
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
@@ -397,6 +417,8 @@ func TestHTTPClientGetReturnsErrorOnClientCallFailure(t *testing.T) {
 }
 
 func TestHTTPClientGetReturnsNoErrorOn5xxFailure(t *testing.T) {
+	t.Parallel()
+
 	client := NewClient(WithHTTPTimeout(10 * time.Millisecond))
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
@@ -414,6 +436,8 @@ func TestHTTPClientGetReturnsNoErrorOn5xxFailure(t *testing.T) {
 }
 
 func TestHTTPClientGetReturnsErrorOnFailure(t *testing.T) {
+	t.Parallel()
+
 	client := NewClient(WithHTTPTimeout(10 * time.Millisecond))
 
 	response, err := client.Get("url_doenst_exist", http.Header{})
@@ -422,6 +446,8 @@ func TestHTTPClientGetReturnsErrorOnFailure(t *testing.T) {
 }
 
 func TestPluginMethodsCalled(t *testing.T) {
+	t.Parallel()
+
 	client := NewClient(WithHTTPTimeout(10 * time.Millisecond))
 	mockPlugin := &MockPlugin{}
 	client.AddPlugin(mockPlugin)
@@ -453,6 +479,8 @@ func TestPluginMethodsCalled(t *testing.T) {
 }
 
 func TestPluginErrorMethodCalled(t *testing.T) {
+	t.Parallel()
+
 	client := NewClient(WithHTTPTimeout(10 * time.Millisecond))
 	mockPlugin := &MockPlugin{}
 	client.AddPlugin(mockPlugin)
@@ -485,6 +513,8 @@ func (c *myHTTPClient) Do(request *http.Request) (*http.Response, error) {
 }
 
 func TestCustomHTTPClientHeaderSuccess(t *testing.T) {
+	t.Parallel()
+
 	client := NewClient(
 		WithHTTPTimeout(10*time.Millisecond),
 		WithHTTPClient(&myHTTPClient{
