@@ -419,7 +419,6 @@ func TestHTTPClientGetReturnsErrorOnFailure(t *testing.T) {
 }
 
 func TestHTTPClientDontRetryWhenContextIsCancelled(t *testing.T) {
-	count := 0
 	noOfRetries := 3
 	// Set a huge backoffInterval that we won't have to wait anyway
 	backoffInterval := 1 * time.Hour
@@ -431,27 +430,60 @@ func TestHTTPClientDontRetryWhenContextIsCancelled(t *testing.T) {
 		WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval))),
 	)
 
-	ctx, cancel := context.WithCancel(context.Background())
-
-	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(`{ "response": "something went wrong" }`))
-		count++
-		// Cancel the context after the first call
-		cancel()
+	tt := []struct {
+		Title          string
+		CancelTimeout  time.Duration
+		NotNilResponse bool
+	}{
+		{
+			Title:          "Cancel directly",
+			CancelTimeout:  0 * time.Millisecond,
+			NotNilResponse: false,
+		},
+		{
+			Title:          "Cancel afterwards",
+			CancelTimeout:  10 * time.Millisecond,
+			NotNilResponse: true,
+		},
 	}
 
-	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
-	defer server.Close()
+	for _, test := range tt {
+		test := test
+		t.Run(test.Title, func(t *testing.T) {
+			t.Parallel()
 
-	req, err := http.NewRequest(http.MethodGet, server.URL, nil)
-	require.NoError(t, err)
+			ctx, cancel := context.WithCancel(context.Background())
 
-	response, err := client.Do(req.WithContext(ctx))
-	require.Error(t, err, "should have failed to make request")
-	require.Nil(t, response)
+			dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+				if test.CancelTimeout == 0 {
+					cancel()
+				} else {
+					go func() {
+						time.Sleep(test.CancelTimeout)
+						cancel()
+					}()
+				}
 
-	assert.Equal(t, 1, count)
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(`{ "response": "something went wrong" }`))
+			}
+
+			server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+			defer server.Close()
+
+			req, err := http.NewRequest(http.MethodGet, server.URL, nil)
+			require.NoError(t, err)
+
+			response, err := client.Do(req.WithContext(ctx))
+			require.Error(t, err, "should have failed to make request")
+
+			if test.NotNilResponse {
+				require.NotNil(t, response)
+			} else {
+				require.Nil(t, response)
+			}
+		})
+	}
 }
 
 func TestPluginMethodsCalled(t *testing.T) {
