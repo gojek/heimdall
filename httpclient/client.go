@@ -145,6 +145,26 @@ outter:
 			response.Body.Close()
 		}
 
+		// Wait before retrying.
+		if i > 0 {
+			backoffTime := c.retrier.NextInterval(i - 1)
+			ctx, cancel := context.WithTimeout(context.Background(), backoffTime)
+
+			select {
+			case <-ctx.Done():
+				cancel()
+
+			case <-request.Context().Done():
+				cancel()
+
+				multiErr.Push(request.Context().Err().Error())
+				c.reportError(request, request.Context().Err())
+
+				// If the request context has already been cancelled, don't retry
+				break outter
+			}
+		}
+
 		c.reportRequestStart(request)
 		var err error
 		response, err = c.client.Do(request)
@@ -165,23 +185,6 @@ outter:
 			// Clear errors if any iteration succeeds
 			multiErr = &valkyrie.MultiError{}
 			break
-		}
-
-		backoffTime := c.retrier.NextInterval(i)
-		ctx, cancel := context.WithTimeout(context.Background(), backoffTime)
-
-		select {
-		case <-ctx.Done():
-			cancel()
-
-		case <-request.Context().Done():
-			cancel()
-
-			multiErr.Push(request.Context().Err().Error())
-			c.reportError(request, request.Context().Err())
-
-			// If the request context has already been cancelled, don't retry
-			break outter
 		}
 	}
 

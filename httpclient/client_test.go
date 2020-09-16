@@ -465,6 +465,7 @@ func TestHTTPClientDontRetryWhenContextIsCancelled(t *testing.T) {
 				}
 
 				w.WriteHeader(http.StatusInternalServerError)
+				w.Header().Set("Content-Type", "application/json")
 				w.Write([]byte(`{ "response": "something went wrong" }`))
 			}
 
