@@ -157,52 +157,32 @@ outter:
 		if err != nil {
 			multiErr.Push(err.Error())
 			c.reportError(request, err)
-
-			backoffTime := c.retrier.NextInterval(i)
-			ctx, cancel := context.WithTimeout(context.Background(), backoffTime)
-
-			select {
-			case <-ctx.Done():
-				cancel()
-
-				continue
-
-			case <-request.Context().Done():
-				cancel()
-
-				multiErr.Push(request.Context().Err().Error())
-				c.reportError(request, request.Context().Err())
-
-				// If the request context has already been cancelled, don't retry
-				break outter
-			}
+		} else {
+			c.reportRequestEnd(request, response)
 		}
 
-		c.reportRequestEnd(request, response)
-
-		if response.StatusCode >= http.StatusInternalServerError {
-			backoffTime := c.retrier.NextInterval(i)
-			ctx, cancel := context.WithTimeout(context.Background(), backoffTime)
-
-			select {
-			case <-ctx.Done():
-				cancel()
-
-				continue
-
-			case <-request.Context().Done():
-				cancel()
-
-				multiErr.Push(request.Context().Err().Error())
-				c.reportError(request, request.Context().Err())
-
-				// If the request context has already been cancelled, don't retry
-				break outter
-			}
+		if err == nil && response.StatusCode < http.StatusInternalServerError {
+			// Clear errors if any iteration succeeds
+			multiErr = &valkyrie.MultiError{}
+			break
 		}
 
-		multiErr = &valkyrie.MultiError{} // Clear errors if any iteration succeeds
-		break
+		backoffTime := c.retrier.NextInterval(i)
+		ctx, cancel := context.WithTimeout(context.Background(), backoffTime)
+
+		select {
+		case <-ctx.Done():
+			cancel()
+
+		case <-request.Context().Done():
+			cancel()
+
+			multiErr.Push(request.Context().Err().Error())
+			c.reportError(request, request.Context().Err())
+
+			// If the request context has already been cancelled, don't retry
+			break outter
+		}
 	}
 
 	return response, multiErr.HasError()
