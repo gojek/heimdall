@@ -177,15 +177,19 @@ outter:
 		if err != nil {
 			multiErr.Push(err.Error())
 			c.reportError(request, err)
-		} else {
-			c.reportRequestEnd(request, response)
+
+			continue
 		}
 
-		if err == nil && response.StatusCode < http.StatusInternalServerError {
-			// Clear errors if any iteration succeeds
-			multiErr = &valkyrie.MultiError{}
-			break
+		c.reportRequestEnd(request, response)
+
+		if response.StatusCode >= http.StatusInternalServerError {
+			continue
 		}
+
+		// Clear errors if any iteration succeeds
+		multiErr = &valkyrie.MultiError{}
+		break
 	}
 
 	return response, multiErr.HasError()
