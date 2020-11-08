@@ -165,6 +165,18 @@ func (hhc *Client) Delete(url string, headers http.Header) (*http.Response, erro
 	return hhc.Do(request)
 }
 
+// Head makes a HTTP HEAD request with provided URL
+func (hhc *Client) Head(url string, headers http.Header) (*http.Response, error) {
+	request, err := http.NewRequest(http.MethodHead, url, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, "HEAD - request creation failed")
+	}
+
+	request.Header = headers
+
+	return hhc.Do(request)
+}
+
 // Do makes an HTTP request with the native `http.Do` interface
 func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
 	var response *http.Response
