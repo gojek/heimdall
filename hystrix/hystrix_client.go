@@ -102,10 +102,9 @@ func durationToInt(duration, unit time.Duration) int {
 
 // Get makes a HTTP GET request to provided URL
 func (hhc *Client) Get(url string, headers http.Header) (*http.Response, error) {
-	var response *http.Response
 	request, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return response, errors.Wrap(err, "GET - request creation failed")
+		return nil, errors.Wrap(err, "GET - request creation failed")
 	}
 
 	request.Header = headers
@@ -115,10 +114,9 @@ func (hhc *Client) Get(url string, headers http.Header) (*http.Response, error) 
 
 // Post makes a HTTP POST request to provided URL and requestBody
 func (hhc *Client) Post(url string, body io.Reader, headers http.Header) (*http.Response, error) {
-	var response *http.Response
 	request, err := http.NewRequest(http.MethodPost, url, body)
 	if err != nil {
-		return response, errors.Wrap(err, "POST - request creation failed")
+		return nil, errors.Wrap(err, "POST - request creation failed")
 	}
 
 	request.Header = headers
@@ -128,10 +126,9 @@ func (hhc *Client) Post(url string, body io.Reader, headers http.Header) (*http.
 
 // Put makes a HTTP PUT request to provided URL and requestBody
 func (hhc *Client) Put(url string, body io.Reader, headers http.Header) (*http.Response, error) {
-	var response *http.Response
 	request, err := http.NewRequest(http.MethodPut, url, body)
 	if err != nil {
-		return response, errors.Wrap(err, "PUT - request creation failed")
+		return nil, errors.Wrap(err, "PUT - request creation failed")
 	}
 
 	request.Header = headers
@@ -141,10 +138,9 @@ func (hhc *Client) Put(url string, body io.Reader, headers http.Header) (*http.R
 
 // Patch makes a HTTP PATCH request to provided URL and requestBody
 func (hhc *Client) Patch(url string, body io.Reader, headers http.Header) (*http.Response, error) {
-	var response *http.Response
 	request, err := http.NewRequest(http.MethodPatch, url, body)
 	if err != nil {
-		return response, errors.Wrap(err, "PATCH - request creation failed")
+		return nil, errors.Wrap(err, "PATCH - request creation failed")
 	}
 
 	request.Header = headers
@@ -154,10 +150,9 @@ func (hhc *Client) Patch(url string, body io.Reader, headers http.Header) (*http
 
 // Delete makes a HTTP DELETE request with provided URL
 func (hhc *Client) Delete(url string, headers http.Header) (*http.Response, error) {
-	var response *http.Response
 	request, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
-		return response, errors.Wrap(err, "DELETE - request creation failed")
+		return nil, errors.Wrap(err, "DELETE - request creation failed")
 	}
 
 	request.Header = headers
