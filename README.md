@@ -342,7 +342,7 @@ For a simple example on how to write plugins, look at the [request logger plugin
 
 ## Documentation
 
-Further documentation can be found on [godoc.org](https://www.godoc.org/github.com/gojektech/heimdall)
+Further documentation can be found on [pkg.go.dev](https://pkg.go.dev/github.com/gojektech/heimdall)
 
 ## FAQ
 
