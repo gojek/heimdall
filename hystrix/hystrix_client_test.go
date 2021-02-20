@@ -785,3 +785,44 @@ func TestReqBodyResetForHTTPTimeoutHigherThanHystrix(t *testing.T) {
 	require.NoError(t, resp.Body.Close())
 	require.Equal(t, int32(3), counter.Load())
 }
+
+func TestHystrixHTTPClientRetriesOnSpecificStatusCodes(t *testing.T) {
+	client := NewClient(
+		WithHTTPTimeout(10*time.Millisecond),
+		WithCommandName("some_new_command_name"),
+		WithHystrixTimeout(10*time.Millisecond),
+		WithMaxConcurrentRequests(100),
+		WithErrorPercentThreshold(10),
+		WithSleepWindow(100),
+		WithRequestVolumeThreshold(10),
+		WithHTTPClient(&myHTTPClient{
+			client: http.Client{Timeout: 25 * time.Millisecond}}),
+		WithStatusCodeToRetry(400),
+		WithRetryCount(3),
+	)
+
+	counter := 0
+	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+		counter++
+		if counter < 2 {
+			w.WriteHeader(http.StatusBadRequest)
+		} else {
+			w.WriteHeader(http.StatusOK)
+		}
+		assert.Equal(t, r.Header.Get("foo"), "bar")
+		assert.NotEqual(t, r.Header.Get("foo"), "baz")
+		_, _ = w.Write([]byte(`{ "response": "ok" }`))
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+	defer server.Close()
+
+	req, err := http.NewRequest(http.MethodGet, server.URL, nil)
+	require.NoError(t, err)
+	response, err := client.Do(req)
+	assert.Equal(t, http.StatusOK, response.StatusCode)
+
+	body, err := io.ReadAll(response.Body)
+	require.NoError(t, err)
+	assert.Equal(t, "{ \"response\": \"ok\" }", string(body))
+}
