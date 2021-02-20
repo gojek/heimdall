@@ -95,3 +95,12 @@ func WithStatsDCollector(addr, prefix string) Option {
 		c.statsD = &plugins.StatsdCollectorConfig{StatsdAddr: addr, Prefix: prefix}
 	}
 }
+
+// WithStatusCodeToRetry sets status codes to be retried
+func WithStatusCodeToRetry(statusCodes ...int) Option {
+	return func(c *Client) {
+		for _, code := range statusCodes {
+			c.statusCodeToRetry[code] = struct{}{}
+		}
+	}
+}
