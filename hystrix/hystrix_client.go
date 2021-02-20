@@ -33,6 +33,7 @@ type Client struct {
 	retrier                heimdall.Retriable
 	fallbackFunc           func(ctx context.Context, err error) error
 	statsD                 *plugins.StatsdCollectorConfig
+	statusCodeToRetry      map[int]struct{}
 }
 
 const (
@@ -49,6 +50,7 @@ const (
 
 var _ heimdall.Client = (*Client)(nil)
 var err5xx = goerrors.New("server returned 5xx status code")
+var errCodeToRetry = goerrors.New("server returned status code to retry")
 
 // NewClient returns a new instance of hystrix Client
 func NewClient(opts ...Option) *Client {
@@ -61,6 +63,7 @@ func NewClient(opts ...Option) *Client {
 		requestVolumeThreshold: defaultRequestVolumeThreshold,
 		retryCount:             defaultHystrixRetryCount,
 		retrier:                heimdall.NewNoRetrier(),
+		statusCodeToRetry:      make(map[int]struct{}),
 	}
 
 	for _, opt := range opts {
@@ -231,6 +234,14 @@ func (hhc *Client) hystrixDo(request *http.Request) (*http.Response, error) {
 
 		if response.StatusCode >= http.StatusInternalServerError {
 			return err5xx
+		}
+
+		if len(hhc.statusCodeToRetry) > 0 {
+			_, ok := hhc.statusCodeToRetry[response.StatusCode]
+			if ok {
+				return errCodeToRetry
+			}
+			return nil
 		}
 
 		return nil

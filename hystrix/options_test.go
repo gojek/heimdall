@@ -21,6 +21,7 @@ func TestOptionsAreSet(t *testing.T) {
 		WithSleepWindow(5),
 		WithRequestVolumeThreshold(5),
 		WithStatsDCollector("localhost:8125", "myapp.hystrix"),
+		WithStatusCodeToRetry(200, 400),
 	)
 
 	assert.Equal(t, "test", c.hystrixCommandName)
@@ -31,6 +32,7 @@ func TestOptionsAreSet(t *testing.T) {
 	assert.Equal(t, 5, c.requestVolumeThreshold)
 	assert.Equal(t, "localhost:8125", c.statsD.StatsdAddr)
 	assert.Equal(t, "myapp.hystrix", c.statsD.Prefix)
+	assert.Equal(t, map[int]struct{}{200: {}, 400: {}}, c.statusCodeToRetry)
 }
 
 func TestOptionsHaveDefaults(t *testing.T) {
