@@ -1,4 +1,4 @@
-module github.com/gojek/heimdall/v6
+module github.com/gojek/heimdall
 
 go 1.14
 

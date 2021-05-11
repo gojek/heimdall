@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gojek/heimdall/v6"
+	"github.com/gojek/heimdall"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
