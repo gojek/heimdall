@@ -43,7 +43,7 @@ go get -u github.com/gojek/heimdall
 This package can be used by adding the following import statement to your `.go` files.
 
 ```go
-import "github.com/gojek/heimdall/httpclient" 
+import "github.com/gojek/heimdall/v7/httpclient" 
 ```
 
 ### Making a simple `GET` request
@@ -88,8 +88,7 @@ fmt.Println(string(body))
 To import hystrix package of heimdall.
 
 ```go
-import "github.com/gojek/heimdall/hystrix" // with go modules enabled (GO111MODULE=on or outside GOPATH)
-import "github.com/gojek/heimdall/hystrix" // with go modules disabled
+import "github.com/gojek/heimdall/v7/hystrix"
 ```
 
 You can use the `hystrix.NewClient` function to create a client wrapped in a hystrix-like circuit breaker:
@@ -313,7 +312,7 @@ To add a plugin to an existing client, use the `AddPlugin` method of the client.
 An example, with the [request logger plugin](/plugins/request_logger.go):
 
 ```go
-// import "github.com/gojek/heimdall/plugins"
+// import "github.com/gojek/heimdall/v7/plugins"
 
 client := heimdall.NewHTTPClient(timeout)
 requestLogger := plugins.NewRequestLogger(nil, nil)
@@ -341,7 +340,7 @@ For a simple example on how to write plugins, look at the [request logger plugin
 
 ## Documentation
 
-Further documentation can be found on [pkg.go.dev](https://pkg.go.dev/github.com/gojek/heimdall)
+Further documentation can be found on [pkg.go.dev](https://pkg.go.dev/github.com/gojek/heimdall/v7)
 
 ## FAQ
 

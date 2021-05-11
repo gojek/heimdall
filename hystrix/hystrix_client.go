@@ -10,8 +10,8 @@ import (
 	"github.com/afex/hystrix-go/hystrix"
 	metricCollector "github.com/afex/hystrix-go/hystrix/metric_collector"
 	"github.com/afex/hystrix-go/plugins"
-	"github.com/gojek/heimdall"
-	"github.com/gojek/heimdall/httpclient"
+	"github.com/gojek/heimdall/v7"
+	"github.com/gojek/heimdall/v7/httpclient"
 	"github.com/pkg/errors"
 )
 
