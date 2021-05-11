@@ -1,6 +1,6 @@
 # Heimdall - Contributing
 
-Heimdall `github.com/gojektech/heimdall` is an open-source project. 
+Heimdall `github.com/gojek/heimdall` is an open-source project. 
 It is licensed using the [Apache License 2.0][1]. 
 We appreciate pull requests; here are our guidelines:
 
@@ -36,7 +36,7 @@ Much Thanks! ❤❤❤
 GO-JEK Tech
 
 [1]: http://www.apache.org/licenses/LICENSE-2.0
-[2]: https://github.com/gojektech/heimdall/issues
+[2]: https://github.com/gojek/heimdall/issues
 [3]: https://golang.org/doc/effective_go.html
 [4]: http://gun.io/blog/how-to-github-fork-branch-and-pull-request
 [5]: http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
