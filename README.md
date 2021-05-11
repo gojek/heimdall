@@ -33,7 +33,7 @@ All HTTP methods are exposed as a fluent interface.
 
 ## Installation
 ```
-go get -u github.com/gojek/heimdall
+go get -u github.com/gojek/heimdall/v7
 ```
 
 ## Usage
@@ -205,7 +205,7 @@ client := httpclient.NewClient(
 // The rest is the same as the first example
 ```
 
-This will create an HTTP client which will retry every `500` milliseconds incase the request fails. The library also comes with an [Exponential Backoff](https://www.godoc.org/github.com/gojek/heimdall#NewExponentialBackoff)
+This will create an HTTP client which will retry every `500` milliseconds incase the request fails. The library also comes with an [Exponential Backoff](https://pkg.go.dev/github.com/gojek/heimdall#NewExponentialBackoff)
 
 ### Custom retry mechanisms
 
