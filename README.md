@@ -3,8 +3,8 @@
 <p align="center"><img src="doc/heimdall-logo.png" width="360"></p>
 <p align="center">
   <a href="https://travis-ci.com/gojek/heimdall"><img src="https://travis-ci.com/gojek/heimdall.svg?branch=master" alt="Build Status"></img></a>
-  <a href="https://goreportcard.com/report/github.com/gojektech/heimdall"><img src="https://goreportcard.com/badge/github.com/gojektech/heimdall"></img></a>
-  <a href="https://golangci.com"><img src="https://golangci.com/badges/github.com/gojektech/heimdall.svg"></img></a>
+  <a href="https://goreportcard.com/report/github.com/gojek/heimdall"><img src="https://goreportcard.com/badge/github.com/gojek/heimdall"></img></a>
+  <a href="https://golangci.com"><img src="https://golangci.com/badges/github.com/gojek/heimdall.svg"></img></a>
   <a href="https://coveralls.io/github/gojek/heimdall?branch=master"><img src="https://coveralls.io/repos/github/gojek/heimdall/badge.svg?branch=master"></img></a>
 </p>
 
@@ -33,7 +33,7 @@ All HTTP methods are exposed as a fluent interface.
 
 ## Installation
 ```
-go get -u github.com/gojektech/heimdall/v6
+go get -u github.com/gojek/heimdall/v7
 ```
 
 ## Usage
@@ -43,8 +43,7 @@ go get -u github.com/gojektech/heimdall/v6
 This package can be used by adding the following import statement to your `.go` files.
 
 ```go
-import "github.com/gojektech/heimdall/v6/httpclient" // with go modules enabled (GO111MODULE=on or outside GOPATH)
-import "github.com/gojektech/heimdall/httpclient" // with go modules disabled
+import "github.com/gojek/heimdall/v7/httpclient" 
 ```
 
 ### Making a simple `GET` request
@@ -89,8 +88,7 @@ fmt.Println(string(body))
 To import hystrix package of heimdall.
 
 ```go
-import "github.com/gojektech/heimdall/v6/hystrix" // with go modules enabled (GO111MODULE=on or outside GOPATH)
-import "github.com/gojektech/heimdall/hystrix" // with go modules disabled
+import "github.com/gojek/heimdall/v7/hystrix"
 ```
 
 You can use the `hystrix.NewClient` function to create a client wrapped in a hystrix-like circuit breaker:
@@ -207,7 +205,7 @@ client := httpclient.NewClient(
 // The rest is the same as the first example
 ```
 
-This will create an HTTP client which will retry every `500` milliseconds incase the request fails. The library also comes with an [Exponential Backoff](https://www.godoc.org/github.com/gojektech/heimdall#NewExponentialBackoff)
+This will create an HTTP client which will retry every `500` milliseconds incase the request fails. The library also comes with an [Exponential Backoff](https://pkg.go.dev/github.com/gojek/heimdall#NewExponentialBackoff)
 
 ### Custom retry mechanisms
 
@@ -314,7 +312,7 @@ To add a plugin to an existing client, use the `AddPlugin` method of the client.
 An example, with the [request logger plugin](/plugins/request_logger.go):
 
 ```go
-// import "github.com/gojektech/heimdall/v6/plugins"
+// import "github.com/gojek/heimdall/v7/plugins"
 
 client := heimdall.NewHTTPClient(timeout)
 requestLogger := plugins.NewRequestLogger(nil, nil)
@@ -342,7 +340,7 @@ For a simple example on how to write plugins, look at the [request logger plugin
 
 ## Documentation
 
-Further documentation can be found on [pkg.go.dev](https://pkg.go.dev/github.com/gojektech/heimdall)
+Further documentation can be found on [pkg.go.dev](https://pkg.go.dev/github.com/gojek/heimdall/v7)
 
 ## FAQ
 
@@ -364,13 +362,13 @@ Heimdall makes use of [multiple mechanisms](https://medium.com/@sohamkamani/how-
 
 **So does this mean that I shouldn't use Heimdall for small scale applications?**
 
-Although Heimdall was made keeping large scale systems in mind, it's interface is simple enough to be used for any type of systems. In fact, we use it for our pet projects as well. Even if you don't require retries or circuit breaking features, the [simpler HTTP client](https://github.com/gojektech/heimdall#making-a-simple-get-request) provides sensible defaults with a simpler interface, and can be upgraded easily should the need arise.
+Although Heimdall was made keeping large scale systems in mind, it's interface is simple enough to be used for any type of systems. In fact, we use it for our pet projects as well. Even if you don't require retries or circuit breaking features, the [simpler HTTP client](https://github.com/gojek/heimdall#making-a-simple-get-request) provides sensible defaults with a simpler interface, and can be upgraded easily should the need arise.
 
 ---
 
 **Can I contribute to make Heimdall better?**
 
-[Please do!](https://github.com/gojektech/heimdall/blob/master/CONTRIBUTING.md) We are looking for any kind of contribution to improve Heimdalls core funtionality and documentation. When in doubt, make a PR!
+[Please do!](https://github.com/gojek/heimdall/blob/master/CONTRIBUTING.md) We are looking for any kind of contribution to improve Heimdalls core funtionality and documentation. When in doubt, make a PR!
 
 ## License
 

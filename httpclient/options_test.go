@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gojektech/heimdall/v6"
+	"github.com/gojek/heimdall/v7"
 	"github.com/stretchr/testify/assert"
 )
 
