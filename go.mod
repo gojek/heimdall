@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/DataDog/datadog-go v3.7.1+incompatible // indirect
-	github.com/afex/hystrix-go v0.0.0-20180209013831-27fae8d30f1a
+	github.com/afex/hystrix-go v0.0.0-20180502004556-fa1af6a1f4f5
 	github.com/cactus/go-statsd-client v3.0.1+incompatible // indirect
 	github.com/gojek/valkyrie v0.0.0-20180215180059-6aee720afcdf
 	github.com/pkg/errors v0.9.1
