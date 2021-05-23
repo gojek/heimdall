@@ -2,6 +2,7 @@ package httpclient
 
 import (
 	"bytes"
+	"context"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -415,6 +416,42 @@ func TestHTTPClientGetReturnsErrorOnFailure(t *testing.T) {
 	response, err := client.Get("url_doenst_exist", http.Header{})
 	assert.Contains(t, err.Error(), "unsupported protocol scheme")
 	assert.Nil(t, response)
+}
+
+func TestHTTPClientDontRetryWhenContextIsCancelled(t *testing.T) {
+	count := 0
+	noOfRetries := 3
+	// Set a huge backoffInterval that we won't have to wait anyway
+	backoffInterval := 1 * time.Hour
+	maximumJitterInterval := 1 * time.Millisecond
+
+	client := NewClient(
+		WithHTTPTimeout(10*time.Millisecond),
+		WithRetryCount(noOfRetries),
+		WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval))),
+	)
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{ "response": "something went wrong" }`))
+		count++
+		// Cancel the context after the first call
+		cancel()
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+	defer server.Close()
+
+	req, err := http.NewRequest(http.MethodGet, server.URL, nil)
+	require.NoError(t, err)
+
+	response, err := client.Do(req.WithContext(ctx))
+	require.Error(t, err, "should have failed to make request")
+	require.Nil(t, response)
+
+	assert.Equal(t, 1, count)
 }
 
 func TestPluginMethodsCalled(t *testing.T) {

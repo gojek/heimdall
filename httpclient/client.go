@@ -153,6 +153,13 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 		}
 
 		if err != nil {
+			// If the request context has already been cancelled, don't retry
+			if err := request.Context().Err(); err != nil {
+				multiErr.Push(err.Error())
+				c.reportRequestEnd(request, response)
+				return nil, multiErr.HasError()
+			}
+
 			multiErr.Push(err.Error())
 			c.reportError(request, err)
 			backoffTime := c.retrier.NextInterval(i)
