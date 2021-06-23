@@ -204,7 +204,8 @@ func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
 			return nil
 		}, hhc.fallbackFunc)
 
-		if err != nil {
+		// need not backoff after the last retry
+		if err != nil && i != hhc.retryCount {
 			backoffTime := hhc.retrier.NextInterval(i)
 			time.Sleep(backoffTime)
 			continue
