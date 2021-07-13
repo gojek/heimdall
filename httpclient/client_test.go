@@ -2,14 +2,17 @@ package httpclient
 
 import (
 	"bytes"
+	"context"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/gojek/heimdall/v7"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -505,6 +508,38 @@ func TestCustomHTTPClientHeaderSuccess(t *testing.T) {
 	body, err := ioutil.ReadAll(response.Body)
 	require.NoError(t, err)
 	assert.Equal(t, "{ \"response\": \"ok\" }", string(body))
+}
+
+func TestHTTPClientContextTimeout(t *testing.T) {
+	client := NewClient(WithHTTPTimeout(1000 * time.Millisecond))
+
+	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+		assert.Equal(t, "en", r.Header.Get("Accept-Language"))
+
+		time.Sleep(100 * time.Millisecond)
+
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{ "response": "ok" }`))
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+	defer server.Close()
+
+	ctxt, cancel := context.WithTimeout(context.Background(), 1*time.Millisecond)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctxt, http.MethodGet, server.URL, nil)
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Language", "en")
+	response, err := client.Do(req)
+	require.Error(t, err, "should have timed out in GET request")
+	require.Contains(t, err.Error(), "context deadline exceeded")
+	require.True(t, errors.Is(err, context.DeadlineExceeded))
+	assert.Equal(t, &url.Error{Op: "Get", URL: server.URL, Err: context.DeadlineExceeded}, errors.Cause(err))
+	require.Nil(t, response)
 }
 
 func respBody(t *testing.T, response *http.Response) string {
