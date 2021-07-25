@@ -3,11 +3,11 @@ package hystrix
 import (
 	"bytes"
 	"github.com/aditi5/heimdall/v6"
+	"github.com/aditi5/heimdall/v6/httpclient"
 	"github.com/afex/hystrix-go/hystrix"
 	metricCollector "github.com/afex/hystrix-go/hystrix/metric_collector"
 	"github.com/afex/hystrix-go/plugins"
 	"github.com/go-coldbrew/hystrixprometheus"
-	"github.com/gojek/heimdall/v7/httpclient"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"io"
