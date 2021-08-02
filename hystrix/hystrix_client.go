@@ -2,17 +2,18 @@ package hystrix
 
 import (
 	"bytes"
+	"github.com/afex/hystrix-go/hystrix"
+	metricCollector "github.com/afex/hystrix-go/hystrix/metric_collector"
+	"github.com/afex/hystrix-go/plugins"
+	"github.com/go-coldbrew/hystrixprometheus"
+	"github.com/gojek/heimdall/v7"
+	"github.com/gojek/heimdall/v7/httpclient"
+	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"time"
-
-	"github.com/afex/hystrix-go/hystrix"
-	metricCollector "github.com/afex/hystrix-go/hystrix/metric_collector"
-	"github.com/afex/hystrix-go/plugins"
-	"github.com/gojek/heimdall/v7"
-	"github.com/gojek/heimdall/v7/httpclient"
-	"github.com/pkg/errors"
 )
 
 type fallbackFunc func(error) error
@@ -76,6 +77,9 @@ func NewClient(opts ...Option) *Client {
 
 		metricCollector.Registry.Register(c.NewStatsdCollector)
 	}
+
+	promC := hystrixprometheus.NewPrometheusCollector("hystrix", nil, prometheus.DefBuckets)
+	metricCollector.Registry.Register(promC.Collector)
 
 	hystrix.ConfigureCommand(client.hystrixCommandName, hystrix.CommandConfig{
 		Timeout:                durationToInt(client.hystrixTimeout, time.Millisecond),
