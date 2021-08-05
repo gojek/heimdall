@@ -122,8 +122,6 @@ func (c *Client) Delete(url string, headers http.Header) (*http.Response, error)
 
 // Do makes an HTTP request with the native `http.Do` interface
 func (c *Client) Do(request *http.Request) (*http.Response, error) {
-	request.Close = true
-
 	var bodyReader *bytes.Reader
 
 	if request.Body != nil {
