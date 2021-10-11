@@ -18,14 +18,14 @@ func WithCommandName(name string) Option {
 	}
 }
 
-// WithHTTPTimeout sets hystrix timeout
+// WithHTTPTimeout sets hystrix timeout in milliseconds
 func WithHTTPTimeout(timeout time.Duration) Option {
 	return func(c *Client) {
 		c.timeout = timeout
 	}
 }
 
-// WithHystrixTimeout sets hystrix timeout
+// WithHystrixTimeout sets hystrix timeout in milliseconds
 func WithHystrixTimeout(timeout time.Duration) Option {
 	return func(c *Client) {
 		c.hystrixTimeout = timeout
@@ -39,21 +39,24 @@ func WithMaxConcurrentRequests(maxConcurrentRequests int) Option {
 	}
 }
 
-// WithRequestVolumeThreshold sets hystrix request volume threshold
+// WithRequestVolumeThreshold sets hystrix request volume threshold,
+// the minimum number of requests needed before a circuit can be tripped due to health
 func WithRequestVolumeThreshold(requestVolumeThreshold int) Option {
 	return func(c *Client) {
 		c.requestVolumeThreshold = requestVolumeThreshold
 	}
 }
 
-// WithSleepWindow sets hystrix sleep window
+// WithSleepWindow sets hystrix sleep window in milliseconds,
+// to wait after a circuit opens before testing for recovery
 func WithSleepWindow(sleepWindow int) Option {
 	return func(c *Client) {
 		c.sleepWindow = sleepWindow
 	}
 }
 
-// WithErrorPercentThreshold sets hystrix error percent threshold
+// WithErrorPercentThreshold sets hystrix error percent threshold,
+// causes circuits to open once the rolling measure of errors exceeds this percent of requests
 func WithErrorPercentThreshold(errorPercentThreshold int) Option {
 	return func(c *Client) {
 		c.errorPercentThreshold = errorPercentThreshold
