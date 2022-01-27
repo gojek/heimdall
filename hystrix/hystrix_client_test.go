@@ -508,7 +508,7 @@ func TestFallBackFunctionIsCalledWithHystrixHTTPClient(t *testing.T) {
 		WithErrorPercentThreshold(10),
 		WithSleepWindow(100),
 		WithRequestVolumeThreshold(10),
-		WithFallbackFunc(func(err error) error {
+		WithFallbackCtxFunc(func(ctx context.Context, err error) error {
 			called = true
 			return err
 		}),
@@ -529,7 +529,7 @@ func TestHystrixHTTPClientReturnsFallbackFailureWithAFallBackFunctionWhichReturn
 		WithErrorPercentThreshold(10),
 		WithSleepWindow(100),
 		WithRequestVolumeThreshold(10),
-		WithFallbackFunc(func(err error) error {
+		WithFallbackCtxFunc(func(ctx context.Context, err error) error {
 			// do something in the fallback function
 			return nil
 		}),
