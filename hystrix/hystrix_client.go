@@ -2,6 +2,7 @@ package hystrix
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -15,7 +16,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-type fallbackFunc func(error) error
+type fallbackFunc func(context.Context, error) error
 
 // Client is the hystrix client implementation
 type Client struct {
@@ -30,7 +31,7 @@ type Client struct {
 	errorPercentThreshold  int
 	retryCount             int
 	retrier                heimdall.Retriable
-	fallbackFunc           func(err error) error
+	fallbackFunc           func(ctx context.Context, err error) error
 	statsD                 *plugins.StatsdCollectorConfig
 }
 
@@ -186,7 +187,7 @@ func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
 			response.Body.Close()
 		}
 
-		err = hystrix.Do(hhc.hystrixCommandName, func() error {
+		err = hystrix.DoC(request.Context(), hhc.hystrixCommandName, func(ctx context.Context) error {
 			response, err = hhc.client.Do(request)
 			if bodyReader != nil {
 				// Reset the body reader after the request since at this point it's already read
