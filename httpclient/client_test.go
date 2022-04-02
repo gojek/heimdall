@@ -201,6 +201,33 @@ func TestHTTPClientPatchSuccess(t *testing.T) {
 	assert.Equal(t, "{ \"response\": \"ok\" }", respBody(t, response))
 }
 
+func TestHTTPClientGetRetriesOnTimeout(t *testing.T) {
+	count := 0
+	noOfRetries := 3
+	noOfCalls := noOfRetries + 1
+	backoffInterval := 1 * time.Millisecond
+	maximumJitterInterval := 10 * time.Millisecond
+
+	client := NewClient(
+		WithHTTPTimeout(3*time.Millisecond),
+		WithRetryCount(noOfRetries),
+		WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval))),
+	)
+
+	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		count++
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+	defer server.Close()
+
+	_, err := client.Get(server.URL, http.Header{})
+	require.Contains(t, err.Error(), "context deadline exceeded")
+	assert.Equal(t, noOfCalls, count)
+}
+
 func TestHTTPClientGetRetriesOnFailure(t *testing.T) {
 	count := 0
 	noOfRetries := 3
@@ -406,7 +433,6 @@ func TestHTTPClientGetReturnsNoErrorOn5xxFailure(t *testing.T) {
 	response, err := client.Get(server.URL, http.Header{})
 	require.NoError(t, err)
 	require.Equal(t, http.StatusInternalServerError, response.StatusCode)
-
 }
 
 func TestHTTPClientGetReturnsErrorOnFailure(t *testing.T) {
@@ -484,7 +510,8 @@ func TestCustomHTTPClientHeaderSuccess(t *testing.T) {
 	client := NewClient(
 		WithHTTPTimeout(10*time.Millisecond),
 		WithHTTPClient(&myHTTPClient{
-			client: http.Client{Timeout: 25 * time.Millisecond}}),
+			client: http.Client{Timeout: 25 * time.Millisecond},
+		}),
 	)
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
