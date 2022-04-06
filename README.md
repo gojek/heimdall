@@ -333,7 +333,7 @@ A plugin is an interface whose methods get called during key events in a request
 
 - `OnRequestStart` is called just before the request is made
 - `OnRequestEnd` is called once the request has successfully executed
-- `OnError` is called is the request failed
+- `OnError` is called when the request failed
 
 Each method is called with the request object as an argument, with `OnRequestEnd`, and `OnError` additionally being called with the response and error instances respectively.
 For a simple example on how to write plugins, look at the [request logger plugin](/plugins/request_logger.go).
