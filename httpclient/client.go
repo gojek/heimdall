@@ -2,6 +2,7 @@ package httpclient
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -136,15 +137,17 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 	}
 
 	multiErr := &valkyrie.MultiError{}
+	var err error
+	var shouldRetry bool
 	var response *http.Response
 
-	for i := 0; i <= c.retryCount; i++ {
+	for i := 0; ; i++ {
 		if response != nil {
 			response.Body.Close()
 		}
 
 		c.reportRequestStart(request)
-		var err error
+
 		response, err = c.client.Do(request)
 		if bodyReader != nil {
 			// Reset the body reader after the request since at this point it's already read
@@ -152,26 +155,48 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 			_, _ = bodyReader.Seek(0, 0)
 		}
 
+		shouldRetry, err = c.checkRetry(request.Context(), response, err)
+
 		if err != nil {
 			multiErr.Push(err.Error())
 			c.reportError(request, err)
-			backoffTime := c.retrier.NextInterval(i)
-			time.Sleep(backoffTime)
-			continue
-		}
-		c.reportRequestEnd(request, response)
-
-		if response.StatusCode >= http.StatusInternalServerError {
-			backoffTime := c.retrier.NextInterval(i)
-			time.Sleep(backoffTime)
-			continue
+		} else {
+			c.reportRequestEnd(request, response)
 		}
 
-		multiErr = &valkyrie.MultiError{} // Clear errors if any iteration succeeds
-		break
+		if !shouldRetry {
+			break
+		}
+
+		if c.retryCount-i <= 0 {
+			break
+		}
+
+		backoffTime := c.retrier.NextInterval(i)
+		time.Sleep(backoffTime)
+	}
+
+	if !shouldRetry && err == nil {
+		// Clear errors if any iteration succeeds
+		multiErr = &valkyrie.MultiError{}
 	}
 
 	return response, multiErr.HasError()
+}
+
+func (c *Client) checkRetry(ctx context.Context, resp *http.Response, err error) (bool, error) {
+	if err != nil {
+		return true, err
+	}
+
+	// 429 Too Many Requests is recoverable. Sometimes the server puts
+	// a Retry-After response header to indicate when the server is
+	// available to start processing request from client.
+	if resp.StatusCode == http.StatusTooManyRequests || resp.StatusCode >= http.StatusInternalServerError {
+		return true, nil
+	}
+
+	return false, nil
 }
 
 func (c *Client) reportRequestStart(request *http.Request) {
