@@ -172,8 +172,14 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 			break
 		}
 
-		backoffTime := c.retrier.NextInterval(i)
-		time.Sleep(backoffTime)
+		// Cancel the retry sleep if the request context is cancelled or deadline exceeded
+		timer := time.NewTimer(c.retrier.NextInterval(i))
+		select {
+		case <-request.Context().Done():
+			timer.Stop()
+			break
+		case <-timer.C:
+		}
 	}
 
 	if !shouldRetry && err == nil {
@@ -185,6 +191,11 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 }
 
 func (c *Client) checkRetry(ctx context.Context, resp *http.Response, err error) (bool, error) {
+	// do not retry on context.Canceled or context.DeadlineExceeded
+	if ctx.Err() != nil {
+		return false, ctx.Err()
+	}
+
 	if err != nil {
 		return true, err
 	}

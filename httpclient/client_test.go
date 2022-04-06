@@ -2,6 +2,7 @@ package httpclient
 
 import (
 	"bytes"
+	"context"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -14,6 +15,37 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
+
+func TestHTTPRequestWithContextDoSuccess(t *testing.T) {
+	noOfRetries := 3
+	backoffInterval := 1 * time.Millisecond
+	maximumJitterInterval := 10 * time.Millisecond
+
+	client := NewClient(
+		WithRetryCount(noOfRetries),
+		WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval))),
+	)
+
+	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{ "response": "ok" }`))
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+	defer server.Close()
+
+	req, err := http.NewRequest(http.MethodGet, server.URL, nil)
+	require.NoError(t, err)
+
+	// define some user case context
+	subCtx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
+	defer cancel()
+
+	req = req.WithContext(subCtx)
+	_, err = client.Do(req)
+	require.Contains(t, err.Error(), "context deadline exceeded")
+}
 
 func TestHTTPClientDoSuccess(t *testing.T) {
 	client := NewClient(WithHTTPTimeout(10 * time.Millisecond))
