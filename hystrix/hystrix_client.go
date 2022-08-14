@@ -205,6 +205,9 @@ func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
 		}, hhc.fallbackFunc)
 
 		if err != nil {
+			if errors.Is(err, hystrix.ErrTimeout) {
+				return nil, err
+			}
 			backoffTime := hhc.retrier.NextInterval(i)
 			time.Sleep(backoffTime)
 			continue
