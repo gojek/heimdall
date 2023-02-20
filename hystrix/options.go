@@ -3,9 +3,9 @@ package hystrix
 import (
 	"time"
 
-	"github.com/afex/hystrix-go/plugins"
 	"github.com/gojek/heimdall/v7"
 	"github.com/gojek/heimdall/v7/httpclient"
+	"github.com/raghavTayal/hystrix-go/plugins"
 )
 
 // Option represents the hystrix client options
