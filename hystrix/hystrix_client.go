@@ -3,7 +3,6 @@ package hystrix
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -173,12 +172,12 @@ func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
 	var bodyReader *bytes.Reader
 
 	if request.Body != nil {
-		reqData, err := ioutil.ReadAll(request.Body)
+		reqData, err := io.ReadAll(request.Body)
 		if err != nil {
 			return nil, err
 		}
 		bodyReader = bytes.NewReader(reqData)
-		request.Body = ioutil.NopCloser(bodyReader) // prevents closing the body between retries
+		request.Body = io.NopCloser(bodyReader) // prevents closing the body between retries
 	}
 
 	for i := 0; i <= hhc.retryCount; i++ {

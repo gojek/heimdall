@@ -2,7 +2,7 @@ package hystrix
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -55,7 +55,7 @@ func TestHystrixHTTPClientDoSuccess(t *testing.T) {
 	require.NoError(t, err, "should not have failed to make a GET request")
 
 	assert.Equal(t, http.StatusOK, response.StatusCode)
-	body, err := ioutil.ReadAll(response.Body)
+	body, err := io.ReadAll(response.Body)
 	require.NoError(t, err)
 	assert.Equal(t, "{ \"response\": \"ok\" }", string(body))
 }
@@ -112,7 +112,7 @@ func TestHystrixHTTPClientPostSuccess(t *testing.T) {
 		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 		assert.Equal(t, "en", r.Header.Get("Accept-Language"))
 
-		rBody, err := ioutil.ReadAll(r.Body)
+		rBody, err := io.ReadAll(r.Body)
 		require.NoError(t, err, "should not have failed to extract request body")
 
 		assert.Equal(t, requestBodyString, string(rBody))
@@ -189,7 +189,7 @@ func TestHystrixHTTPClientPutSuccess(t *testing.T) {
 		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 		assert.Equal(t, "en", r.Header.Get("Accept-Language"))
 
-		rBody, err := ioutil.ReadAll(r.Body)
+		rBody, err := io.ReadAll(r.Body)
 		require.NoError(t, err, "should not have failed to extract request body")
 
 		assert.Equal(t, requestBodyString, string(rBody))
@@ -232,7 +232,7 @@ func TestHystrixHTTPClientPatchSuccess(t *testing.T) {
 		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 		assert.Equal(t, "en", r.Header.Get("Accept-Language"))
 
-		rBody, err := ioutil.ReadAll(r.Body)
+		rBody, err := io.ReadAll(r.Body)
 		require.NoError(t, err, "should not have failed to extract request body")
 
 		assert.Equal(t, requestBodyString, string(rBody))
@@ -512,7 +512,7 @@ func TestCustomHystrixHTTPClientDoSuccess(t *testing.T) {
 	response, err := client.Do(req)
 	assert.Equal(t, http.StatusOK, response.StatusCode)
 
-	body, err := ioutil.ReadAll(response.Body)
+	body, err := io.ReadAll(response.Body)
 	require.NoError(t, err)
 	assert.Equal(t, "{ \"response\": \"ok\" }", string(body))
 }
@@ -524,7 +524,7 @@ func respBody(t *testing.T, response *http.Response) string {
 		}()
 	}
 
-	respBody, err := ioutil.ReadAll(response.Body)
+	respBody, err := io.ReadAll(response.Body)
 	require.NoError(t, err, "should not have failed to read response body")
 
 	return string(respBody)

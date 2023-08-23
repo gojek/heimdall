@@ -2,8 +2,8 @@ package httpclient
 
 import (
 	"bytes"
+	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -48,6 +48,17 @@ func NewClient(opts ...Option) *Client {
 	}
 
 	return &client
+}
+
+// SetTransport allows override of the transport when
+// the underlying heimdall.Doer is an http.Client
+func (c *Client) SetTransport(t *http.Transport) error {
+	cl, ok := c.client.(*http.Client)
+	if !ok {
+		return fmt.Errorf("client is not http.Client - cannot set transport")
+	}
+	cl.Transport = t
+	return nil
 }
 
 // AddPlugin Adds plugin to client
@@ -127,12 +138,12 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 	var bodyReader *bytes.Reader
 
 	if request.Body != nil {
-		reqData, err := ioutil.ReadAll(request.Body)
+		reqData, err := io.ReadAll(request.Body)
 		if err != nil {
 			return nil, err
 		}
 		bodyReader = bytes.NewReader(reqData)
-		request.Body = ioutil.NopCloser(bodyReader) // prevents closing the body between retries
+		request.Body = io.NopCloser(bodyReader) // prevents closing the body between retries
 	}
 
 	multiErr := &valkyrie.MultiError{}

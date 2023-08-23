@@ -2,7 +2,7 @@ package httpclient
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -39,7 +39,7 @@ func TestHTTPClientDoSuccess(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, response.StatusCode)
 
-	body, err := ioutil.ReadAll(response.Body)
+	body, err := io.ReadAll(response.Body)
 	require.NoError(t, err)
 	assert.Equal(t, "{ \"response\": \"ok\" }", string(body))
 }
@@ -80,7 +80,7 @@ func TestHTTPClientPostSuccess(t *testing.T) {
 		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 		assert.Equal(t, "en", r.Header.Get("Accept-Language"))
 
-		rBody, err := ioutil.ReadAll(r.Body)
+		rBody, err := io.ReadAll(r.Body)
 		require.NoError(t, err, "should not have failed to extract request body")
 
 		assert.Equal(t, requestBodyString, string(rBody))
@@ -141,7 +141,7 @@ func TestHTTPClientPutSuccess(t *testing.T) {
 		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 		assert.Equal(t, "en", r.Header.Get("Accept-Language"))
 
-		rBody, err := ioutil.ReadAll(r.Body)
+		rBody, err := io.ReadAll(r.Body)
 		require.NoError(t, err, "should not have failed to extract request body")
 
 		assert.Equal(t, requestBodyString, string(rBody))
@@ -176,7 +176,7 @@ func TestHTTPClientPatchSuccess(t *testing.T) {
 		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 		assert.Equal(t, "en", r.Header.Get("Accept-Language"))
 
-		rBody, err := ioutil.ReadAll(r.Body)
+		rBody, err := io.ReadAll(r.Body)
 		require.NoError(t, err, "should not have failed to extract request body")
 
 		assert.Equal(t, requestBodyString, string(rBody))
@@ -502,9 +502,21 @@ func TestCustomHTTPClientHeaderSuccess(t *testing.T) {
 	response, err := client.Do(req)
 	assert.Equal(t, http.StatusOK, response.StatusCode)
 
-	body, err := ioutil.ReadAll(response.Body)
+	body, err := io.ReadAll(response.Body)
 	require.NoError(t, err)
 	assert.Equal(t, "{ \"response\": \"ok\" }", string(body))
+}
+
+func TestSetTransport(t *testing.T) {
+	client := NewClient(
+		WithHTTPClient(&http.Client{}),
+	)
+
+	transport := &http.Transport{}
+	assert.NoError(t, client.SetTransport(transport))
+
+	client.client = &mockClient{}
+	assert.Error(t, client.SetTransport(transport))
 }
 
 func respBody(t *testing.T, response *http.Response) string {
@@ -512,7 +524,7 @@ func respBody(t *testing.T, response *http.Response) string {
 		defer response.Body.Close()
 	}
 
-	respBody, err := ioutil.ReadAll(response.Body)
+	respBody, err := io.ReadAll(response.Body)
 	require.NoError(t, err, "should not have failed to read response body")
 
 	return string(respBody)
