@@ -61,7 +61,7 @@ if err != nil{
 }
 
 // Heimdall returns the standard *http.Response object
-body, err := ioutil.ReadAll(res.Body)
+body, err := io.ReadAll(res.Body)
 fmt.Println(string(body))
 ```
 
@@ -79,7 +79,7 @@ if err != nil {
 	panic(err)
 }
 
-body, err := ioutil.ReadAll(res.Body)
+body, err := io.ReadAll(res.Body)
 fmt.Println(string(body))
 ```
 
