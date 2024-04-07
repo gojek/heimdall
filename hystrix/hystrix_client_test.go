@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/afex/hystrix-go/hystrix"
 	"github.com/gojek/heimdall/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -375,6 +376,42 @@ func TestHystrixHTTPClientRetriesPostOnFailure(t *testing.T) {
 	assert.Equal(t, 4, count)
 	assert.Equal(t, http.StatusInternalServerError, response.StatusCode)
 	assert.JSONEq(t, `{ "response": "something went wrong" }`, respBody(t, response))
+}
+
+func TestHystrixTimeout(t *testing.T) {
+	client := NewClient(
+		WithHTTPTimeout(50*time.Millisecond),
+		WithCommandName("some_command_name"),
+		WithHystrixTimeout(10*time.Millisecond),
+		WithMaxConcurrentRequests(100),
+		WithErrorPercentThreshold(10),
+		WithSleepWindow(100),
+		WithRequestVolumeThreshold(20),
+	)
+
+	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+		assert.Equal(t, "en", r.Header.Get("Accept-Language"))
+
+		time.Sleep(20 * time.Millisecond)
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{ "response": "ok" }`))
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+	defer server.Close()
+
+	req, err := http.NewRequest(http.MethodGet, server.URL, nil)
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Language", "en")
+
+	response, err := client.Do(req)
+	require.Error(t, err, "expected error at GET request due to hystrix timeout")
+
+	assert.Nil(t, response)
+	assert.ErrorIs(t, err, hystrix.ErrTimeout, "missing hystrix timeout error")
 }
 
 func BenchmarkHystrixHTTPClientRetriesPostOnFailure(b *testing.B) {
