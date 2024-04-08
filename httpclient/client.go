@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/gojek/heimdall/v7"
-	"github.com/gojek/valkyrie"
 	"github.com/pkg/errors"
 )
 
@@ -133,7 +132,7 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 		request.Body = ioutil.NopCloser(bodyReader) // prevents closing the body between retries
 	}
 
-	multiErr := &valkyrie.MultiError{}
+	var errs []error
 	var response *http.Response
 
 	for i := 0; i <= c.retryCount; i++ {
@@ -151,7 +150,7 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 		}
 
 		if err != nil {
-			multiErr.Push(err.Error())
+			errs = append(errs, err)
 			c.reportError(request, err)
 			backoffTime := c.retrier.NextInterval(i)
 			time.Sleep(backoffTime)
@@ -165,11 +164,11 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 			continue
 		}
 
-		multiErr = &valkyrie.MultiError{} // Clear errors if any iteration succeeds
+		errs = nil // Clear errors if any iteration succeeds
 		break
 	}
 
-	return response, multiErr.HasError()
+	return response, MultiError{errs}.HasError()
 }
 
 func (c *Client) reportRequestStart(request *http.Request) {
