@@ -1,5 +1,5 @@
-.PHONYthub.com/mattn/goveralls: all
-all: build test coverage
+.PHONY: all
+all: setup build test coverage
 
 ALL_PACKAGES=$(shell go list ./... | grep -v "vendor")
 
