@@ -128,6 +128,5 @@ func ExampleWithRetrier() {
 	// Output: retry attempt 0
 	// retry attempt 1
 	// retry attempt 2
-	// retry attempt 3
 	// error
 }

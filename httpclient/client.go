@@ -2,6 +2,7 @@ package httpclient
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -136,9 +137,30 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 	multiErr := &valkyrie.MultiError{}
 	var response *http.Response
 
+outter:
 	for i := 0; i <= c.retryCount; i++ {
 		if response != nil {
 			response.Body.Close()
+		}
+
+		// Wait before retrying.
+		if i > 0 {
+			backoffTime := c.retrier.NextInterval(i - 1)
+			ctx, cancel := context.WithTimeout(context.Background(), backoffTime)
+
+			select {
+			case <-ctx.Done():
+				cancel()
+
+			case <-request.Context().Done():
+				cancel()
+
+				multiErr.Push(request.Context().Err().Error())
+				c.reportError(request, request.Context().Err())
+
+				// If the request context has already been cancelled, don't retry
+				break outter
+			}
 		}
 
 		c.reportRequestStart(request)
@@ -153,19 +175,18 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 		if err != nil {
 			multiErr.Push(err.Error())
 			c.reportError(request, err)
-			backoffTime := c.retrier.NextInterval(i)
-			time.Sleep(backoffTime)
+
 			continue
 		}
+
 		c.reportRequestEnd(request, response)
 
 		if response.StatusCode >= http.StatusInternalServerError {
-			backoffTime := c.retrier.NextInterval(i)
-			time.Sleep(backoffTime)
 			continue
 		}
 
-		multiErr = &valkyrie.MultiError{} // Clear errors if any iteration succeeds
+		// Clear errors if any iteration succeeds
+		multiErr = &valkyrie.MultiError{}
 		break
 	}
 

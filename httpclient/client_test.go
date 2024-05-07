@@ -2,6 +2,7 @@ package httpclient
 
 import (
 	"bytes"
+	"context"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -415,6 +416,75 @@ func TestHTTPClientGetReturnsErrorOnFailure(t *testing.T) {
 	response, err := client.Get("url_doenst_exist", http.Header{})
 	assert.Contains(t, err.Error(), "unsupported protocol scheme")
 	assert.Nil(t, response)
+}
+
+func TestHTTPClientDontRetryWhenContextIsCancelled(t *testing.T) {
+	noOfRetries := 3
+	// Set a huge backoffInterval that we won't have to wait anyway
+	backoffInterval := 1 * time.Hour
+	maximumJitterInterval := 1 * time.Millisecond
+
+	client := NewClient(
+		WithHTTPTimeout(10*time.Millisecond),
+		WithRetryCount(noOfRetries),
+		WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval))),
+	)
+
+	tt := []struct {
+		Title          string
+		CancelTimeout  time.Duration
+		NotNilResponse bool
+	}{
+		{
+			Title:          "Cancel directly",
+			CancelTimeout:  0 * time.Millisecond,
+			NotNilResponse: false,
+		},
+		{
+			Title:          "Cancel afterwards",
+			CancelTimeout:  10 * time.Millisecond,
+			NotNilResponse: true,
+		},
+	}
+
+	for _, test := range tt {
+		test := test
+		t.Run(test.Title, func(t *testing.T) {
+			t.Parallel()
+
+			ctx, cancel := context.WithCancel(context.Background())
+
+			dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+				if test.CancelTimeout == 0 {
+					cancel()
+				} else {
+					go func() {
+						time.Sleep(test.CancelTimeout)
+						cancel()
+					}()
+				}
+
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Header().Set("Content-Type", "application/json")
+				w.Write([]byte(`{ "response": "something went wrong" }`))
+			}
+
+			server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+			defer server.Close()
+
+			req, err := http.NewRequest(http.MethodGet, server.URL, nil)
+			require.NoError(t, err)
+
+			response, err := client.Do(req.WithContext(ctx))
+			require.Error(t, err, "should have failed to make request")
+
+			if test.NotNilResponse {
+				require.NotNil(t, response)
+			} else {
+				require.Nil(t, response)
+			}
+		})
+	}
 }
 
 func TestPluginMethodsCalled(t *testing.T) {
