@@ -131,6 +131,32 @@ func TestHTTPClientDeleteSuccess(t *testing.T) {
 	assert.Equal(t, "{ \"response\": \"ok\" }", respBody(t, response))
 }
 
+func TestHTTPClientHeadSuccess(t *testing.T) {
+	client := NewClient(WithHTTPTimeout(10 * time.Millisecond))
+
+	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodHead, r.Method)
+		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+		assert.Equal(t, "en", r.Header.Get("Accept-Language"))
+
+		w.Header().Add("x-foo", "bar")
+		w.WriteHeader(http.StatusOK)
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+	defer server.Close()
+
+	headers := http.Header{}
+	headers.Set("Content-Type", "application/json")
+	headers.Set("Accept-Language", "en")
+
+	response, err := client.Head(server.URL, headers)
+	require.NoError(t, err, "should not have failed to make a HEAD request")
+
+	assert.Equal(t, http.StatusOK, response.StatusCode)
+	assert.Equal(t, "bar", response.Header.Get("x-foo"))
+}
+
 func TestHTTPClientPutSuccess(t *testing.T) {
 	client := NewClient(WithHTTPTimeout(10 * time.Millisecond))
 
