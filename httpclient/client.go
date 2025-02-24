@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gojek/heimdall/v7"
-	"github.com/gojek/valkyrie"
 	"github.com/pkg/errors"
+
+	heimdall "github.com/gojek/heimdall/v7"
 )
 
 // Client is the http client implementation
@@ -136,7 +136,6 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 		request.Body = ioutil.NopCloser(bodyReader) // prevents closing the body between retries
 	}
 
-	multiErr := &valkyrie.MultiError{}
 	var err error
 	var shouldRetry bool
 	var response *http.Response
@@ -158,7 +157,6 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 		shouldRetry, err = c.checkRetry(request.Context(), response, err)
 
 		if err != nil {
-			multiErr.Push(err.Error())
 			c.reportError(request, err)
 		} else {
 			c.reportRequestEnd(request, response)
@@ -182,12 +180,7 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 		}
 	}
 
-	if !shouldRetry && err == nil {
-		// Clear errors if any iteration succeeds
-		multiErr = &valkyrie.MultiError{}
-	}
-
-	return response, multiErr.HasError()
+	return response, err
 }
 
 func (c *Client) checkRetry(ctx context.Context, resp *http.Response, err error) (bool, error) {
