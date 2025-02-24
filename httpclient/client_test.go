@@ -2,6 +2,7 @@ package httpclient
 
 import (
 	"bytes"
+	"context"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -14,6 +15,37 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
+
+func TestHTTPRequestWithContextDoSuccess(t *testing.T) {
+	noOfRetries := 3
+	backoffInterval := 1 * time.Millisecond
+	maximumJitterInterval := 10 * time.Millisecond
+
+	client := NewClient(
+		WithRetryCount(noOfRetries),
+		WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval))),
+	)
+
+	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{ "response": "ok" }`))
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+	defer server.Close()
+
+	req, err := http.NewRequest(http.MethodGet, server.URL, nil)
+	require.NoError(t, err)
+
+	// define some user case context
+	subCtx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
+	defer cancel()
+
+	req = req.WithContext(subCtx)
+	_, err = client.Do(req)
+	require.Contains(t, err.Error(), "context deadline exceeded")
+}
 
 func TestHTTPClientDoSuccess(t *testing.T) {
 	client := NewClient(WithHTTPTimeout(10 * time.Millisecond))
@@ -199,6 +231,33 @@ func TestHTTPClientPatchSuccess(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, response.StatusCode)
 	assert.Equal(t, "{ \"response\": \"ok\" }", respBody(t, response))
+}
+
+func TestHTTPClientGetRetriesOnTimeout(t *testing.T) {
+	count := 0
+	noOfRetries := 3
+	noOfCalls := noOfRetries + 1
+	backoffInterval := 1 * time.Millisecond
+	maximumJitterInterval := 10 * time.Millisecond
+
+	client := NewClient(
+		WithHTTPTimeout(3*time.Millisecond),
+		WithRetryCount(noOfRetries),
+		WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval))),
+	)
+
+	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		count++
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+	defer server.Close()
+
+	_, err := client.Get(server.URL, http.Header{})
+	require.Contains(t, err.Error(), "context deadline exceeded")
+	assert.Equal(t, noOfCalls, count)
 }
 
 func TestHTTPClientGetRetriesOnFailure(t *testing.T) {
@@ -406,7 +465,6 @@ func TestHTTPClientGetReturnsNoErrorOn5xxFailure(t *testing.T) {
 	response, err := client.Get(server.URL, http.Header{})
 	require.NoError(t, err)
 	require.Equal(t, http.StatusInternalServerError, response.StatusCode)
-
 }
 
 func TestHTTPClientGetReturnsErrorOnFailure(t *testing.T) {
@@ -484,7 +542,8 @@ func TestCustomHTTPClientHeaderSuccess(t *testing.T) {
 	client := NewClient(
 		WithHTTPTimeout(10*time.Millisecond),
 		WithHTTPClient(&myHTTPClient{
-			client: http.Client{Timeout: 25 * time.Millisecond}}),
+			client: http.Client{Timeout: 25 * time.Millisecond},
+		}),
 	)
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
