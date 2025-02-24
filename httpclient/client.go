@@ -137,7 +137,7 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 	}
 
 	var err error
-	var shouldRetry bool
+	var needRetry bool
 	var response *http.Response
 
 	for i := 0; ; i++ {
@@ -154,7 +154,7 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 			_, _ = bodyReader.Seek(0, 0)
 		}
 
-		shouldRetry, err = c.checkRetry(request.Context(), response, err)
+		needRetry, err = c.checkRetry(request.Context(), response, err)
 
 		if err != nil {
 			c.reportError(request, err)
@@ -162,7 +162,7 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 			c.reportRequestEnd(request, response)
 		}
 
-		if !shouldRetry {
+		if !needRetry {
 			break
 		}
 
