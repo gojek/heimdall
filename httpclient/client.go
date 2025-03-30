@@ -133,6 +133,8 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 		request.Body = ioutil.NopCloser(bodyReader) // prevents closing the body between retries
 	}
 
+	ctx := request.Context()
+
 	multiErr := &valkyrie.MultiError{}
 	var response *http.Response
 
@@ -154,14 +156,28 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 			multiErr.Push(err.Error())
 			c.reportError(request, err)
 			backoffTime := c.retrier.NextInterval(i)
-			time.Sleep(backoffTime)
+			// sleep should be interrupted in case the context gets cancelled
+			err = SleepInterruptible(ctx, backoffTime)
+			if err != nil {
+				multiErr.Push(err.Error())
+				c.reportError(request, err)
+				// no point of retrying after context has been cancelled
+				break
+			}
 			continue
 		}
 		c.reportRequestEnd(request, response)
 
 		if response.StatusCode >= http.StatusInternalServerError {
 			backoffTime := c.retrier.NextInterval(i)
-			time.Sleep(backoffTime)
+			// sleep should be interrupted in case the context gets cancelled
+			err = SleepInterruptible(ctx, backoffTime)
+			if err != nil {
+				multiErr.Push(err.Error())
+				c.reportError(request, err)
+				// no point of retrying after context has been cancelled
+				break
+			}
 			continue
 		}
 
