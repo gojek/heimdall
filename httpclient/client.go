@@ -138,6 +138,8 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 		reqGetBody = request.GetBody
 	}
 
+	ctx := request.Context()
+
 	multiErr := &valkyrie.MultiError{}
 	var response *http.Response
 
@@ -147,7 +149,13 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 			_ = response.Body.Close()
 		}
 		if i > 0 {
-			time.Sleep(c.retrier.NextInterval(i - 1)) // sleep after closing the previous response body
+			err = SleepInterruptible(ctx, c.retrier.NextInterval(i-1))
+			if err != nil {
+				multiErr.Push(err.Error())
+				c.reportError(request, err)
+				// no point of retrying after context has been cancelled
+				break
+			}
 
 			request, err = internal.CloneRequest(request, reqGetBody) // Clone the request to reset the body for retry
 			if err != nil {
