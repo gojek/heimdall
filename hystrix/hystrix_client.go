@@ -183,24 +183,30 @@ func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
 
 	for i := 0; i <= hhc.retryCount; i++ {
 		if response != nil {
-			response.Body.Close()
+			_ = response.Body.Close()
 		}
 
-		err = hystrix.DoC(request.Context(), hhc.hystrixCommandName, func(_ context.Context) error {
-			response, err = hhc.client.Do(request)
+		err = hystrix.DoC(request.Context(), hhc.hystrixCommandName, func(ctx context.Context) error {
+			resp, e := hhc.client.Do(request)
 			if bodyReader != nil {
 				// Reset the body reader after the request since at this point it's already read
 				// Note that it's safe to ignore the error here since the 0,0 position is always valid
 				_, _ = bodyReader.Seek(0, 0)
 			}
 
-			if err != nil {
-				return err
+			if ctx.Err() != nil {
+				return ctx.Err()
 			}
 
-			if response.StatusCode >= http.StatusInternalServerError {
+			response = resp
+			if e != nil {
+				return e
+			}
+
+			if resp.StatusCode >= http.StatusInternalServerError {
 				return err5xx
 			}
+
 			return nil
 		}, hhc.fallbackFunc)
 
