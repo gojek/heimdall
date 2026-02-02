@@ -48,7 +48,7 @@ func TestOptionsHaveDefaults(t *testing.T) {
 
 func ExampleWithHTTPTimeout() {
 	c := NewClient(WithHTTPTimeout(5 * time.Second))
-	req, err := http.NewRequest(http.MethodGet, "https://www.gojek.io/", nil)
+	req, err := http.NewRequest(http.MethodGet, "https://gojek.com/", nil)
 	if err != nil {
 		panic(err)
 	}
@@ -62,7 +62,7 @@ func ExampleWithHTTPTimeout() {
 
 func ExampleWithHTTPTimeout_expired() {
 	c := NewClient(WithHTTPTimeout(1 * time.Millisecond))
-	req, err := http.NewRequest(http.MethodGet, "https://www.gojek.io/", nil)
+	req, err := http.NewRequest(http.MethodGet, "https://gojek.com/", nil)
 	if err != nil {
 		panic(err)
 	}
@@ -76,7 +76,7 @@ func ExampleWithHTTPTimeout_expired() {
 
 func ExampleWithRetryCount() {
 	c := NewClient(WithHTTPTimeout(1*time.Millisecond), WithRetryCount(3))
-	req, err := http.NewRequest(http.MethodGet, "https://www.gojek.io/", nil)
+	req, err := http.NewRequest(http.MethodGet, "https://gojek.com/", nil)
 	if err != nil {
 		panic(err)
 	}
@@ -98,7 +98,7 @@ func (m *mockClient) Do(r *http.Request) (*http.Response, error) {
 func ExampleWithHTTPClient() {
 	m := &mockClient{}
 	c := NewClient(WithHTTPClient(m))
-	req, err := http.NewRequest(http.MethodGet, "https://www.gojek.io/", nil)
+	req, err := http.NewRequest(http.MethodGet, "https://gojek.com/", nil)
 	if err != nil {
 		panic(err)
 	}
@@ -115,7 +115,7 @@ func (m *mockRetrier) NextInterval(attempt int) time.Duration {
 
 func ExampleWithRetrier() {
 	c := NewClient(WithHTTPTimeout(1*time.Millisecond), WithRetryCount(3), WithRetrier(&mockRetrier{}))
-	req, err := http.NewRequest(http.MethodGet, "https://www.gojek.io/", nil)
+	req, err := http.NewRequest(http.MethodGet, "https://gojek.com/", nil)
 	if err != nil {
 		panic(err)
 	}
