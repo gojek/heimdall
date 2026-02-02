@@ -1,0 +1,25 @@
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  disable-all: true
+  enable:
+    - gofmt
+    - govet
+    - staticcheck
+    - ineffassign
+    - unused
+    - gosimple
+  settings:
+    govet:
+      enable-all: true
+    gofmt:
+      simplify: true
+
+issues:
+  exclude-dirs:
+    - vendor
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0

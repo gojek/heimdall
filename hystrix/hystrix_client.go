@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -174,12 +173,12 @@ func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
 	var bodyReader *bytes.Reader
 
 	if request.Body != nil {
-		reqData, err := ioutil.ReadAll(request.Body)
-		if err != nil {
-			return nil, err
+		reqData, readErr := io.ReadAll(request.Body)
+		if readErr != nil {
+			return nil, readErr
 		}
 		bodyReader = bytes.NewReader(reqData)
-		request.Body = ioutil.NopCloser(bodyReader) // prevents closing the body between retries
+		request.Body = io.NopCloser(bodyReader) // prevents closing the body between retries
 	}
 
 	for i := 0; i <= hhc.retryCount; i++ {

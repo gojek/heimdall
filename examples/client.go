@@ -2,7 +2,7 @@ package examples
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 
@@ -34,7 +34,7 @@ func httpClientUsage() error {
 
 	defer response.Body.Close()
 
-	respBody, err := ioutil.ReadAll(response.Body)
+	respBody, err := io.ReadAll(response.Body)
 	if err != nil {
 		return errors.Wrap(err, "failed to read response body")
 	}
@@ -63,7 +63,7 @@ func hystrixClientUsage() error {
 
 	defer response.Body.Close()
 
-	respBody, err := ioutil.ReadAll(response.Body)
+	respBody, err := io.ReadAll(response.Body)
 	if err != nil {
 		return errors.Wrap(err, "failed to read response body")
 	}
@@ -102,7 +102,7 @@ func customHTTPClientUsage() error {
 
 	defer response.Body.Close()
 
-	respBody, err := ioutil.ReadAll(response.Body)
+	respBody, err := io.ReadAll(response.Body)
 	if err != nil {
 		return errors.Wrap(err, "failed to read response body")
 	}
@@ -136,7 +136,7 @@ func customHystrixClientUsage() error {
 
 	defer response.Body.Close()
 
-	respBody, err := ioutil.ReadAll(response.Body)
+	respBody, err := io.ReadAll(response.Body)
 	if err != nil {
 		return errors.Wrap(err, "failed to read response body")
 	}

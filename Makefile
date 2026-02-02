@@ -5,25 +5,22 @@ ALL_PACKAGES=$(shell go list ./... | grep -v "vendor")
 
 setup:
 	mkdir -p $(GOPATH)/bin
-	go get -u golang.org/x/lint/golint
-	go get github.com/mattn/goveralls
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8
+	go install github.com/mattn/goveralls@v0.0.12
 
 compile:
 	mkdir -p out/
 	go build -race ./...
 
-build: compile fmt vet lint
+build: compile fmt lint
 
 fmt:
 	go fmt ./...
 
-vet:
-	go vet ./...
-
 lint:
-	golint -set_exit_status $(ALL_PACKAGES)
+	golangci-lint run ./...
 
-test: fmt vet build
+test: fmt build
 	ENVIRONMENT=test go test -race ./...
 
 coverage:
