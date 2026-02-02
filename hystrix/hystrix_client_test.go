@@ -2,6 +2,7 @@ package hystrix
 
 import (
 	"bytes"
+	"context"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -544,4 +545,34 @@ func TestDurationToInt(t *testing.T) {
 
 		assert.Equal(t, 30000, timeoutInMs)
 	})
+}
+
+func TestHystrixHTTPClientDoContextCancelled(t *testing.T) {
+	const cmdName = "some_command_name_for_ctx_cncl"
+	r := newSimpleMetricRegistry()
+
+	client := NewClient(WithCommandName(cmdName))
+
+	req, err := http.NewRequest(http.MethodGet, "http://localhost/test", nil)
+	require.NoError(t, err)
+	ctx, cnclFN := context.WithCancel(req.Context())
+	cnclFN()
+	req = req.WithContext(ctx)
+
+	response, err := client.Do(req)
+	require.Equal(t, err, context.Canceled)
+	require.Nil(t, response)
+	time.Sleep(time.Second)
+	m := r.GetMetrics(cmdName)
+	assert.Equal(t, float64(1), m.ContextCanceled)
+	assert.Equal(t, float64(1), m.Attempts)
+	assert.Zero(t, m.Errors)
+	assert.Zero(t, m.Successes)
+	assert.Zero(t, m.Failures)
+	assert.Zero(t, m.Rejects)
+	assert.Zero(t, m.ShortCircuits)
+	assert.Zero(t, m.Timeouts)
+	assert.Zero(t, m.FallbackSuccesses)
+	assert.Zero(t, m.FallbackFailures)
+	assert.Zero(t, m.ContextDeadlineExceeded)
 }
