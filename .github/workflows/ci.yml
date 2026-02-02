@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [ master, modernize-codebase ]
+    branches: [ master ]
   pull_request:
     branches: [ master ]
 
