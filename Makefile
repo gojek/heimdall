@@ -24,7 +24,7 @@ test: fmt build
 	ENVIRONMENT=test go test -race ./...
 
 coverage:
-	ENVIRONMENT=test goveralls -service=travis-ci
+	ENVIRONMENT=test goveralls -service=github-actions
 
 test-cover-html:
 	@echo "mode: count" > coverage-all.out
