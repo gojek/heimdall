@@ -1,25 +1,31 @@
+version: "2"
 run:
-  timeout: 5m
   tests: true
-
 linters:
-  disable-all: true
+  default: none
   enable:
-    - gofmt
     - govet
-    - staticcheck
     - ineffassign
+    - staticcheck
     - unused
-    - gosimple
-  settings:
-    govet:
-      enable-all: true
-    gofmt:
-      simplify: true
-
+    - modernize
+  exclusions:
+    generated: lax
+    paths:
+      - vendor
+      - third_party$
+      - builtin$
+      - examples/
 issues:
-  exclude-dirs:
-    - vendor
-  exclude-use-default: false
   max-issues-per-linter: 0
   max-same-issues: 0
+formatters:
+  enable:
+    - gofmt
+  exclusions:
+    generated: lax
+    paths:
+      - vendor
+      - third_party$
+      - builtin$
+      - examples/

@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go-version: ['1.24.x', '1.25.x']
+        go-version: ['1.24.x', '1.25.x', 'stable']
     
     steps:
     - name: Checkout code
@@ -37,4 +37,11 @@ jobs:
       run: make setup
 
     - name: Build and test
-      run: make
+      run: make test
+
+    - name: Upload coverage to Coveralls
+      uses: coverallsapp/github-action@v2
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        file: coverage.out
+        format: golang

@@ -339,7 +339,7 @@ func BenchmarkHystrixHTTPClientRetriesGetOnFailure(b *testing.B) {
 	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
 	defer server.Close()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, _ = client.Get(server.URL, http.Header{})
 	}
 }
@@ -402,7 +402,7 @@ func BenchmarkHystrixHTTPClientRetriesPostOnFailure(b *testing.B) {
 	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
 	defer server.Close()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, _ = client.Post(server.URL, strings.NewReader("a=1&b=2"), http.Header{})
 	}
 }

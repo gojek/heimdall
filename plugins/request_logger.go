@@ -43,18 +43,18 @@ func (rl *requestLogger) OnRequestStart(req *http.Request) {
 }
 
 func (rl *requestLogger) OnRequestEnd(req *http.Request, res *http.Response) {
-	reqDurationMs := getRequestDuration(req.Context()) / time.Millisecond
+	reqDuration := getRequestDuration(req.Context()) / time.Millisecond
 	method := req.Method
 	url := req.URL.String()
 	statusCode := res.StatusCode
-	fmt.Fprintf(rl.out, "%s %s %s %d [%dms]\n", time.Now().Format("02/Jan/2006 03:04:05"), method, url, statusCode, reqDurationMs)
+	fmt.Fprintf(rl.out, "%s %s %s %d [%dms]\n", time.Now().Format("02/Jan/2006 03:04:05"), method, url, statusCode, reqDuration)
 }
 
 func (rl *requestLogger) OnError(req *http.Request, err error) {
-	reqDurationMs := getRequestDuration(req.Context()) / time.Millisecond
+	reqDuration := getRequestDuration(req.Context()) / time.Millisecond
 	method := req.Method
 	url := req.URL.String()
-	fmt.Fprintf(rl.errOut, "%s %s %s [%dms] ERROR: %v\n", time.Now().Format("02/Jan/2006 03:04:05"), method, url, reqDurationMs, err)
+	fmt.Fprintf(rl.errOut, "%s %s %s [%dms] ERROR: %v\n", time.Now().Format("02/Jan/2006 03:04:05"), method, url, reqDuration, err)
 }
 
 func getRequestDuration(ctx context.Context) time.Duration {
