@@ -136,6 +136,7 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 
 	for i := 0; i <= c.retryCount; i++ {
 		if response != nil {
+			_, _ = io.Copy(io.Discard, response.Body)
 			_ = response.Body.Close()
 		}
 
