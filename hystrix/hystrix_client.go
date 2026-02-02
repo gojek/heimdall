@@ -186,24 +186,19 @@ func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
 			_ = response.Body.Close()
 		}
 
-		err = hystrix.DoC(request.Context(), hhc.hystrixCommandName, func(ctx context.Context) error {
-			resp, e := hhc.client.Do(request)
+		err = hystrix.DoC(request.Context(), hhc.hystrixCommandName, func(ctx context.Context) (err error) {
+			response, err = hhc.client.Do(request)
 			if bodyReader != nil {
 				// Reset the body reader after the request since at this point it's already read
 				// Note that it's safe to ignore the error here since the 0,0 position is always valid
 				_, _ = bodyReader.Seek(0, 0)
 			}
 
-			if ctx.Err() != nil {
-				return ctx.Err()
+			if err != nil {
+				return err
 			}
 
-			response = resp
-			if e != nil {
-				return e
-			}
-
-			if resp.StatusCode >= http.StatusInternalServerError {
+			if response.StatusCode >= http.StatusInternalServerError {
 				return err5xx
 			}
 
@@ -219,11 +214,15 @@ func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
 		break
 	}
 
-	if err == err5xx {
-		return response, nil
+	if err != nil {
+		if err == err5xx {
+			return response, nil
+		}
+
+		return nil, err
 	}
 
-	return response, err
+	return response, nil
 }
 
 // AddPlugin Adds plugin to client
