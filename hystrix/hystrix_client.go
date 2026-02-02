@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -174,20 +173,21 @@ func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
 	var bodyReader *bytes.Reader
 
 	if request.Body != nil {
-		reqData, err := ioutil.ReadAll(request.Body)
-		if err != nil {
-			return nil, err
+		reqData, readErr := io.ReadAll(request.Body)
+		if readErr != nil {
+			return nil, readErr
 		}
 		bodyReader = bytes.NewReader(reqData)
-		request.Body = ioutil.NopCloser(bodyReader) // prevents closing the body between retries
+		request.Body = io.NopCloser(bodyReader) // prevents closing the body between retries
 	}
 
 	for i := 0; i <= hhc.retryCount; i++ {
 		if response != nil {
-			response.Body.Close()
+			_, _ = io.Copy(io.Discard, response.Body)
+			_ = response.Body.Close()
 		}
 
-		err = hystrix.DoC(request.Context(), hhc.hystrixCommandName, func(_ context.Context) error {
+		err = hystrix.DoC(request.Context(), hhc.hystrixCommandName, func(_ context.Context) (err error) {
 			response, err = hhc.client.Do(request)
 			if bodyReader != nil {
 				// Reset the body reader after the request since at this point it's already read
@@ -202,6 +202,7 @@ func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
 			if response.StatusCode >= http.StatusInternalServerError {
 				return err5xx
 			}
+
 			return nil
 		}, hhc.fallbackFunc)
 
@@ -214,11 +215,15 @@ func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
 		break
 	}
 
-	if err == err5xx {
-		return response, nil
+	if err != nil {
+		if err == err5xx {
+			return response, nil
+		}
+
+		return nil, err
 	}
 
-	return response, err
+	return response, nil
 }
 
 // AddPlugin Adds plugin to client

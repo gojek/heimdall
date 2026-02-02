@@ -1,33 +1,27 @@
-.PHONYthub.com/mattn/goveralls: all
-all: build test coverage
+.PHONY: all
+all: build test
 
 ALL_PACKAGES=$(shell go list ./... | grep -v "vendor")
 
 setup:
 	mkdir -p $(GOPATH)/bin
-	go get -u golang.org/x/lint/golint
-	go get github.com/mattn/goveralls
+	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.8.0
+	go install github.com/mattn/goveralls@v0.0.12
 
 compile:
 	mkdir -p out/
 	go build -race ./...
 
-build: compile fmt vet lint
+build: compile fmt lint
 
 fmt:
 	go fmt ./...
 
-vet:
-	go vet ./...
-
 lint:
-	golint -set_exit_status $(ALL_PACKAGES)
+	golangci-lint run ./...
 
-test: fmt vet build
-	ENVIRONMENT=test go test -race ./...
-
-coverage:
-	ENVIRONMENT=test goveralls -service=travis-ci
+test: fmt build
+	ENVIRONMENT=test go test -race -covermode=atomic -coverprofile=coverage.out ./...
 
 test-cover-html:
 	@echo "mode: count" > coverage-all.out

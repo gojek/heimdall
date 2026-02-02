@@ -2,7 +2,7 @@ package httpclient
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -39,7 +39,7 @@ func TestHTTPClientDoSuccess(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, response.StatusCode)
 
-	body, err := ioutil.ReadAll(response.Body)
+	body, err := io.ReadAll(response.Body)
 	require.NoError(t, err)
 	assert.Equal(t, "{ \"response\": \"ok\" }", string(body))
 }
@@ -80,7 +80,7 @@ func TestHTTPClientPostSuccess(t *testing.T) {
 		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 		assert.Equal(t, "en", r.Header.Get("Accept-Language"))
 
-		rBody, err := ioutil.ReadAll(r.Body)
+		rBody, err := io.ReadAll(r.Body)
 		require.NoError(t, err, "should not have failed to extract request body")
 
 		assert.Equal(t, requestBodyString, string(rBody))
@@ -141,7 +141,7 @@ func TestHTTPClientPutSuccess(t *testing.T) {
 		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 		assert.Equal(t, "en", r.Header.Get("Accept-Language"))
 
-		rBody, err := ioutil.ReadAll(r.Body)
+		rBody, err := io.ReadAll(r.Body)
 		require.NoError(t, err, "should not have failed to extract request body")
 
 		assert.Equal(t, requestBodyString, string(rBody))
@@ -176,7 +176,7 @@ func TestHTTPClientPatchSuccess(t *testing.T) {
 		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 		assert.Equal(t, "en", r.Header.Get("Accept-Language"))
 
-		rBody, err := ioutil.ReadAll(r.Body)
+		rBody, err := io.ReadAll(r.Body)
 		require.NoError(t, err, "should not have failed to extract request body")
 
 		assert.Equal(t, requestBodyString, string(rBody))
@@ -251,7 +251,7 @@ func BenchmarkHTTPClientGetRetriesOnFailure(b *testing.B) {
 	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
 	defer server.Close()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, _ = client.Get(server.URL, http.Header{})
 	}
 }
@@ -306,7 +306,7 @@ func BenchmarkHTTPClientPostRetriesOnFailure(b *testing.B) {
 	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
 	defer server.Close()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, _ = client.Post(server.URL, strings.NewReader("a=1"), http.Header{})
 	}
 }
@@ -457,7 +457,7 @@ func TestPluginErrorMethodCalled(t *testing.T) {
 	mockPlugin.On("OnError", mock.Anything, mock.Anything)
 
 	serverURL := "does_not_exist"
-	_, err := client.Get(serverURL, http.Header{})
+	client.Get(serverURL, http.Header{})
 
 	mockPlugin.AssertNumberOfCalls(t, "OnRequestStart", 1)
 	pluginRequest, ok := mockPlugin.Calls[0].Arguments[0].(*http.Request)
@@ -466,7 +466,7 @@ func TestPluginErrorMethodCalled(t *testing.T) {
 	assert.Equal(t, serverURL, pluginRequest.URL.String())
 
 	mockPlugin.AssertNumberOfCalls(t, "OnError", 1)
-	err, ok = mockPlugin.Calls[1].Arguments[1].(error)
+	err, ok := mockPlugin.Calls[1].Arguments[1].(error)
 	require.True(t, ok)
 	assert.Contains(t, err.Error(), "unsupported protocol scheme")
 }
@@ -501,8 +501,9 @@ func TestCustomHTTPClientHeaderSuccess(t *testing.T) {
 	require.NoError(t, err)
 	response, err := client.Do(req)
 	assert.Equal(t, http.StatusOK, response.StatusCode)
+	require.NoError(t, err)
 
-	body, err := ioutil.ReadAll(response.Body)
+	body, err := io.ReadAll(response.Body)
 	require.NoError(t, err)
 	assert.Equal(t, "{ \"response\": \"ok\" }", string(body))
 }
@@ -512,7 +513,7 @@ func respBody(t *testing.T, response *http.Response) string {
 		defer response.Body.Close()
 	}
 
-	respBody, err := ioutil.ReadAll(response.Body)
+	respBody, err := io.ReadAll(response.Body)
 	require.NoError(t, err, "should not have failed to read response body")
 
 	return string(respBody)

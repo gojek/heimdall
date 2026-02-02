@@ -3,7 +3,6 @@ package httpclient
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -14,12 +13,11 @@ import (
 
 // Client is the http client implementation
 type Client struct {
-	client heimdall.Doer
-
-	timeout    time.Duration
-	retryCount int
+	client     heimdall.Doer
 	retrier    heimdall.Retriable
 	plugins    []heimdall.Plugin
+	timeout    time.Duration
+	retryCount int
 }
 
 const (
@@ -125,12 +123,12 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 	var bodyReader *bytes.Reader
 
 	if request.Body != nil {
-		reqData, err := ioutil.ReadAll(request.Body)
+		reqData, err := io.ReadAll(request.Body)
 		if err != nil {
 			return nil, err
 		}
 		bodyReader = bytes.NewReader(reqData)
-		request.Body = ioutil.NopCloser(bodyReader) // prevents closing the body between retries
+		request.Body = io.NopCloser(bodyReader) // prevents closing the body between retries
 	}
 
 	multiErr := &valkyrie.MultiError{}
@@ -138,7 +136,8 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 
 	for i := 0; i <= c.retryCount; i++ {
 		if response != nil {
-			response.Body.Close()
+			_, _ = io.Copy(io.Discard, response.Body)
+			_ = response.Body.Close()
 		}
 
 		c.reportRequestStart(request)

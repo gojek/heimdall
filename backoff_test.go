@@ -45,21 +45,21 @@ func TestExponentialBackoffWhenRetryIsLessThanZero(t *testing.T) {
 
 func TestExponentialBackoffJitter0(t *testing.T) {
 	exponentialBackoff := NewExponentialBackoff(100*time.Millisecond, 1000*time.Millisecond, 2.0, 0*time.Millisecond)
-	for i := 0; i < 10000; i++ {
+	for range 10000 {
 		assert.Equal(t, 200*time.Millisecond, exponentialBackoff.Next(1))
 	}
 }
 
 func TestExponentialBackoffJitter1(t *testing.T) {
 	exponentialBackoff := NewExponentialBackoff(100*time.Millisecond, 1000*time.Millisecond, 2.0, 1*time.Millisecond)
-	for i := 0; i < 10000; i++ {
+	for range 10000 {
 		assert.True(t, 200*time.Millisecond <= exponentialBackoff.Next(1) && exponentialBackoff.Next(1) <= 201*time.Millisecond)
 	}
 }
 
 func TestExponentialBackoffJitter50(t *testing.T) {
 	exponentialBackoff := NewExponentialBackoff(100*time.Millisecond, 1000*time.Millisecond, 2.0, 50*time.Millisecond)
-	for i := 0; i < 10000; i++ {
+	for range 10000 {
 		assert.True(t, 200*time.Millisecond <= exponentialBackoff.Next(1) && exponentialBackoff.Next(1) <= 250*time.Millisecond)
 	}
 }
@@ -90,21 +90,21 @@ func TestConstantBackoffWhenRetryIsLessThanZero(t *testing.T) {
 
 func TestConstantBackoffJitter0(t *testing.T) {
 	constantBackoff := NewConstantBackoff(100*time.Millisecond, 0*time.Millisecond)
-	for i := 0; i < 10000; i++ {
+	for i := range 10000 {
 		assert.Equal(t, 100*time.Millisecond, constantBackoff.Next(i))
 	}
 }
 
 func TestConstantBackoffJitter1(t *testing.T) {
 	constantBackoff := NewConstantBackoff(100*time.Millisecond, 1*time.Millisecond)
-	for i := 0; i < 10000; i++ {
+	for i := range 10000 {
 		assert.True(t, 100*time.Millisecond <= constantBackoff.Next(i) && constantBackoff.Next(1) <= 101*time.Millisecond)
 	}
 }
 
 func TestConstantBackoffJitter50(t *testing.T) {
 	constantBackoff := NewConstantBackoff(100*time.Millisecond, 50*time.Millisecond)
-	for i := 0; i < 10000; i++ {
+	for i := range 10000 {
 		assert.True(t, 100*time.Millisecond <= constantBackoff.Next(i) && constantBackoff.Next(1) <= 150*time.Millisecond)
 	}
 }
