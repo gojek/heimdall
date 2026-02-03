@@ -25,6 +25,8 @@ func (c *myHTTPClient) Do(request *http.Request) (*http.Response, error) {
 }
 
 func TestHystrixHTTPClientDoSuccess(t *testing.T) {
+	t.Parallel()
+
 	client := NewClient(
 		WithHTTPTimeout(50*time.Millisecond),
 		WithCommandName("some_command_name"),
@@ -62,6 +64,8 @@ func TestHystrixHTTPClientDoSuccess(t *testing.T) {
 }
 
 func TestHystrixHTTPClientGetSuccess(t *testing.T) {
+	t.Parallel()
+
 	client := NewClient(
 		WithHTTPTimeout(10*time.Millisecond),
 		WithCommandName("some_command_name"),
@@ -96,6 +100,8 @@ func TestHystrixHTTPClientGetSuccess(t *testing.T) {
 }
 
 func TestHystrixHTTPClientPostSuccess(t *testing.T) {
+	t.Parallel()
+
 	client := NewClient(
 		WithHTTPTimeout(10*time.Millisecond),
 		WithCommandName("some_command_name"),
@@ -139,6 +145,8 @@ func TestHystrixHTTPClientPostSuccess(t *testing.T) {
 }
 
 func TestHystrixHTTPClientDeleteSuccess(t *testing.T) {
+	t.Parallel()
+
 	client := NewClient(
 		WithHTTPTimeout(10*time.Millisecond),
 		WithCommandName("some_command_name"),
@@ -216,6 +224,8 @@ func TestHystrixHTTPClientPutSuccess(t *testing.T) {
 }
 
 func TestHystrixHTTPClientPatchSuccess(t *testing.T) {
+	t.Parallel()
+
 	client := NewClient(
 		WithHTTPTimeout(10*time.Millisecond),
 		WithCommandName("some_command_name"),
@@ -259,6 +269,8 @@ func TestHystrixHTTPClientPatchSuccess(t *testing.T) {
 }
 
 func TestHystrixHTTPClientRetriesGetOnFailure(t *testing.T) {
+	t.Parallel()
+
 	backoffInterval := 1 * time.Millisecond
 	maximumJitterInterval := 1 * time.Millisecond
 
@@ -281,6 +293,8 @@ func TestHystrixHTTPClientRetriesGetOnFailure(t *testing.T) {
 }
 
 func TestHystrixHTTPClientRetriesGetOnFailure5xx(t *testing.T) {
+	t.Parallel()
+
 	count := 0
 	backoffInterval := 1 * time.Millisecond
 	maximumJitterInterval := 1 * time.Millisecond
@@ -345,6 +359,8 @@ func BenchmarkHystrixHTTPClientRetriesGetOnFailure(b *testing.B) {
 }
 
 func TestHystrixHTTPClientRetriesPostOnFailure(t *testing.T) {
+	t.Parallel()
+
 	count := 0
 	backoffInterval := 1 * time.Millisecond
 	maximumJitterInterval := 1 * time.Millisecond
@@ -408,6 +424,8 @@ func BenchmarkHystrixHTTPClientRetriesPostOnFailure(b *testing.B) {
 }
 
 func TestHystrixHTTPClientReturnsFallbackFailureWithoutFallBackFunction(t *testing.T) {
+	t.Parallel()
+
 	client := NewClient(
 		WithHTTPTimeout(10*time.Millisecond),
 		WithCommandName("some_command_name"),
@@ -423,6 +441,8 @@ func TestHystrixHTTPClientReturnsFallbackFailureWithoutFallBackFunction(t *testi
 }
 
 func TestHystrixHTTPClientReturnsFallbackFailureWithAFallBackFunctionWhichReturnAnError(t *testing.T) {
+	t.Parallel()
+
 	client := NewClient(
 		WithHTTPTimeout(10*time.Millisecond),
 		WithCommandName("some_command_name"),
@@ -444,6 +464,8 @@ func TestHystrixHTTPClientReturnsFallbackFailureWithAFallBackFunctionWhichReturn
 }
 
 func TestFallBackFunctionIsCalledWithHystrixHTTPClient(t *testing.T) {
+	t.Parallel()
+
 	called := false
 
 	client := NewClient(
@@ -467,6 +489,8 @@ func TestFallBackFunctionIsCalledWithHystrixHTTPClient(t *testing.T) {
 }
 
 func TestHystrixHTTPClientReturnsFallbackFailureWithAFallBackFunctionWhichReturnsNil(t *testing.T) {
+	t.Parallel()
+
 	client := NewClient(
 		WithHTTPTimeout(10*time.Millisecond),
 		WithCommandName("some_command_name"),
@@ -486,6 +510,8 @@ func TestHystrixHTTPClientReturnsFallbackFailureWithAFallBackFunctionWhichReturn
 }
 
 func TestCustomHystrixHTTPClientDoSuccess(t *testing.T) {
+	t.Parallel()
+
 	client := NewClient(
 		WithHTTPTimeout(10*time.Millisecond),
 		WithCommandName("some_new_command_name"),
@@ -533,6 +559,8 @@ func respBody(t *testing.T, response *http.Response) string {
 }
 
 func TestDurationToInt(t *testing.T) {
+	t.Parallel()
+
 	t.Run("1sec should return 1 when unit is second", func(t *testing.T) {
 		timeout := 1 * time.Second
 		timeoutInSec := durationToInt(timeout, time.Second)

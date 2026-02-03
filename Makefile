@@ -27,6 +27,6 @@ test-cover-html:
 	@echo "mode: count" > coverage-all.out
 
 	$(foreach pkg, $(ALL_PACKAGES),\
-	ENVIRONMENT=test go test -coverprofile=coverage.out -covermode=count $(pkg);\
-	tail -n +2 coverage.out >> coverage-all.out;)
+		ENVIRONMENT=test go test -race -coverprofile=coverage.out -covermode=count $(pkg);\
+		tail -n +2 coverage.out >> coverage-all.out;)
 	go tool cover -html=coverage-all.out -o out/coverage.html
