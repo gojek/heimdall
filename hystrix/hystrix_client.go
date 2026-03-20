@@ -1,7 +1,6 @@
 package hystrix
 
 import (
-	"bytes"
 	"context"
 	"io"
 	"net/http"
@@ -12,6 +11,7 @@ import (
 	"github.com/afex/hystrix-go/plugins"
 	"github.com/gojek/heimdall/v7"
 	"github.com/gojek/heimdall/v7/httpclient"
+	"github.com/gojek/heimdall/v7/internal"
 	"github.com/pkg/errors"
 )
 
@@ -167,20 +167,20 @@ func (hhc *Client) Delete(url string, headers http.Header) (*http.Response, erro
 
 // Do makes an HTTP request with the native `http.Do` interface
 func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
-	var response *http.Response
-	var err error
-
-	var bodyReader *bytes.Reader
-
-	if request.Body != nil {
-		reqData, readErr := io.ReadAll(request.Body)
-		if readErr != nil {
-			return nil, readErr
-		}
-		bodyReader = bytes.NewReader(reqData)
-		request.Body = io.NopCloser(bodyReader) // prevents closing the body between retries
+	if origReqBody := request.Body; origReqBody != nil {
+		defer func() {
+			// close the original request body as httpclient.BuildReadSeekCloser wraps body with noop closer.
+			_ = origReqBody.Close()
+		}()
 	}
 
+	reqBody, err := internal.BuildReadSeekCloser(request.Body)
+	if err != nil {
+		return nil, err
+	}
+	request.Body = reqBody
+
+	var response *http.Response
 	for i := 0; i <= hhc.retryCount; i++ {
 		if response != nil {
 			_, _ = io.Copy(io.Discard, response.Body)
@@ -189,10 +189,10 @@ func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
 
 		err = hystrix.DoC(request.Context(), hhc.hystrixCommandName, func(_ context.Context) (err error) {
 			response, err = hhc.client.Do(request)
-			if bodyReader != nil {
+			if reqBody != nil {
 				// Reset the body reader after the request since at this point it's already read
 				// Note that it's safe to ignore the error here since the 0,0 position is always valid
-				_, _ = bodyReader.Seek(0, 0)
+				_, _ = reqBody.Seek(0, 0)
 			}
 
 			if err != nil {

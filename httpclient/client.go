@@ -1,12 +1,12 @@
 package httpclient
 
 import (
-	"bytes"
 	"io"
 	"net/http"
 	"time"
 
 	"github.com/gojek/heimdall/v7"
+	"github.com/gojek/heimdall/v7/internal"
 	"github.com/gojek/valkyrie"
 	"github.com/pkg/errors"
 )
@@ -120,16 +120,18 @@ func (c *Client) Delete(url string, headers http.Header) (*http.Response, error)
 
 // Do makes an HTTP request with the native `http.Do` interface
 func (c *Client) Do(request *http.Request) (*http.Response, error) {
-	var bodyReader *bytes.Reader
-
-	if request.Body != nil {
-		reqData, err := io.ReadAll(request.Body)
-		if err != nil {
-			return nil, err
-		}
-		bodyReader = bytes.NewReader(reqData)
-		request.Body = io.NopCloser(bodyReader) // prevents closing the body between retries
+	if origReqBody := request.Body; origReqBody != nil {
+		defer func() {
+			// close the original request body as httpclient.BuildReadSeekCloser wraps body with noop closer.
+			_ = origReqBody.Close()
+		}()
 	}
+
+	reqBody, err := internal.BuildReadSeekCloser(request.Body)
+	if err != nil {
+		return nil, err
+	}
+	request.Body = reqBody
 
 	multiErr := &valkyrie.MultiError{}
 	var response *http.Response
@@ -143,10 +145,10 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 		c.reportRequestStart(request)
 		var err error
 		response, err = c.client.Do(request)
-		if bodyReader != nil {
+		if reqBody != nil {
 			// Reset the body reader after the request since at this point it's already read
 			// Note that it's safe to ignore the error here since the 0,0 position is always valid
-			_, _ = bodyReader.Seek(0, 0)
+			_, _ = reqBody.Seek(0, 0)
 		}
 
 		if err != nil {
