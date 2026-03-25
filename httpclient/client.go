@@ -147,6 +147,9 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 			_, _ = io.Copy(io.Discard, response.Body)
 			_ = response.Body.Close()
 		}
+		if i > 0 {
+			time.Sleep(c.retrier.NextInterval(i - 1)) // sleep after closing the previous response body
+		}
 
 		c.reportRequestStart(request)
 		var err error
@@ -160,15 +163,11 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 		if err != nil {
 			multiErr.Push(err.Error())
 			c.reportError(request, err)
-			backoffTime := c.retrier.NextInterval(i)
-			time.Sleep(backoffTime)
 			continue
 		}
 		c.reportRequestEnd(request, response)
 
 		if response.StatusCode >= http.StatusInternalServerError {
-			backoffTime := c.retrier.NextInterval(i)
-			time.Sleep(backoffTime)
 			continue
 		}
 

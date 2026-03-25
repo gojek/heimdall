@@ -174,22 +174,25 @@ func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
 		}()
 	}
 
-	reqBody, err := internal.BuildReadSeekCloser(request.Body)
-	if err != nil {
-		return nil, err
+	var reqBody io.ReadSeekCloser
+	var err error
+	if hhc.retryCount > 0 && request.Body != nil {
+		reqBody, err = internal.BuildReadSeekCloser(request.Body)
+		if err != nil {
+			return nil, err
+		}
+		request.Body = reqBody
 	}
-	request.Body = reqBody
 
 	var response *http.Response
-	var backoffTime time.Duration
 	for i := 0; i <= hhc.retryCount; i++ {
 		if response != nil {
 			_, _ = io.Copy(io.Discard, response.Body)
 			_ = response.Body.Close()
 		}
 
-		if backoffTime > 0 {
-			time.Sleep(backoffTime) // sleep after closing the previous response body
+		if i > 0 {
+			time.Sleep(hhc.retrier.NextInterval(i - 1)) // sleep after closing the previous response body
 		}
 
 		if reqBody != nil {
@@ -201,8 +204,6 @@ func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
 		if err == nil {
 			break
 		}
-
-		backoffTime = hhc.retrier.NextInterval(i)
 	}
 
 	if err != nil {
