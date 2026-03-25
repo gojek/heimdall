@@ -181,38 +181,28 @@ func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
 	request.Body = reqBody
 
 	var response *http.Response
+	var backoffTime time.Duration
 	for i := 0; i <= hhc.retryCount; i++ {
 		if response != nil {
 			_, _ = io.Copy(io.Discard, response.Body)
 			_ = response.Body.Close()
 		}
 
-		err = hystrix.DoC(request.Context(), hhc.hystrixCommandName, func(_ context.Context) (err error) {
-			response, err = hhc.client.Do(request)
-			if reqBody != nil {
-				// Reset the body reader after the request since at this point it's already read
-				// Note that it's safe to ignore the error here since the 0,0 position is always valid
-				_, _ = reqBody.Seek(0, 0)
-			}
-
-			if err != nil {
-				return err
-			}
-
-			if response.StatusCode >= http.StatusInternalServerError {
-				return err5xx
-			}
-
-			return nil
-		}, hhc.fallbackFunc)
-
-		if err != nil {
-			backoffTime := hhc.retrier.NextInterval(i)
-			time.Sleep(backoffTime)
-			continue
+		if backoffTime > 0 {
+			time.Sleep(backoffTime) // sleep after closing the previous response body
 		}
 
-		break
+		if reqBody != nil {
+			// Reset the body reader before the request to ensure even in case of retries from hystrix timeout, the body is at correct offset.
+			// Note that it's safe to ignore the error here since the 0,0 position is always valid
+			_, _ = reqBody.Seek(0, 0)
+		}
+		response, err = hhc.hystrixDo(request)
+		if err == nil {
+			break
+		}
+
+		backoffTime = hhc.retrier.NextInterval(i)
 	}
 
 	if err != nil {
@@ -224,6 +214,27 @@ func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
 	}
 
 	return response, nil
+}
+
+func (hhc *Client) hystrixDo(request *http.Request) (response *http.Response, err error) {
+	ctx, cancelFn := context.WithCancel(request.Context())
+	defer cancelFn()
+
+	err = hystrix.DoC(ctx, hhc.hystrixCommandName, func(_ context.Context) (err error) {
+		resp, err := hhc.client.Do(request.WithContext(ctx))
+		if err != nil {
+			return err
+		}
+		response = resp
+
+		if response.StatusCode >= http.StatusInternalServerError {
+			return err5xx
+		}
+
+		return nil
+	}, hhc.fallbackFunc)
+
+	return response, err
 }
 
 // AddPlugin Adds plugin to client

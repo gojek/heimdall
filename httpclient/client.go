@@ -127,11 +127,17 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 		}()
 	}
 
-	reqBody, err := internal.BuildReadSeekCloser(request.Body)
-	if err != nil {
-		return nil, err
+	var reqBody io.ReadSeekCloser
+	var err error
+	// Only build ReadSeekCloser if retry is enabled to avoid unnecessary overhead for non-retry requests
+	// This also avoid data race condition for hystrix.Client which internally calls httpclient.Client without retry enabled
+	if c.retryCount > 0 && request.Body != nil {
+		reqBody, err = internal.BuildReadSeekCloser(request.Body)
+		if err != nil {
+			return nil, err
+		}
+		request.Body = reqBody
 	}
-	request.Body = reqBody
 
 	multiErr := &valkyrie.MultiError{}
 	var response *http.Response
