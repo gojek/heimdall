@@ -122,7 +122,7 @@ func (c *Client) Delete(url string, headers http.Header) (*http.Response, error)
 func (c *Client) Do(request *http.Request) (*http.Response, error) {
 	if origReqBody := request.Body; origReqBody != nil {
 		defer func() {
-			// close the original request body as httpclient.BuildReadSeekCloser wraps body with noop closer.
+			// close the original request body as internal.BuildReadSeekCloser wraps body with noop closer.
 			_ = origReqBody.Close()
 		}()
 	}
