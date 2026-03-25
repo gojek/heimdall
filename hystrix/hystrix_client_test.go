@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/afex/hystrix-go/hystrix"
 	"github.com/gojek/heimdall/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -376,6 +377,39 @@ func TestHystrixHTTPClientRetriesPostOnFailure(t *testing.T) {
 	assert.Equal(t, 4, count)
 	assert.Equal(t, http.StatusInternalServerError, response.StatusCode)
 	assert.JSONEq(t, `{ "response": "something went wrong" }`, respBody(t, response))
+}
+
+func TestHystrixHTTPClientRetriesPostOnTimeout(t *testing.T) {
+	backoffInterval := 1 * time.Millisecond
+	maximumJitterInterval := 1 * time.Millisecond
+
+	client := NewClient(
+		WithHTTPTimeout(2*time.Millisecond),
+		WithCommandName("some_command_name"),
+		WithHystrixTimeout(time.Millisecond),
+		WithMaxConcurrentRequests(100),
+		WithErrorPercentThreshold(10),
+		WithSleepWindow(100),
+		WithRequestVolumeThreshold(20),
+		WithRetryCount(3),
+		WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval))),
+	)
+
+	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+		select {
+		case <-r.Context().Done():
+		case <-time.After(10 * time.Millisecond):
+		}
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{ "response": "something" }`))
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+	defer server.Close()
+
+	response, err := client.Post(server.URL, strings.NewReader("a=1&b=2"), http.Header{})
+	require.Equal(t, hystrix.ErrTimeout, err)
+	require.Nil(t, response)
 }
 
 func BenchmarkHystrixHTTPClientRetriesPostOnFailure(b *testing.B) {

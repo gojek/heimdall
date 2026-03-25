@@ -127,11 +127,17 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 		}()
 	}
 
-	reqBody, err := internal.BuildReadSeekCloser(request.Body)
-	if err != nil {
-		return nil, err
+	var reqBody io.ReadSeekCloser
+	var err error
+	// Only build ReadSeekCloser if retry is enabled to avoid unnecessary overhead for non-retry requests
+	// This also avoid data race condition for hystrix.Client which internally calls httpclient.Client without retry enabled
+	if c.retryCount > 0 && request.Body != nil {
+		reqBody, err = internal.BuildReadSeekCloser(request.Body)
+		if err != nil {
+			return nil, err
+		}
+		request.Body = reqBody
 	}
-	request.Body = reqBody
 
 	multiErr := &valkyrie.MultiError{}
 	var response *http.Response
@@ -140,6 +146,9 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 		if response != nil {
 			_, _ = io.Copy(io.Discard, response.Body)
 			_ = response.Body.Close()
+		}
+		if i > 0 {
+			time.Sleep(c.retrier.NextInterval(i - 1)) // sleep after closing the previous response body
 		}
 
 		c.reportRequestStart(request)
@@ -154,15 +163,11 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 		if err != nil {
 			multiErr.Push(err.Error())
 			c.reportError(request, err)
-			backoffTime := c.retrier.NextInterval(i)
-			time.Sleep(backoffTime)
 			continue
 		}
 		c.reportRequestEnd(request, response)
 
 		if response.StatusCode >= http.StatusInternalServerError {
-			backoffTime := c.retrier.NextInterval(i)
-			time.Sleep(backoffTime)
 			continue
 		}
 
