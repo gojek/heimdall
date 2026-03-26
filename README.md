@@ -205,7 +205,7 @@ client := httpclient.NewClient(
 // The rest is the same as the first example
 ```
 
-This will create an HTTP client which will retry every `500` milliseconds incase the request fails. The library also comes with an [Exponential Backoff](https://pkg.go.dev/github.com/gojek/heimdall#NewExponentialBackoff)
+This will create an HTTP client which will retry every `500` milliseconds in case the request fails. The library also comes with an [Exponential Backoff](https://pkg.go.dev/github.com/gojek/heimdall#NewExponentialBackoff)
 
 ### Custom retry mechanisms
 
@@ -368,7 +368,7 @@ Although Heimdall was made keeping large scale systems in mind, it's interface i
 
 **Can I contribute to make Heimdall better?**
 
-[Please do!](https://github.com/gojek/heimdall/blob/master/CONTRIBUTING.md) We are looking for any kind of contribution to improve Heimdalls core funtionality and documentation. When in doubt, make a PR!
+[Please do!](https://github.com/gojek/heimdall/blob/master/CONTRIBUTING.md) We are looking for any kind of contribution to improve Heimdalls core functionality and documentation. When in doubt, make a PR!
 
 ## License
 
