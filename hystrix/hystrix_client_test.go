@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -312,6 +313,7 @@ func TestHystrixHTTPClientRetriesGetOnFailure5xx(t *testing.T) {
 
 	assert.Equal(t, 4, count)
 
+	assert.NotNil(t, response)
 	assert.Equal(t, http.StatusInternalServerError, response.StatusCode)
 	assert.Equal(t, "{ \"response\": \"something went wrong\" }", respBody(t, response))
 }
@@ -627,9 +629,7 @@ func TestResponseBodyStreaming(t *testing.T) {
 	client := NewClient(WithCommandName(cmdName))
 
 	req, err := http.NewRequest(http.MethodGet, srv.URL, nil)
-	if err != nil {
-		t.Fatalf("new request: %v", err)
-	}
+	require.NoError(t, err)
 
 	resp, err := client.Do(req)
 	require.NoError(t, err)
@@ -638,4 +638,41 @@ func TestResponseBodyStreaming(t *testing.T) {
 	data, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 	assert.Equal(t, 1024*40, len(data))
+}
+
+func TestReqBodyResetForHTTPTimeoutHigherThanHystrix(t *testing.T) {
+	const cmdName = "response_http_timeout_higher"
+	var counter atomic.Int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		count := counter.Add(1)
+
+		data, err := io.ReadAll(r.Body)
+		require.NoError(t, err)
+		assert.Equal(t, strings.Repeat("x", 40*1024), string(data))
+
+		if count < 3 {
+			select {
+			case <-r.Context().Done():
+			case <-time.After(100 * time.Millisecond):
+			}
+		}
+		w.Header().Set("Content-Type", "text/plain")
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer srv.Close()
+
+	client := NewClient(
+		WithCommandName(cmdName),
+		WithHystrixTimeout(5*time.Millisecond),
+		WithRetryCount(5),
+		WithHTTPClient(&http.Client{Timeout: 25 * time.Millisecond}),
+	)
+
+	req, err := http.NewRequest(http.MethodPost, srv.URL, strings.NewReader(strings.Repeat("x", 40*1024)))
+	require.NoError(t, err)
+
+	resp, err := client.Do(req)
+	require.NoError(t, err)
+	require.NoError(t, resp.Body.Close())
+	require.Equal(t, int32(3), counter.Load())
 }
