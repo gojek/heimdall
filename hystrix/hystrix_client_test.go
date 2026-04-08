@@ -617,7 +617,7 @@ func TestResponseBodyStreaming(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(http.StatusOK)
-		for i := 0; i < 40; i++ { // streaming data in chunks
+		for range 40 { // streaming data in chunks
 			_, _ = io.WriteString(w, strings.Repeat("x", 1024))
 			time.Sleep(10 * time.Millisecond)
 		}
