@@ -170,13 +170,14 @@ func (hhc *Client) Delete(url string, headers http.Header) (*http.Response, erro
 func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
 	if origReqBody := request.Body; origReqBody != nil {
 		defer func() {
-			// close the original request body as internal.BuildReadSeekCloser wraps body with noop closer.
+			// close the original request body as internal.SetRequestGetBody wraps body with noop closer.
 			_ = origReqBody.Close()
 		}()
 	}
 
 	var reqGetBody internal.RequestGetBody
 	var err error
+	// Only SetRequestGetBody if retry is enabled to avoid unnecessary overhead for non-retry requests
 	if hhc.retryCount > 0 {
 		if err := internal.SetRequestGetBody(request); err != nil {
 			return nil, err

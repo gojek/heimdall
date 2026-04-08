@@ -22,9 +22,9 @@ func SetRequestGetBody(r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	r.Body = io.NopCloser(bytes.NewBuffer(buf))
+	r.Body = newBytesBody(buf)
 	r.GetBody = func() (io.ReadCloser, error) {
-		return io.NopCloser(bytes.NewBuffer(buf)), nil
+		return newBytesBody(buf), nil
 	}
 
 	return nil
@@ -42,4 +42,8 @@ func CloneRequest(request *http.Request, getReqBody RequestGetBody) (*http.Reque
 	request = request.WithContext(request.Context()) // shallow clone instead of deep clone from http.Request.Clone
 	request.Body = body
 	return request, nil
+}
+
+func newBytesBody(buf []byte) io.ReadCloser {
+	return io.NopCloser(bytes.NewReader(buf))
 }

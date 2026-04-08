@@ -122,15 +122,14 @@ func (c *Client) Delete(url string, headers http.Header) (*http.Response, error)
 func (c *Client) Do(request *http.Request) (*http.Response, error) {
 	if origReqBody := request.Body; origReqBody != nil {
 		defer func() {
-			// close the original request body as internal.BuildReadSeekCloser wraps body with noop closer.
+			// close the original request body as internal.SetRequestGetBody wraps body with noop closer.
 			_ = origReqBody.Close()
 		}()
 	}
 
 	var reqGetBody internal.RequestGetBody
 	var err error
-	// Only build ReadSeekCloser if retry is enabled to avoid unnecessary overhead for non-retry requests
-	// This also avoid data race condition for hystrix.Client which internally calls httpclient.Client without retry enabled
+	// Only SetRequestGetBody if retry is enabled to avoid unnecessary overhead for non-retry requests
 	if c.retryCount > 0 {
 		if err = internal.SetRequestGetBody(request); err != nil {
 			return nil, err
