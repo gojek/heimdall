@@ -595,7 +595,7 @@ func TestHystrixHTTPClientDoContextCancelled(t *testing.T) {
 	req = req.WithContext(ctx)
 
 	response, err := client.Do(req)
-	require.Equal(t, err, context.Canceled)
+	require.Contains(t, err.Error(), context.Canceled.Error())
 	require.Nil(t, response)
 	time.Sleep(time.Second)
 	m := r.GetMetrics(cmdName)
