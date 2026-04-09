@@ -479,6 +479,24 @@ func TestHystrixHTTPClientReturnsFallbackFailureWithAFallBackFunctionWhichReturn
 	assert.True(t, strings.Contains(err.Error(), "fallback failed"))
 }
 
+func TestHystrixHTTPClientReturnsHTTPFailureWithANilFallBackFunction(t *testing.T) {
+	client := NewClient(
+		WithHTTPTimeout(10*time.Millisecond),
+		WithCommandName("some_command_name_v2"),
+		WithHystrixTimeout(10*time.Millisecond),
+		WithMaxConcurrentRequests(100),
+		WithErrorPercentThreshold(10),
+		WithSleepWindow(100),
+		WithRequestVolumeThreshold(10),
+		WithFallbackFunc(nil),
+	)
+
+	_, err := client.Get("", http.Header{})
+	require.Error(t, err, "should have failed")
+
+	assert.Contains(t, err.Error(), "unsupported protocol scheme")
+}
+
 func TestFallBackFunctionIsCalledWithHystrixHTTPClient(t *testing.T) {
 	called := false
 
