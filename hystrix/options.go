@@ -64,6 +64,9 @@ func WithErrorPercentThreshold(errorPercentThreshold int) Option {
 // WithFallbackFunc sets the fallback function
 func WithFallbackFunc(fn fallbackFunc) Option {
 	return func(c *Client) {
+		if fn == nil {
+			return
+		}
 		c.fallbackFunc = func(_ context.Context, err error) error {
 			return fn(err)
 		}
