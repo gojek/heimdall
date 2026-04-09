@@ -2,6 +2,7 @@ package hystrix
 
 import (
 	"context"
+	goerrors "errors"
 	"io"
 	"net/http"
 	"time"
@@ -48,7 +49,7 @@ const (
 )
 
 var _ heimdall.Client = (*Client)(nil)
-var err5xx = errors.New("server returned 5xx status code")
+var err5xx = goerrors.New("server returned 5xx status code")
 
 // NewClient returns a new instance of hystrix Client
 func NewClient(opts ...Option) *Client {
@@ -169,19 +170,20 @@ func (hhc *Client) Delete(url string, headers http.Header) (*http.Response, erro
 func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
 	if origReqBody := request.Body; origReqBody != nil {
 		defer func() {
-			// close the original request body as internal.BuildReadSeekCloser wraps body with noop closer.
+			// close the original request body as internal.SetRequestGetBody wraps body with noop closer.
 			_ = origReqBody.Close()
 		}()
 	}
 
-	var reqBody io.ReadSeekCloser
+	var reqGetBody internal.RequestGetBody
 	var err error
-	if hhc.retryCount > 0 && request.Body != nil {
-		reqBody, err = internal.BuildReadSeekCloser(request.Body)
-		if err != nil {
+	// Only SetRequestGetBody if retry is enabled to avoid unnecessary overhead for non-retry requests
+	if hhc.retryCount > 0 {
+		if err := internal.SetRequestGetBody(request); err != nil {
 			return nil, err
 		}
-		request.Body = reqBody
+		// keeping a local variable just in case request.GetBody gets overridden by some plugins/middlewares
+		reqGetBody = request.GetBody
 	}
 
 	var response *http.Response
@@ -193,13 +195,13 @@ func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
 
 		if i > 0 {
 			time.Sleep(hhc.retrier.NextInterval(i - 1)) // sleep after closing the previous response body
+
+			request, err = internal.CloneRequest(request, reqGetBody) // Clone the request to reset the body for retry
+			if err != nil {
+				return nil, err
+			}
 		}
 
-		if reqBody != nil {
-			// Reset the body reader before the request to ensure even in case of retries from hystrix timeout, the body is at correct offset.
-			// Note that it's safe to ignore the error here since the 0,0 position is always valid
-			_, _ = reqBody.Seek(0, 0)
-		}
 		response, err = hhc.hystrixDo(request)
 		if err == nil {
 			break
@@ -207,7 +209,7 @@ func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
 	}
 
 	if err != nil {
-		if err == err5xx {
+		if errors.Is(err, err5xx) {
 			return response, nil
 		}
 
@@ -218,10 +220,10 @@ func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
 }
 
 func (hhc *Client) hystrixDo(request *http.Request) (response *http.Response, err error) {
-	err = hystrix.DoC(request.Context(), hhc.hystrixCommandName, func(_ context.Context) (err error) {
-		resp, err := hhc.client.Do(request)
-		if err != nil {
-			return err
+	err = hystrix.DoC(request.Context(), hhc.hystrixCommandName, func(_ context.Context) error {
+		resp, doErr := hhc.client.Do(request)
+		if doErr != nil {
+			return doErr
 		}
 		response = resp
 
@@ -231,6 +233,9 @@ func (hhc *Client) hystrixDo(request *http.Request) (response *http.Response, er
 
 		return nil
 	}, hhc.fallbackFunc)
+	if err != nil && !errors.Is(err, err5xx) { // Special handling to avoid data race conditions
+		return nil, err
+	}
 
 	return response, err
 }

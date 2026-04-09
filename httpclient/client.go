@@ -122,21 +122,20 @@ func (c *Client) Delete(url string, headers http.Header) (*http.Response, error)
 func (c *Client) Do(request *http.Request) (*http.Response, error) {
 	if origReqBody := request.Body; origReqBody != nil {
 		defer func() {
-			// close the original request body as internal.BuildReadSeekCloser wraps body with noop closer.
+			// close the original request body as internal.SetRequestGetBody wraps body with noop closer.
 			_ = origReqBody.Close()
 		}()
 	}
 
-	var reqBody io.ReadSeekCloser
+	var reqGetBody internal.RequestGetBody
 	var err error
-	// Only build ReadSeekCloser if retry is enabled to avoid unnecessary overhead for non-retry requests
-	// This also avoid data race condition for hystrix.Client which internally calls httpclient.Client without retry enabled
-	if c.retryCount > 0 && request.Body != nil {
-		reqBody, err = internal.BuildReadSeekCloser(request.Body)
-		if err != nil {
+	// Only SetRequestGetBody if retry is enabled to avoid unnecessary overhead for non-retry requests
+	if c.retryCount > 0 {
+		if err = internal.SetRequestGetBody(request); err != nil {
 			return nil, err
 		}
-		request.Body = reqBody
+		// keeping a local variable just in case request.GetBody gets overridden by some plugins/middlewares
+		reqGetBody = request.GetBody
 	}
 
 	multiErr := &valkyrie.MultiError{}
@@ -149,16 +148,16 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 		}
 		if i > 0 {
 			time.Sleep(c.retrier.NextInterval(i - 1)) // sleep after closing the previous response body
+
+			request, err = internal.CloneRequest(request, reqGetBody) // Clone the request to reset the body for retry
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		c.reportRequestStart(request)
 		var err error
 		response, err = c.client.Do(request)
-		if reqBody != nil {
-			// Reset the body reader after the request since at this point it's already read
-			// Note that it's safe to ignore the error here since the 0,0 position is always valid
-			_, _ = reqBody.Seek(0, 0)
-		}
 
 		if err != nil {
 			multiErr.Push(err.Error())
