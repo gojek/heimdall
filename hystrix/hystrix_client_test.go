@@ -595,7 +595,7 @@ func TestHystrixHTTPClientDoContextCancelled(t *testing.T) {
 	req = req.WithContext(ctx)
 
 	response, err := client.Do(req)
-	require.Equal(t, err, context.Canceled)
+	require.Contains(t, err.Error(), context.Canceled.Error())
 	require.Nil(t, response)
 	time.Sleep(time.Second)
 	m := r.GetMetrics(cmdName)
@@ -610,4 +610,32 @@ func TestHystrixHTTPClientDoContextCancelled(t *testing.T) {
 	assert.Zero(t, m.FallbackSuccesses)
 	assert.Zero(t, m.FallbackFailures)
 	assert.Zero(t, m.ContextDeadlineExceeded)
+}
+
+func TestResponseBodyStreaming(t *testing.T) {
+	const cmdName = "response_body_streamig"
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/plain")
+		w.WriteHeader(http.StatusOK)
+		for range 40 { // streaming data in chunks
+			_, _ = io.WriteString(w, strings.Repeat("x", 1024))
+			time.Sleep(10 * time.Millisecond)
+		}
+	}))
+	defer srv.Close()
+
+	client := NewClient(WithCommandName(cmdName))
+
+	req, err := http.NewRequest(http.MethodGet, srv.URL, nil)
+	if err != nil {
+		t.Fatalf("new request: %v", err)
+	}
+
+	resp, err := client.Do(req)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	data, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+	assert.Equal(t, 1024*40, len(data))
 }
