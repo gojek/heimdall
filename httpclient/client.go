@@ -147,7 +147,12 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 			_ = response.Body.Close()
 		}
 		if i > 0 {
-			time.Sleep(c.retrier.NextInterval(i - 1)) // sleep after closing the previous response body
+			if err := internal.SleepInterruptible(request.Context(), c.retrier.NextInterval(i-1)); err != nil {
+				multiErr.Push(err.Error())
+				c.reportError(request, err)
+				// no point of retrying after context has been cancelled
+				break
+			}
 
 			request, err = internal.CloneRequest(request, reqGetBody) // Clone the request to reset the body for retry
 			if err != nil {
@@ -162,11 +167,18 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 		if err != nil {
 			multiErr.Push(err.Error())
 			c.reportError(request, err)
+			if internal.IsCtxDone(request.Context()) {
+				break
+			}
 			continue
 		}
 		c.reportRequestEnd(request, response)
 
 		if response.StatusCode >= http.StatusInternalServerError {
+			if internal.IsCtxDone(request.Context()) {
+				break
+			}
+
 			continue
 		}
 
