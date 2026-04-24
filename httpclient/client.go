@@ -187,7 +187,7 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 		break
 	}
 
-	return response, MultiError{errs}.HasError()
+	return response, internal.BuildMultiError(errs)
 }
 
 func (c *Client) reportRequestStart(request *http.Request) {

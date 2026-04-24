@@ -3,6 +3,7 @@ package httpclient
 import (
 	"bytes"
 	"context"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -13,7 +14,6 @@ import (
 	"time"
 
 	"github.com/gojek/heimdall/v7"
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -537,10 +537,8 @@ func TestHTTPClientContextTimeout(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept-Language", "en")
 	response, err := client.Do(req)
-	require.Error(t, err, "should have timed out in GET request")
-	require.Contains(t, err.Error(), "context deadline exceeded")
-	require.True(t, errors.Is(err, context.DeadlineExceeded))
-	assert.Equal(t, &url.Error{Op: "Get", URL: server.URL, Err: context.DeadlineExceeded}, errors.Cause(err))
+	require.ErrorIs(t, err, context.DeadlineExceeded)
+	assert.Equal(t, &url.Error{Op: "Get", URL: server.URL, Err: context.DeadlineExceeded}, err)
 	require.Nil(t, response)
 }
 
@@ -589,7 +587,7 @@ func TestHTTPClientDoContextCancelledDuringRetry(t *testing.T) {
 
 	_, err = client.Do(req)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), context.Canceled.Error())
+	assert.Equal(t, context.Canceled, err)
 	assert.Less(t, count.Load(), int32(noOfRetries+1), "should not have completed all retries due to context cancellation")
 }
 
@@ -657,4 +655,42 @@ func TestHTTPClientDoContextTimeoutDuringRetry(t *testing.T) {
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), context.DeadlineExceeded.Error())
 	assert.Less(t, count.Load(), int32(noOfRetries+1), "should not have completed all retries due to context timeout")
+}
+
+func TestHTTPClientMultiRetryOnTimeout(t *testing.T) {
+	noOfRetries := 3
+	backoffInterval := 4 * time.Millisecond
+	maximumJitterInterval := 2 * time.Millisecond
+
+	client := NewClient(
+		WithHTTPTimeout(5*time.Millisecond),
+		WithRetryCount(noOfRetries),
+		WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval))),
+	)
+
+	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+		time.Sleep(10 * time.Millisecond)
+		w.WriteHeader(http.StatusOK)
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+	defer server.Close()
+
+	req, err := http.NewRequest(http.MethodGet, server.URL, nil)
+	require.NoError(t, err)
+
+	_, err = client.Do(req)
+	require.Error(t, err)
+	assert.ErrorIs(t, err, context.DeadlineExceeded)
+	mutliErr, ok := err.(interface{ Unwrap() []error })
+	require.True(t, ok)
+	errs := mutliErr.Unwrap()
+	assert.Len(t, errs, noOfRetries+1)
+	for _, e := range errs {
+		var urlErr *url.Error
+		require.True(t, errors.As(e, &urlErr))
+		assert.Equal(t, "Get", urlErr.Op)
+		assert.Equal(t, server.URL, urlErr.URL)
+		assert.ErrorIs(t, urlErr.Err, context.DeadlineExceeded)
+	}
 }
