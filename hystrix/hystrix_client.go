@@ -17,6 +17,7 @@ import (
 )
 
 type fallbackFunc func(error) error
+type fallbackCtxFunc func(context.Context, error) error
 
 // Client is the hystrix client implementation
 type Client struct {
