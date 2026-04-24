@@ -10,6 +10,8 @@ import (
 )
 
 func TestOptionsAreSet(t *testing.T) {
+	t.Parallel()
+
 	c := NewClient(
 		WithHTTPTimeout(10*time.Second),
 		WithCommandName("test"),
@@ -33,6 +35,8 @@ func TestOptionsAreSet(t *testing.T) {
 }
 
 func TestOptionsHaveDefaults(t *testing.T) {
+	t.Parallel()
+
 	c := NewClient(WithCommandName("test-defaults"))
 
 	assert.Equal(t, 30*time.Second, c.timeout)

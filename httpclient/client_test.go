@@ -218,6 +218,8 @@ func TestHTTPClientPatchSuccess(t *testing.T) {
 }
 
 func TestHTTPClientGetRetriesOnFailure(t *testing.T) {
+	t.Parallel()
+
 	count := 0
 	noOfRetries := 3
 	noOfCalls := noOfRetries + 1
@@ -543,6 +545,8 @@ func TestCustomHTTPClientHeaderSuccess(t *testing.T) {
 }
 
 func TestHTTPClientContextTimeout(t *testing.T) {
+	t.Parallel()
+
 	client := NewClient(WithHTTPTimeout(1000 * time.Millisecond))
 
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
@@ -584,6 +588,8 @@ func respBody(t *testing.T, response *http.Response) string {
 }
 
 func TestHTTPClientDoContextCancelledDuringRetry(t *testing.T) {
+	t.Parallel()
+
 	noOfRetries := 3
 	backoffInterval := 100 * time.Millisecond
 	maximumJitterInterval := 10 * time.Millisecond
@@ -622,6 +628,8 @@ func TestHTTPClientDoContextCancelledDuringRetry(t *testing.T) {
 }
 
 func TestHTTPClientDoContextCancelledBeforeRetry(t *testing.T) {
+	t.Parallel()
+
 	client := NewClient(
 		WithHTTPTimeout(10*time.Millisecond),
 		WithRetryCount(3),
@@ -654,6 +662,8 @@ func TestHTTPClientDoContextCancelledBeforeRetry(t *testing.T) {
 }
 
 func TestHTTPClientDoContextTimeoutDuringRetry(t *testing.T) {
+	t.Parallel()
+
 	noOfRetries := 3
 	backoffInterval := 100 * time.Millisecond
 	maximumJitterInterval := 10 * time.Millisecond
@@ -688,6 +698,8 @@ func TestHTTPClientDoContextTimeoutDuringRetry(t *testing.T) {
 }
 
 func TestHTTPClientMultiRetryOnTimeout(t *testing.T) {
+	t.Parallel()
+
 	noOfRetries := 3
 	backoffInterval := 4 * time.Millisecond
 	maximumJitterInterval := 2 * time.Millisecond

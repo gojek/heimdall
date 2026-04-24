@@ -223,8 +223,9 @@ func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
 	return response, nil
 }
 
-func (hhc *Client) hystrixDo(request *http.Request) (response *http.Response, err error) {
-	err = hystrix.DoC(request.Context(), hhc.hystrixCommandName, func(_ context.Context) error {
+func (hhc *Client) hystrixDo(request *http.Request) (*http.Response, error) {
+	var response *http.Response
+	err := hystrix.DoC(request.Context(), hhc.hystrixCommandName, func(_ context.Context) error {
 		resp, doErr := hhc.client.Do(request)
 		if doErr != nil {
 			return doErr
