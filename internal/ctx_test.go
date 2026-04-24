@@ -10,6 +10,8 @@ import (
 )
 
 func TestIsCtxDone(t *testing.T) {
+	t.Parallel()
+
 	assert.False(t, internal.IsCtxDone(context.Background()))
 
 	ctx, cancel := context.WithCancel(context.Background())

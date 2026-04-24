@@ -10,6 +10,8 @@ import (
 )
 
 func TestSleepInterruptible_CancelledContext(t *testing.T) {
+	t.Parallel()
+
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// Cancel the context immediately
@@ -21,6 +23,8 @@ func TestSleepInterruptible_CancelledContext(t *testing.T) {
 }
 
 func TestSleepInterruptible_CompletesWithoutCancel(t *testing.T) {
+	t.Parallel()
+
 	ctx := context.Background()
 	start := time.Now()
 

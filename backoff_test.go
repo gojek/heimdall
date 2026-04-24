@@ -8,6 +8,8 @@ import (
 )
 
 func TestExponentialBackoffNextTime(t *testing.T) {
+	t.Parallel()
+
 	exponentialBackoff := NewExponentialBackoff(100*time.Millisecond, 1000*time.Millisecond, 2.0, 0*time.Millisecond)
 
 	assert.Equal(t, 100*time.Millisecond, exponentialBackoff.Next(0))
@@ -17,6 +19,8 @@ func TestExponentialBackoffNextTime(t *testing.T) {
 }
 
 func TestExponentialBackoffWithInvalidJitter(t *testing.T) {
+	t.Parallel()
+
 	exponentialBackoff := NewExponentialBackoff(100*time.Millisecond, 1000*time.Millisecond, 2.0, -1*time.Millisecond)
 
 	assert.Equal(t, 100*time.Millisecond, exponentialBackoff.Next(0))
@@ -26,24 +30,32 @@ func TestExponentialBackoffWithInvalidJitter(t *testing.T) {
 }
 
 func TestExponentialBackoffMaxTimeoutCrossed(t *testing.T) {
+	t.Parallel()
+
 	exponentialBackoff := NewExponentialBackoff(100*time.Millisecond, 1000*time.Millisecond, 2.0, 0*time.Millisecond)
 
 	assert.Equal(t, 1000*time.Millisecond, exponentialBackoff.Next(4))
 }
 
 func TestExponentialBackoffMaxTimeoutReached(t *testing.T) {
+	t.Parallel()
+
 	exponentialBackoff := NewExponentialBackoff(100*time.Millisecond, 1600*time.Millisecond, 2.0, 0*time.Millisecond)
 
 	assert.Equal(t, 1600*time.Millisecond, exponentialBackoff.Next(4))
 }
 
 func TestExponentialBackoffWhenRetryIsLessThanZero(t *testing.T) {
+	t.Parallel()
+
 	exponentialBackoff := NewExponentialBackoff(100*time.Millisecond, 1000*time.Millisecond, 2.0, 0*time.Millisecond)
 
 	assert.Equal(t, 100*time.Millisecond, exponentialBackoff.Next(-1))
 }
 
 func TestExponentialBackoffJitter0(t *testing.T) {
+	t.Parallel()
+
 	exponentialBackoff := NewExponentialBackoff(100*time.Millisecond, 1000*time.Millisecond, 2.0, 0*time.Millisecond)
 	for range 10000 {
 		assert.Equal(t, 200*time.Millisecond, exponentialBackoff.Next(1))
@@ -51,6 +63,8 @@ func TestExponentialBackoffJitter0(t *testing.T) {
 }
 
 func TestExponentialBackoffJitter1(t *testing.T) {
+	t.Parallel()
+
 	exponentialBackoff := NewExponentialBackoff(100*time.Millisecond, 1000*time.Millisecond, 2.0, 1*time.Millisecond)
 	for range 10000 {
 		assert.True(t, 200*time.Millisecond <= exponentialBackoff.Next(1) && exponentialBackoff.Next(1) <= 201*time.Millisecond)
@@ -58,6 +72,8 @@ func TestExponentialBackoffJitter1(t *testing.T) {
 }
 
 func TestExponentialBackoffJitter50(t *testing.T) {
+	t.Parallel()
+
 	exponentialBackoff := NewExponentialBackoff(100*time.Millisecond, 1000*time.Millisecond, 2.0, 50*time.Millisecond)
 	for range 10000 {
 		assert.True(t, 200*time.Millisecond <= exponentialBackoff.Next(1) && exponentialBackoff.Next(1) <= 250*time.Millisecond)
@@ -65,6 +81,8 @@ func TestExponentialBackoffJitter50(t *testing.T) {
 }
 
 func TestConstantBackoffNextTime(t *testing.T) {
+	t.Parallel()
+
 	constantBackoff := NewConstantBackoff(100*time.Millisecond, 0*time.Millisecond)
 
 	assert.Equal(t, 100*time.Millisecond, constantBackoff.Next(0))
@@ -74,6 +92,8 @@ func TestConstantBackoffNextTime(t *testing.T) {
 }
 
 func TestConstantBackoffWithInvalidJitter(t *testing.T) {
+	t.Parallel()
+
 	constantBackoff := NewConstantBackoff(100*time.Millisecond, -1*time.Millisecond)
 
 	assert.Equal(t, 100*time.Millisecond, constantBackoff.Next(0))
@@ -83,12 +103,16 @@ func TestConstantBackoffWithInvalidJitter(t *testing.T) {
 }
 
 func TestConstantBackoffWhenRetryIsLessThanZero(t *testing.T) {
+	t.Parallel()
+
 	constantBackoff := NewConstantBackoff(100*time.Millisecond, 0*time.Millisecond)
 
 	assert.Equal(t, 100*time.Millisecond, constantBackoff.Next(-1))
 }
 
 func TestConstantBackoffJitter0(t *testing.T) {
+	t.Parallel()
+
 	constantBackoff := NewConstantBackoff(100*time.Millisecond, 0*time.Millisecond)
 	for i := range 10000 {
 		assert.Equal(t, 100*time.Millisecond, constantBackoff.Next(i))
@@ -96,6 +120,8 @@ func TestConstantBackoffJitter0(t *testing.T) {
 }
 
 func TestConstantBackoffJitter1(t *testing.T) {
+	t.Parallel()
+
 	constantBackoff := NewConstantBackoff(100*time.Millisecond, 1*time.Millisecond)
 	for i := range 10000 {
 		assert.True(t, 100*time.Millisecond <= constantBackoff.Next(i) && constantBackoff.Next(1) <= 101*time.Millisecond)
@@ -103,6 +129,8 @@ func TestConstantBackoffJitter1(t *testing.T) {
 }
 
 func TestConstantBackoffJitter50(t *testing.T) {
+	t.Parallel()
+
 	constantBackoff := NewConstantBackoff(100*time.Millisecond, 50*time.Millisecond)
 	for i := range 10000 {
 		assert.True(t, 100*time.Millisecond <= constantBackoff.Next(i) && constantBackoff.Next(1) <= 150*time.Millisecond)

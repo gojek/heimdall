@@ -8,6 +8,7 @@ import (
 )
 
 func TestRetrierWithExponentialBackoff(t *testing.T) {
+	t.Parallel()
 
 	exponentialBackoff := NewExponentialBackoff(2*time.Millisecond, 10*time.Millisecond, 2.0, 1*time.Millisecond)
 	exponentialRetrier := NewRetrier(exponentialBackoff)
@@ -16,6 +17,8 @@ func TestRetrierWithExponentialBackoff(t *testing.T) {
 }
 
 func TestRetrierWithConstantBackoff(t *testing.T) {
+	t.Parallel()
+
 	backoffInterval := 2 * time.Millisecond
 	maximumJitterInterval := 1 * time.Millisecond
 
@@ -26,6 +29,8 @@ func TestRetrierWithConstantBackoff(t *testing.T) {
 }
 
 func TestRetrierFunc(t *testing.T) {
+	t.Parallel()
+
 	linearRetrier := NewRetrierFunc(func(retry int) time.Duration {
 		if retry <= 0 {
 			return 0 * time.Millisecond
@@ -37,6 +42,8 @@ func TestRetrierFunc(t *testing.T) {
 }
 
 func TestNoRetrier(t *testing.T) {
+	t.Parallel()
+
 	noRetrier := NewNoRetrier()
 	nextInterval := noRetrier.NextInterval(1)
 	assert.Equal(t, time.Duration(0), nextInterval)

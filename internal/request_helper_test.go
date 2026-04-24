@@ -13,10 +13,14 @@ import (
 )
 
 func TestSetRequestGetBodyReturnsNilForNilRequest(t *testing.T) {
+	t.Parallel()
+
 	require.Nil(t, SetRequestGetBody(nil))
 }
 
 func TestSetRequestGetBodyReturnsNilWhenBodyIsNil(t *testing.T) {
+	t.Parallel()
+
 	req, err := http.NewRequest(http.MethodPost, "http://example.com", nil)
 	require.Nil(t, err)
 
@@ -25,6 +29,8 @@ func TestSetRequestGetBodyReturnsNilWhenBodyIsNil(t *testing.T) {
 }
 
 func TestSetRequestGetBodyKeepsExistingGetBody(t *testing.T) {
+	t.Parallel()
+
 	req, err := http.NewRequest(http.MethodPost, "http://example.com", io.NopCloser(strings.NewReader("payload")))
 	require.Nil(t, err)
 
@@ -46,6 +52,8 @@ func TestSetRequestGetBodyKeepsExistingGetBody(t *testing.T) {
 }
 
 func TestSetRequestGetBodySupportsNoBody(t *testing.T) {
+	t.Parallel()
+
 	req, err := http.NewRequest(http.MethodPost, "http://example.com", http.NoBody)
 	require.Nil(t, err)
 
@@ -60,6 +68,8 @@ func TestSetRequestGetBodySupportsNoBody(t *testing.T) {
 }
 
 func TestSetRequestGetBodyMakesRequestBodyReplayable(t *testing.T) {
+	t.Parallel()
+
 	req, err := http.NewRequest(http.MethodPost, "http://example.com", io.NopCloser(strings.NewReader("payload")))
 	require.Nil(t, err)
 
@@ -78,6 +88,8 @@ func TestSetRequestGetBodyMakesRequestBodyReplayable(t *testing.T) {
 }
 
 func TestSetRequestGetBodyReturnsErrorWhenBodyReadFails(t *testing.T) {
+	t.Parallel()
+
 	req, err := http.NewRequest(http.MethodPost, "http://example.com", nil)
 	require.Nil(t, err)
 	req.Body = errReadCloser{err: errors.New("read failed")}
@@ -87,6 +99,8 @@ func TestSetRequestGetBodyReturnsErrorWhenBodyReadFails(t *testing.T) {
 }
 
 func TestCloneRequestReturnsNilWhenRequestIsNil(t *testing.T) {
+	t.Parallel()
+
 	cloned, err := CloneRequest(nil, func() (io.ReadCloser, error) {
 		return io.NopCloser(strings.NewReader("payload")), nil
 	})
@@ -96,6 +110,8 @@ func TestCloneRequestReturnsNilWhenRequestIsNil(t *testing.T) {
 }
 
 func TestCloneRequestReturnsOriginalRequestWhenGetBodyIsNil(t *testing.T) {
+	t.Parallel()
+
 	req, err := http.NewRequest(http.MethodPost, "http://example.com", io.NopCloser(strings.NewReader("payload")))
 	require.Nil(t, err)
 
@@ -107,6 +123,8 @@ func TestCloneRequestReturnsOriginalRequestWhenGetBodyIsNil(t *testing.T) {
 }
 
 func TestCloneRequestReturnsErrorWhenGetBodyFails(t *testing.T) {
+	t.Parallel()
+
 	req, err := http.NewRequest(http.MethodPost, "http://example.com", io.NopCloser(strings.NewReader("payload")))
 	require.Nil(t, err)
 
@@ -119,6 +137,8 @@ func TestCloneRequestReturnsErrorWhenGetBodyFails(t *testing.T) {
 }
 
 func TestCloneRequestReturnsClonedRequestWithFreshBodyAndPreservedContext(t *testing.T) {
+	t.Parallel()
+
 	ctx := context.WithValue(context.Background(), ctxKey("key"), "value")
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "http://example.com", io.NopCloser(strings.NewReader("original-body")))
 	require.Nil(t, err)

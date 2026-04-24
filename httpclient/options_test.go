@@ -11,6 +11,8 @@ import (
 )
 
 func TestOptionsAreSet(t *testing.T) {
+	t.Parallel()
+
 	backoffInterval := 1 * time.Millisecond
 	maximumJitterInterval := 1 * time.Millisecond
 	noOfRetries := 3
@@ -33,6 +35,8 @@ func TestOptionsAreSet(t *testing.T) {
 }
 
 func TestOptionsHaveDefaults(t *testing.T) {
+	t.Parallel()
+
 	retrier := heimdall.NewNoRetrier()
 	httpTimeout := 30 * time.Second
 	http.DefaultClient.Timeout = httpTimeout

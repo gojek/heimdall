@@ -14,6 +14,8 @@ var err3 = errors.New("err3")
 var err4 = errors.New("err4")
 
 func TestBuildMultiError(t *testing.T) {
+	t.Parallel()
+
 	assert.Nil(t, internal.BuildMultiError(nil))
 
 	assert.Equal(t, err1, internal.BuildMultiError([]error{err1}))
