@@ -2,11 +2,12 @@ package httpclient
 
 import (
 	"bytes"
-	"io"
 	"context"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -531,10 +532,11 @@ func TestHTTPClientDoContextCancelledDuringRetry(t *testing.T) {
 		WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval))),
 	)
 
-	count := 0
+	count := atomic.Int32{}
+	count.Store(0)
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
-		count++
+		count.Add(1)
 	}
 
 	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
@@ -554,29 +556,30 @@ func TestHTTPClientDoContextCancelledDuringRetry(t *testing.T) {
 	_, err = client.Do(req)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), context.Canceled.Error())
-	assert.True(t, count < noOfRetries+1, "should not have completed all retries due to context cancellation")
+	assert.Less(t, count.Load(), int32(noOfRetries+1), "should not have completed all retries due to context cancellation")
 }
 
 func TestHTTPClientDoContextCancelledBeforeRetry(t *testing.T) {
-	noOfRetries := 3
-	backoffInterval := 100 * time.Millisecond
-	maximumJitterInterval := 10 * time.Millisecond
-
 	client := NewClient(
 		WithHTTPTimeout(10*time.Millisecond),
-		WithRetryCount(noOfRetries),
-		WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval))),
+		WithRetryCount(3),
+		WithRetrier(heimdall.NewRetrierFunc(func(retry int) time.Duration {
+			assert.Fail(t, "should not have retrier func due to context cancellation")
+			return 0
+		})),
 	)
+	ctx, cancel := context.WithCancel(context.Background())
 
+	count := atomic.Int32{}
+	count.Store(0)
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+		cancel() // Cancel immediately
+		count.Add(1)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 
 	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
 	defer server.Close()
-
-	ctx, cancel := context.WithCancel(context.Background())
-	cancel() // Cancel immediately
 
 	req, err := http.NewRequest(http.MethodGet, server.URL, nil)
 	require.NoError(t, err)
@@ -585,6 +588,7 @@ func TestHTTPClientDoContextCancelledBeforeRetry(t *testing.T) {
 	_, err = client.Do(req)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), context.Canceled.Error())
+	assert.Equal(t, int32(1), count.Load())
 }
 
 func TestHTTPClientDoContextTimeoutDuringRetry(t *testing.T) {
@@ -598,10 +602,11 @@ func TestHTTPClientDoContextTimeoutDuringRetry(t *testing.T) {
 		WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval))),
 	)
 
-	count := 0
+	count := atomic.Int32{}
+	count.Store(0)
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
-		count++
+		count.Add(1)
 	}
 
 	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
@@ -617,5 +622,5 @@ func TestHTTPClientDoContextTimeoutDuringRetry(t *testing.T) {
 	_, err = client.Do(req)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), context.DeadlineExceeded.Error())
-	assert.True(t, count < noOfRetries+1, "should not have completed all retries due to context timeout")
+	assert.Less(t, count.Load(), int32(noOfRetries+1), "should not have completed all retries due to context timeout")
 }

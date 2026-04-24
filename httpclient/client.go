@@ -138,8 +138,6 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 		reqGetBody = request.GetBody
 	}
 
-	ctx := request.Context()
-
 	multiErr := &valkyrie.MultiError{}
 	var response *http.Response
 
@@ -149,8 +147,7 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 			_ = response.Body.Close()
 		}
 		if i > 0 {
-			err = SleepInterruptible(ctx, c.retrier.NextInterval(i-1))
-			if err != nil {
+			if err := internal.SleepInterruptible(request.Context(), c.retrier.NextInterval(i-1)); err != nil {
 				multiErr.Push(err.Error())
 				c.reportError(request, err)
 				// no point of retrying after context has been cancelled
@@ -170,11 +167,18 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 		if err != nil {
 			multiErr.Push(err.Error())
 			c.reportError(request, err)
+			if internal.IsCtxDone(request.Context()) {
+				break
+			}
 			continue
 		}
 		c.reportRequestEnd(request, response)
 
 		if response.StatusCode >= http.StatusInternalServerError {
+			if internal.IsCtxDone(request.Context()) {
+				break
+			}
+
 			continue
 		}
 

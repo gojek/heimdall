@@ -1,10 +1,11 @@
-package httpclient
+package internal_test
 
 import (
 	"context"
 	"testing"
 	"time"
 
+	"github.com/gojek/heimdall/v7/internal"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -14,7 +15,7 @@ func TestSleepInterruptible_CancelledContext(t *testing.T) {
 	// Cancel the context immediately
 	cancel()
 
-	err := SleepInterruptible(ctx, 10*time.Second) // Long duration to ensure cancellation is what stops it
+	err := internal.SleepInterruptible(ctx, 10*time.Second) // Long duration to ensure cancellation is what stops it
 	assert.Error(t, err)
 	assert.Equal(t, context.Canceled, err)
 }
@@ -23,7 +24,7 @@ func TestSleepInterruptible_CompletesWithoutCancel(t *testing.T) {
 	ctx := context.Background()
 	start := time.Now()
 
-	err := SleepInterruptible(ctx, 50*time.Millisecond) // Short sleep time
+	err := internal.SleepInterruptible(ctx, 50*time.Millisecond) // Short sleep time
 	elapsed := time.Since(start)
 
 	assert.NoError(t, err)
