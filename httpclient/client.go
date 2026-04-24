@@ -7,7 +7,6 @@ import (
 
 	"github.com/gojek/heimdall/v7"
 	"github.com/gojek/heimdall/v7/internal"
-	"github.com/gojek/valkyrie"
 	"github.com/pkg/errors"
 )
 
@@ -138,7 +137,7 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 		reqGetBody = request.GetBody
 	}
 
-	multiErr := &valkyrie.MultiError{}
+	var errs []error
 	var response *http.Response
 
 	for i := 0; i <= c.retryCount; i++ {
@@ -148,7 +147,7 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 		}
 		if i > 0 {
 			if err := internal.SleepInterruptible(request.Context(), c.retrier.NextInterval(i-1)); err != nil {
-				multiErr.Push(err.Error())
+				errs = append(errs, err)
 				c.reportError(request, err)
 				// no point of retrying after context has been cancelled
 				break
@@ -156,7 +155,9 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 
 			request, err = internal.CloneRequest(request, reqGetBody) // Clone the request to reset the body for retry
 			if err != nil {
-				return nil, err
+				errs = append(errs, err)
+				c.reportError(request, err)
+				break
 			}
 		}
 
@@ -165,7 +166,7 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 		response, err = c.client.Do(request)
 
 		if err != nil {
-			multiErr.Push(err.Error())
+			errs = append(errs, err)
 			c.reportError(request, err)
 			if internal.IsCtxDone(request.Context()) {
 				break
@@ -182,11 +183,11 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 			continue
 		}
 
-		multiErr = &valkyrie.MultiError{} // Clear errors if any iteration succeeds
+		errs = nil // Clear errors if any iteration succeeds
 		break
 	}
 
-	return response, multiErr.HasError()
+	return response, internal.BuildMultiError(errs)
 }
 
 func (c *Client) reportRequestStart(request *http.Request) {
