@@ -647,6 +647,7 @@ func TestHystrixHTTPClientDoContextCancelled(t *testing.T) {
 	r := newSimpleMetricRegistry()
 
 	client := NewClient(
+		WithHTTPClient(delayedCancelDoer{Delay: 100 * time.Millisecond}), // making sure hystrix pickups context cancel before run failure
 		WithCommandName(cmdName),
 		WithRetryCount(3),
 		WithRetrier(heimdall.NewRetrierFunc(func(retry int) time.Duration {
