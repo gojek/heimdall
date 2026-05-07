@@ -15,7 +15,7 @@ type Client struct {
 	client     heimdall.Doer
 	retrier    heimdall.Retriable
 	plugins    []heimdall.Plugin
-	timeout    time.Duration
+	timeout    *time.Duration
 	retryCount int
 }
 
@@ -29,7 +29,7 @@ var _ heimdall.Client = (*Client)(nil)
 // NewClient returns a new instance of http Client
 func NewClient(opts ...Option) *Client {
 	client := Client{
-		timeout:    defaultHTTPTimeout,
+		client:     new(http.Client),
 		retryCount: defaultRetryCount,
 		retrier:    heimdall.NewNoRetrier(),
 	}
@@ -38,11 +38,7 @@ func NewClient(opts ...Option) *Client {
 		opt(&client)
 	}
 
-	if client.client == nil {
-		client.client = &http.Client{
-			Timeout: client.timeout,
-		}
-	}
+	client.updateHTTPTimeout()
 
 	return &client
 }
@@ -205,5 +201,16 @@ func (c *Client) reportError(request *http.Request, err error) {
 func (c *Client) reportRequestEnd(request *http.Request, response *http.Response) {
 	for _, plugin := range c.plugins {
 		plugin.OnRequestEnd(request, response)
+	}
+}
+
+func (c *Client) updateHTTPTimeout() {
+	timeout := defaultHTTPTimeout
+	if c.timeout != nil {
+		timeout = *c.timeout
+	}
+
+	if client, ok := c.client.(*http.Client); ok && client != nil {
+		client.Timeout = timeout
 	}
 }
