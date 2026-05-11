@@ -29,7 +29,7 @@ var _ heimdall.Client = (*Client)(nil)
 // NewClient returns a new instance of http Client
 func NewClient(opts ...Option) *Client {
 	client := Client{
-		client:     new(http.Client),
+		client:     &http.Client{Timeout: defaultHTTPTimeout},
 		retryCount: defaultRetryCount,
 		retrier:    heimdall.NewNoRetrier(),
 	}
@@ -205,12 +205,11 @@ func (c *Client) reportRequestEnd(request *http.Request, response *http.Response
 }
 
 func (c *Client) updateHTTPTimeout() {
-	timeout := defaultHTTPTimeout
-	if c.timeout != nil {
-		timeout = *c.timeout
+	if c.timeout == nil {
+		return
 	}
 
 	if client, ok := c.client.(*http.Client); ok && client != nil {
-		client.Timeout = timeout
+		client.Timeout = *c.timeout
 	}
 }

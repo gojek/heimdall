@@ -35,6 +35,20 @@ func TestOptionsAreSet(t *testing.T) {
 	assert.Equal(t, noOfRetries, c.retryCount)
 }
 
+func TestWithClientWihhoutHTTPTimeoutShouldNotOverrideUserHTTPClientTimeout(t *testing.T) {
+	t.Parallel()
+
+	client := &http.Client{Timeout: 25 * time.Millisecond}
+
+	c := NewClient(
+		WithHTTPClient(client),
+	)
+
+	assert.Equal(t, client, c.client)
+	assert.Equal(t, 25*time.Millisecond, client.Timeout) // overrides user provided *http.Client
+	assert.Nil(t, c.timeout)
+}
+
 func TestWithHTTPTimeoutOverridesUserHTTPClientTimeout(t *testing.T) {
 	t.Parallel()
 
