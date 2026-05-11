@@ -23,7 +23,6 @@ type fallbackCtxFunc func(context.Context, error) error
 type Client struct {
 	client *httpclient.Client
 
-	timeout                time.Duration
 	hystrixTimeout         time.Duration
 	hystrixCommandName     string
 	maxConcurrentRequests  int
@@ -38,7 +37,6 @@ type Client struct {
 
 const (
 	defaultHystrixRetryCount      = 0
-	defaultHTTPTimeout            = 30 * time.Second
 	defaultHystrixTimeout         = 30 * time.Second
 	defaultMaxConcurrentRequests  = 100
 	defaultErrorPercentThreshold  = 25
@@ -56,7 +54,6 @@ var err5xx = goerrors.New("server returned 5xx status code")
 func NewClient(opts ...Option) *Client {
 	client := Client{
 		client:                 httpclient.NewClient(),
-		timeout:                defaultHTTPTimeout,
 		hystrixTimeout:         defaultHystrixTimeout,
 		maxConcurrentRequests:  defaultMaxConcurrentRequests,
 		errorPercentThreshold:  defaultErrorPercentThreshold,

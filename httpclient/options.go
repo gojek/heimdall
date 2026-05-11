@@ -9,10 +9,12 @@ import (
 // Option represents the client options
 type Option func(*Client)
 
-// WithHTTPTimeout sets hystrix timeout
+// WithHTTPTimeout sets timeout for http.Client
 func WithHTTPTimeout(timeout time.Duration) Option {
 	return func(c *Client) {
-		c.timeout = timeout
+		c.timeout = &timeout
+
+		c.updateHTTPTimeout() // hystrix.WithHTTPTimeout relies on this
 	}
 }
 
@@ -34,5 +36,7 @@ func WithRetrier(retrier heimdall.Retriable) Option {
 func WithHTTPClient(client heimdall.Doer) Option {
 	return func(c *Client) {
 		c.client = client
+
+		c.updateHTTPTimeout() // hystrix.WithHTTPTimeout relies on this
 	}
 }

@@ -23,7 +23,6 @@ func TestOptionsAreSet(t *testing.T) {
 		WithStatsDCollector("localhost:8125", "myapp.hystrix"),
 	)
 
-	assert.Equal(t, 10*time.Second, c.timeout)
 	assert.Equal(t, "test", c.hystrixCommandName)
 	assert.Equal(t, time.Duration(1100), c.hystrixTimeout)
 	assert.Equal(t, 10, c.maxConcurrentRequests)
@@ -39,7 +38,6 @@ func TestOptionsHaveDefaults(t *testing.T) {
 
 	c := NewClient(WithCommandName("test-defaults"))
 
-	assert.Equal(t, 30*time.Second, c.timeout)
 	assert.Equal(t, "test-defaults", c.hystrixCommandName)
 	assert.Equal(t, 30*time.Second, c.hystrixTimeout)
 	assert.Equal(t, 100, c.maxConcurrentRequests)
@@ -146,4 +144,36 @@ func ExampleWithStatsDCollector() {
 	}
 	fmt.Println("Response status : ", res.StatusCode)
 	// Output: Response status :  200
+}
+
+func TestWithHTTPTimeoutOverridesUserHTTPClientTimeout(t *testing.T) {
+	t.Parallel()
+
+	httpTimeout := 10 * time.Second
+
+	client := &http.Client{Timeout: 25 * time.Millisecond}
+
+	c := NewClient(
+		WithHTTPClient(client),
+		WithHTTPTimeout(httpTimeout),
+	)
+
+	assert.NotNil(t, c)
+	assert.Equal(t, httpTimeout, client.Timeout) // overrides user provided *http.Client
+}
+
+func TestWithHTTPTimeoutOverridesUserHTTPClientTimeout_InverseSeq(t *testing.T) {
+	t.Parallel()
+
+	httpTimeout := 10 * time.Second
+
+	client := &http.Client{Timeout: 25 * time.Millisecond}
+
+	c := NewClient(
+		WithHTTPTimeout(httpTimeout),
+		WithHTTPClient(client),
+	)
+
+	assert.NotNil(t, c)
+	assert.Equal(t, httpTimeout, client.Timeout) // overrides user provided *http.Client
 }

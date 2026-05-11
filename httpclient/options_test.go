@@ -29,9 +29,58 @@ func TestOptionsAreSet(t *testing.T) {
 	)
 
 	assert.Equal(t, client, c.client)
-	assert.Equal(t, httpTimeout, c.timeout)
+	assert.NotEqual(t, httpTimeout, client.client.Timeout) // can't override custom implementation
+	assert.Equal(t, httpTimeout, *c.timeout)
 	assert.Equal(t, retrier, c.retrier)
 	assert.Equal(t, noOfRetries, c.retryCount)
+}
+
+func TestWithClientWihhoutHTTPTimeoutShouldNotOverrideUserHTTPClientTimeout(t *testing.T) {
+	t.Parallel()
+
+	client := &http.Client{Timeout: 25 * time.Millisecond}
+
+	c := NewClient(
+		WithHTTPClient(client),
+	)
+
+	assert.Equal(t, client, c.client)
+	assert.Equal(t, 25*time.Millisecond, client.Timeout) // overrides user provided *http.Client
+	assert.Nil(t, c.timeout)
+}
+
+func TestWithHTTPTimeoutOverridesUserHTTPClientTimeout(t *testing.T) {
+	t.Parallel()
+
+	httpTimeout := 10 * time.Second
+
+	client := &http.Client{Timeout: 25 * time.Millisecond}
+
+	c := NewClient(
+		WithHTTPClient(client),
+		WithHTTPTimeout(httpTimeout),
+	)
+
+	assert.Equal(t, client, c.client)
+	assert.Equal(t, httpTimeout, client.Timeout) // overrides user provided *http.Client
+	assert.Equal(t, httpTimeout, *c.timeout)
+}
+
+func TestWithHTTPTimeoutOverridesUserHTTPClientTimeout_InverseSeq(t *testing.T) {
+	t.Parallel()
+
+	httpTimeout := 10 * time.Second
+
+	client := &http.Client{Timeout: 25 * time.Millisecond}
+
+	c := NewClient(
+		WithHTTPTimeout(httpTimeout),
+		WithHTTPClient(client),
+	)
+
+	assert.Equal(t, client, c.client)
+	assert.Equal(t, httpTimeout, client.Timeout) // overrides user provided *http.Client
+	assert.Equal(t, httpTimeout, *c.timeout)
 }
 
 func TestOptionsHaveDefaults(t *testing.T) {
@@ -45,7 +94,10 @@ func TestOptionsHaveDefaults(t *testing.T) {
 	c := NewClient()
 
 	assert.Equal(t, http.DefaultClient, c.client)
-	assert.Equal(t, httpTimeout, c.timeout)
+	assert.Nil(t, c.timeout)
+	httpClient, ok := c.client.(*http.Client)
+	assert.True(t, ok)
+	assert.Equal(t, httpTimeout, httpClient.Timeout)
 	assert.Equal(t, retrier, c.retrier)
 	assert.Equal(t, noOfRetries, c.retryCount)
 }
