@@ -5,6 +5,7 @@ import (
 	goerrors "errors"
 	"io"
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/afex/hystrix-go/hystrix"
@@ -29,11 +30,13 @@ type Client struct {
 	requestVolumeThreshold int
 	sleepWindow            int
 	errorPercentThreshold  int
-	retryCount             int
-	retrier                heimdall.Retriable
 	fallbackFunc           func(ctx context.Context, err error) error
-	statsD                 *plugins.StatsdCollectorConfig
-	statusCodeToRetry      map[int]struct{}
+
+	retrier        heimdall.Retriable
+	retryCount     int
+	retryableCodes []int
+
+	statsD *plugins.StatsdCollectorConfig
 }
 
 const (
@@ -49,8 +52,7 @@ const (
 )
 
 var _ heimdall.Client = (*Client)(nil)
-var err5xx = goerrors.New("server returned 5xx status code")
-var errCodeToRetry = goerrors.New("server returned status code to retry")
+var errRetryableCode = goerrors.New("server returned status code to retry")
 
 // NewClient returns a new instance of hystrix Client
 func NewClient(opts ...Option) *Client {
@@ -63,7 +65,6 @@ func NewClient(opts ...Option) *Client {
 		requestVolumeThreshold: defaultRequestVolumeThreshold,
 		retryCount:             defaultHystrixRetryCount,
 		retrier:                heimdall.NewNoRetrier(),
-		statusCodeToRetry:      make(map[int]struct{}),
 	}
 
 	for _, opt := range opts {
@@ -213,7 +214,7 @@ func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
 	}
 
 	if err != nil {
-		if errors.Is(err, err5xx) {
+		if errors.Is(err, errRetryableCode) {
 			return response, nil
 		}
 
@@ -232,21 +233,14 @@ func (hhc *Client) hystrixDo(request *http.Request) (*http.Response, error) {
 		}
 		response = resp
 
-		if response.StatusCode >= http.StatusInternalServerError {
-			return err5xx
-		}
-
-		if len(hhc.statusCodeToRetry) > 0 {
-			_, ok := hhc.statusCodeToRetry[response.StatusCode]
-			if ok {
-				return errCodeToRetry
-			}
-			return nil
+		if _, ok := slices.BinarySearch(hhc.retryableCodes, response.StatusCode); ok ||
+			response.StatusCode >= http.StatusInternalServerError {
+			return errRetryableCode
 		}
 
 		return nil
 	}, hhc.fallbackFunc)
-	if err != nil && !errors.Is(err, err5xx) { // Special handling to avoid data race conditions
+	if err != nil && !errors.Is(err, errRetryableCode) { // Special handling to avoid data race conditions
 		return nil, err
 	}
 

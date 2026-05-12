@@ -1,6 +1,7 @@
 package httpclient
 
 import (
+	"slices"
 	"time"
 
 	"github.com/gojek/heimdall/v7"
@@ -38,5 +39,15 @@ func WithHTTPClient(client heimdall.Doer) Option {
 		c.client = client
 
 		c.updateHTTPTimeout() // hystrix.WithHTTPTimeout relies on this
+	}
+}
+
+// WithRetryableStatusCodes sets status codes to be retried
+func WithRetryableStatusCodes(statusCodes ...int) Option {
+	return func(c *Client) {
+		codes := append(c.retryableCodes, statusCodes...)
+		slices.Sort(codes)
+
+		c.retryableCodes = codes
 	}
 }

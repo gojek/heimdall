@@ -2,6 +2,7 @@ package hystrix
 
 import (
 	"context"
+	"slices"
 	"time"
 
 	"github.com/afex/hystrix-go/plugins"
@@ -107,11 +108,12 @@ func WithStatsDCollector(addr, prefix string) Option {
 	}
 }
 
-// WithStatusCodeToRetry sets status codes to be retried
-func WithStatusCodeToRetry(statusCodes ...int) Option {
+// WithRetryableStatusCodes sets status codes to be retried
+func WithRetryableStatusCodes(statusCodes ...int) Option {
 	return func(c *Client) {
-		for _, code := range statusCodes {
-			c.statusCodeToRetry[code] = struct{}{}
-		}
+		codes := append(c.retryableCodes, statusCodes...)
+		slices.Sort(codes)
+
+		c.retryableCodes = codes
 	}
 }

@@ -26,6 +26,7 @@ func TestOptionsAreSet(t *testing.T) {
 		WithHTTPTimeout(httpTimeout),
 		WithRetrier(retrier),
 		WithRetryCount(noOfRetries),
+		WithRetryableStatusCodes(400, 201, 424),
 	)
 
 	assert.Equal(t, client, c.client)
@@ -33,6 +34,7 @@ func TestOptionsAreSet(t *testing.T) {
 	assert.Equal(t, httpTimeout, *c.timeout)
 	assert.Equal(t, retrier, c.retrier)
 	assert.Equal(t, noOfRetries, c.retryCount)
+	assert.Equal(t, []int{201, 400, 424}, c.retryableCodes)
 }
 
 func TestWithClientWihhoutHTTPTimeoutShouldNotOverrideUserHTTPClientTimeout(t *testing.T) {

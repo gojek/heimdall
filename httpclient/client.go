@@ -3,6 +3,7 @@ package httpclient
 import (
 	"io"
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/gojek/heimdall/v7"
@@ -12,11 +13,13 @@ import (
 
 // Client is the http client implementation
 type Client struct {
-	client     heimdall.Doer
-	retrier    heimdall.Retriable
-	plugins    []heimdall.Plugin
-	timeout    *time.Duration
-	retryCount int
+	client  heimdall.Doer
+	plugins []heimdall.Plugin
+	timeout *time.Duration
+
+	retrier        heimdall.Retriable
+	retryCount     int
+	retryableCodes []int
 }
 
 const (
@@ -171,7 +174,8 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 		}
 		c.reportRequestEnd(request, response)
 
-		if response.StatusCode >= http.StatusInternalServerError {
+		if _, ok := slices.BinarySearch(c.retryableCodes, response.StatusCode); ok ||
+			response.StatusCode >= http.StatusInternalServerError {
 			if internal.IsCtxDone(request.Context()) {
 				break
 			}
