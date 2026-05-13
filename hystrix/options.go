@@ -109,6 +109,7 @@ func WithStatsDCollector(addr, prefix string) Option {
 }
 
 // WithRetryableStatusCodes sets status codes to be retried
+// Note: All 5xx status codes are always eligible for retry, thus not required for WithRetryableStatusCodes option.
 func WithRetryableStatusCodes(statusCodes ...int) Option {
 	return func(c *Client) {
 		codes := append(c.retryableCodes, statusCodes...)
