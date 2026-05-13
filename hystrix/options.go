@@ -2,6 +2,7 @@ package hystrix
 
 import (
 	"context"
+	"slices"
 	"time"
 
 	"github.com/afex/hystrix-go/plugins"
@@ -104,5 +105,16 @@ func WithHTTPClient(client heimdall.Doer) Option {
 func WithStatsDCollector(addr, prefix string) Option {
 	return func(c *Client) {
 		c.statsD = &plugins.StatsdCollectorConfig{StatsdAddr: addr, Prefix: prefix}
+	}
+}
+
+// WithRetryableStatusCodes sets status codes to be retried
+// Note: All 5xx status codes are always eligible for retry, thus not required for WithRetryableStatusCodes option.
+func WithRetryableStatusCodes(statusCodes ...int) Option {
+	return func(c *Client) {
+		codes := append(c.retryableCodes, statusCodes...)
+		slices.Sort(codes)
+
+		c.retryableCodes = codes
 	}
 }

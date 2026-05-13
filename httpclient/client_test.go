@@ -736,3 +736,35 @@ func TestHTTPClientMultiRetryOnTimeout(t *testing.T) {
 		assert.ErrorIs(t, urlErr.Err, context.DeadlineExceeded)
 	}
 }
+
+func TestHTTPClientRetriesOnSpecificStatusCodes(t *testing.T) {
+	t.Parallel()
+
+	client := NewClient(
+		WithHTTPTimeout(10*time.Millisecond),
+		WithRetryableStatusCodes(424, 400),
+		WithRetryCount(3),
+	)
+
+	counter := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		counter++
+		if counter < 2 {
+			w.WriteHeader(http.StatusBadRequest)
+		} else {
+			w.WriteHeader(http.StatusOK)
+		}
+		_, _ = w.Write([]byte(`{ "response": "ok" }`))
+	}))
+	defer server.Close()
+
+	req, err := http.NewRequest(http.MethodGet, server.URL, nil)
+	require.NoError(t, err)
+	response, err := client.Do(req)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, response.StatusCode)
+
+	body, err := io.ReadAll(response.Body)
+	require.NoError(t, err)
+	assert.Equal(t, "{ \"response\": \"ok\" }", string(body))
+}
