@@ -1,6 +1,7 @@
 package httpclient
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"slices"
@@ -17,9 +18,10 @@ type Client struct {
 	plugins []heimdall.Plugin
 	timeout *time.Duration
 
-	retrier        heimdall.Retriable
-	retryCount     int
-	retryableCodes []int
+	retrier          heimdall.Retriable
+	retryCount       int
+	retryableCodes   []int
+	retryErrorBudget *internal.ErrorBudget
 }
 
 const (
@@ -167,7 +169,7 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 		if err != nil {
 			errs = append(errs, err)
 			c.reportError(request, err)
-			if internal.IsCtxDone(request.Context()) {
+			if c.skipRetry(request.Context()) {
 				break
 			}
 			continue
@@ -176,18 +178,27 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 
 		if _, ok := slices.BinarySearch(c.retryableCodes, response.StatusCode); ok ||
 			response.StatusCode >= http.StatusInternalServerError {
-			if internal.IsCtxDone(request.Context()) {
+			if c.skipRetry(request.Context()) {
 				break
 			}
-
 			continue
 		}
 
 		errs = nil // Clear errors if any iteration succeeds
+		_ = c.retryErrorBudget.Success()
 		break
 	}
 
 	return response, internal.BuildMultiError(errs)
+}
+
+func (c *Client) skipRetry(ctx context.Context) bool {
+	if internal.IsCtxDone(ctx) {
+		_ = c.retryErrorBudget.Success()
+		return true
+	}
+
+	return c.retryErrorBudget.Failure()
 }
 
 func (c *Client) reportRequestStart(request *http.Request) {

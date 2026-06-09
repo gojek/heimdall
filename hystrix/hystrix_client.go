@@ -32,9 +32,10 @@ type Client struct {
 	errorPercentThreshold  int
 	fallbackFunc           func(ctx context.Context, err error) error
 
-	retrier        heimdall.Retriable
-	retryCount     int
-	retryableCodes []int
+	retrier          heimdall.Retriable
+	retryCount       int
+	retryableCodes   []int
+	retryErrorBudget *internal.ErrorBudget
 
 	statsD *plugins.StatsdCollectorConfig
 }
@@ -209,6 +210,11 @@ func (hhc *Client) Do(request *http.Request) (*http.Response, error) {
 
 		response, err = hhc.hystrixDo(request)
 		if err == nil || internal.IsCtxDone(request.Context()) {
+			_ = hhc.retryErrorBudget.Success()
+			break
+		}
+
+		if hhc.retryErrorBudget.Failure() {
 			break
 		}
 	}

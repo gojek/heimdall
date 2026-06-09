@@ -334,6 +334,58 @@ func TestHystrixHTTPClientRetriesGetOnFailure5xx(t *testing.T) {
 	assert.Equal(t, "{ \"response\": \"something went wrong\" }", respBody(t, response))
 }
 
+func TestHystrixHTTPClientRetriesWithBudgetGetOnFailure5xx(t *testing.T) {
+	t.Parallel()
+
+	count := 0
+	backoffInterval := 1 * time.Millisecond
+	maximumJitterInterval := 1 * time.Millisecond
+
+	client := NewClient(
+		WithHTTPTimeout(10*time.Millisecond),
+		WithCommandName("some_command_name_5xx_with_budget"),
+		WithHystrixTimeout(10*time.Millisecond),
+		WithMaxConcurrentRequests(100),
+		WithErrorPercentThreshold(25),
+		WithSleepWindow(100),
+		WithRequestVolumeThreshold(100),
+		WithRetryCount(4),
+		WithRetryErrorBudgetToken(100, 0.1),
+		WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval))),
+	)
+
+	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte(`{ "response": "something went wrong" }`))
+		count = count + 1
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(dummyHandler))
+	defer server.Close()
+
+	for attempt := range 10 { // under budget
+		currCount := count
+		response, err := client.Get(server.URL, http.Header{})
+		require.NoError(t, err)
+
+		assert.Equal(t, 5, count-currCount, "attempt #%d", attempt)
+		assert.NotNil(t, response)
+		assert.Equal(t, http.StatusInternalServerError, response.StatusCode)
+		assert.Equal(t, "{ \"response\": \"something went wrong\" }", respBody(t, response))
+	}
+
+	for attempt := range 10 { // over budget, no retry
+		currCount := count
+		response, err := client.Get(server.URL, http.Header{})
+		require.NoError(t, err)
+
+		assert.Equal(t, 1, count-currCount, "attempt #%d", attempt)
+		assert.NotNil(t, response)
+		assert.Equal(t, http.StatusInternalServerError, response.StatusCode)
+		assert.Equal(t, "{ \"response\": \"something went wrong\" }", respBody(t, response))
+	}
+}
+
 func BenchmarkHystrixHTTPClientRetriesGetOnFailure(b *testing.B) {
 	backoffInterval := 1 * time.Millisecond
 	maximumJitterInterval := 1 * time.Millisecond
