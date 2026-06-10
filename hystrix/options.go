@@ -8,6 +8,7 @@ import (
 	"github.com/afex/hystrix-go/plugins"
 	"github.com/gojek/heimdall/v7"
 	"github.com/gojek/heimdall/v7/httpclient"
+	"github.com/gojek/heimdall/v7/internal"
 )
 
 // Option represents the hystrix client options
@@ -116,5 +117,36 @@ func WithRetryableStatusCodes(statusCodes ...int) Option {
 		slices.Sort(codes)
 
 		c.retryableCodes = codes
+	}
+}
+
+// WithRetryErrorBudgetToken creates a weighted token retry error budget with the following token details.
+//
+//	maxToken: The maximum/initial token value which is used to calculate token threshold(i.e. maxToken/2)
+//	tokenRatio: The allowed ratio of failure in comparison to success.
+func WithRetryErrorBudgetToken(maxToken int32, tokenRatio float32) Option {
+	return func(c *Client) {
+		c.retryErrorBudget = internal.NewTokenErrorBudget(maxToken, tokenRatio)
+	}
+}
+
+// WithRetryErrorBudgetPercent creates a weighted token retry error budget with the following failure details.
+//
+//	minFailureVolume: The minimum failure required.
+//	failurePercent: The failure percentage (0-100).
+//
+// Note: To determine if budget is exceeded we use recent event which satisfies following
+//
+//	failureEvent <= maxFailureEvent
+//	successEvent = (maxFailureEvent-failureEvent) / allowedSuccessPerFailure
+//	totalEvent = failureEvent + successEvent
+//
+// Where
+//
+//	maxFailureEvent = minFailureVolume * 2
+//	allowedSuccessPerFailure = (100 - failurePercent) / failurePercent
+func WithRetryErrorBudgetPercent(minFailureVolume int32, failurePercent float32) Option {
+	return func(c *Client) {
+		c.retryErrorBudget = internal.NewPercentErrorBudget(minFailureVolume, failurePercent)
 	}
 }
