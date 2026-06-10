@@ -1,7 +1,6 @@
 package internal_test
 
 import (
-	"math"
 	"strconv"
 	"testing"
 
@@ -12,30 +11,49 @@ import (
 func Test_ErrorBudget_VaryingErrorRate(t *testing.T) {
 	t.Parallel()
 
-	const volume = 1000
+	const minFailureVolume = 1000
 	const budgetFailurePercent = 10
-	var budgetSuccessPerFailure = (100 - budgetFailurePercent) / budgetFailurePercent
-
-	budget := internal.NewPercentErrorBudget(volume, budgetFailurePercent)
 
 	// Note: given budgetSuccessPerFailure is not normalised to the precision supported,
 	// we expect few slightly off calculation and we will skip them.
 
-	// 100% failure rate
-	testSuccessPerFailure(t, budgetSuccessPerFailure, volume, 0, budget)
+	t.Run("100% failure rate", func(t *testing.T) {
+		t.Parallel()
+		// failureNeededToExceedBudget same as minFailureVolume
+		testSuccessPerFailure(t, budgetFailurePercent, minFailureVolume, 0, 1000)
+	})
 
-	// 50% failure rate
-	testSuccessPerFailure(t, budgetSuccessPerFailure, volume, 1, budget)
+	t.Run("50% failure rate", func(t *testing.T) {
+		t.Parallel()
+		// Default state: 9000 preceding success events (i.e. (100 - budgetFailurePercent) * minFailureVolume)
+		// failureNeededToExceedBudget = 1125, new events needed = 2250
+		// effective failure rate(including default state): 1125/(2250+9000) = 10%
+		testSuccessPerFailure(t, budgetFailurePercent, minFailureVolume, 1, 1125)
+	})
 
-	// 33% error rate
-	testSuccessPerFailure(t, budgetSuccessPerFailure, volume, 2, budget)
+	t.Run("33% failure rate", func(t *testing.T) {
+		t.Parallel()
+		// Default state: 9000 preceding success events (i.e. (100 - budgetFailurePercent) * minFailureVolume)
+		// failureNeededToExceedBudget = 1286, new events needed = 3858
+		// effective failure rate(including default state): 1286/(3858+9000) = ~10%
+		testSuccessPerFailure(t, budgetFailurePercent, minFailureVolume, 2, 1286)
+	})
 
-	// 25% error rate
-	testSuccessPerFailure(t, budgetSuccessPerFailure, volume, 3, budget)
+	t.Run("25% failure rate", func(t *testing.T) {
+		t.Parallel()
+		// Default state: 9000 preceding success events (i.e. (100 - budgetFailurePercent) * minFailureVolume)
+		// failureNeededToExceedBudget = 1500, new events needed = 6000
+		// effective failure rate(including default state): 1500/(6000+9000) = 10%
+		testSuccessPerFailure(t, budgetFailurePercent, minFailureVolume, 3, 1500)
+	})
 
-	// 20% error rate
-	testSuccessPerFailure(t, budgetSuccessPerFailure, volume, 4, budget)
-
+	t.Run("20% failure rate", func(t *testing.T) {
+		t.Parallel()
+		// Default state: 9000 preceding success events (i.e. (100 - budgetFailurePercent) * minFailureVolume)
+		// failureNeededToExceedBudget = 1800, new events needed = 9000
+		// effective failure rate(including default state): 1800/(9000+9000) = 10%
+		testSuccessPerFailure(t, budgetFailurePercent, minFailureVolume, 4, 1800)
+	})
 }
 
 func Test_ErrorBudget_BudgetedFailurePercentZeroOrLower(t *testing.T) {
@@ -125,13 +143,11 @@ func Test_ErrorBudget_Nil(t *testing.T) {
 	eb.Reset()
 }
 
-func testSuccessPerFailure(t *testing.T, budgetSuccessPerFailure int, volume int, expectedSuccessPerFailure int, budget *internal.ErrorBudget) {
+func testSuccessPerFailure(t *testing.T, budgetFailurePercent float32, volume int32, expectedSuccessPerFailure int32, failureNeededToExceedBudget int) {
 	t.Helper()
+	budget := internal.NewPercentErrorBudget(volume, budgetFailurePercent)
 
-	// budgetSuccessPerFailure is not normalised to the precision supported,
-	// so there will be edge case in the calculation
-	cnt := failureNeededToExceedBudget(budgetSuccessPerFailure, volume, expectedSuccessPerFailure)
-	for range cnt - 1 {
+	for range failureNeededToExceedBudget - 1 {
 		require.False(t, budget.Failure())
 		for range expectedSuccessPerFailure {
 			require.False(t, budget.Success())
@@ -141,11 +157,4 @@ func testSuccessPerFailure(t *testing.T, budgetSuccessPerFailure int, volume int
 	require.True(t, budget.Failure())
 	require.True(t, budget.IsOverBudget())
 	budget.Reset()
-}
-
-func failureNeededToExceedBudget(budgetSuccessPerFailure int, volume int, expectedSuccessPerFailure int) int64 {
-	// Given default state(/state after long 100% success rate) of the budget tracks accounts for budgetSuccessPerFailure*volume success event
-	// We need to adjust our calculation to account for the fact that we are not starting from threshold
-
-	return int64(math.Ceil(float64(budgetSuccessPerFailure*volume) / float64(budgetSuccessPerFailure-expectedSuccessPerFailure)))
 }
