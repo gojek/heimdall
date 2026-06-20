@@ -691,6 +691,7 @@ func TestHTTPClientDoContextCancelledBeforeRetry(t *testing.T) {
 	dummyHandler := func(w http.ResponseWriter, r *http.Request) {
 		cancel() // Cancel immediately
 		count.Add(1)
+		<-r.Context().Done() // Wait for cancelation to propagate
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 
@@ -703,7 +704,7 @@ func TestHTTPClientDoContextCancelledBeforeRetry(t *testing.T) {
 
 	_, err = client.Do(req)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), context.Canceled.Error())
+	assert.ErrorIs(t, err, context.Canceled)
 	assert.Equal(t, int32(1), count.Load())
 }
 

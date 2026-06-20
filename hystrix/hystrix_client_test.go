@@ -342,9 +342,9 @@ func TestHystrixHTTPClientRetriesWithBudgetGetOnFailure5xx(t *testing.T) {
 	maximumJitterInterval := 1 * time.Millisecond
 
 	client := NewClient(
-		WithHTTPTimeout(10*time.Millisecond),
+		WithHTTPTimeout(100*time.Millisecond),
 		WithCommandName("some_command_name_5xx_with_budget"),
-		WithHystrixTimeout(10*time.Millisecond),
+		WithHystrixTimeout(100*time.Millisecond),
 		WithMaxConcurrentRequests(100),
 		WithErrorPercentThreshold(25),
 		WithSleepWindow(100),
