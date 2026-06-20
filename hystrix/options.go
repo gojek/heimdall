@@ -35,28 +35,33 @@ func WithHystrixTimeout(timeout time.Duration) Option {
 	}
 }
 
-// WithMaxConcurrentRequests sets hystrix max concurrent requests
+// WithMaxConcurrentRequests sets the maximum number of concurrent requests
+// allowed to the command before further requests are short-circuited.
 func WithMaxConcurrentRequests(maxConcurrentRequests int) Option {
 	return func(c *Client) {
 		c.maxConcurrentRequests = maxConcurrentRequests
 	}
 }
 
-// WithRequestVolumeThreshold sets hystrix request volume threshold
+// WithRequestVolumeThreshold sets the minimum number of requests in a rolling
+// window needed before the circuit breaker can trip.
 func WithRequestVolumeThreshold(requestVolumeThreshold int) Option {
 	return func(c *Client) {
 		c.requestVolumeThreshold = requestVolumeThreshold
 	}
 }
 
-// WithSleepWindow sets hystrix sleep window
+// WithSleepWindow sets how long, in milliseconds, to wait after the circuit
+// opens before allowing a single retry to test whether the backend has recovered.
+// The value is passed through to hystrix unchanged (hystrix defaults to 5000ms).
 func WithSleepWindow(sleepWindow int) Option {
 	return func(c *Client) {
 		c.sleepWindow = sleepWindow
 	}
 }
 
-// WithErrorPercentThreshold sets hystrix error percent threshold
+// WithErrorPercentThreshold sets the error percentage (0-100) at or above which,
+// once the request volume threshold is met, the circuit breaker opens.
 func WithErrorPercentThreshold(errorPercentThreshold int) Option {
 	return func(c *Client) {
 		c.errorPercentThreshold = errorPercentThreshold
