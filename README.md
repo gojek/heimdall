@@ -4,7 +4,6 @@
 <p align="center">
   <a href="https://github.com/gojek/heimdall/actions"><img src="https://github.com/gojek/heimdall/actions/workflows/ci.yml/badge.svg" alt="Build Status"></img></a>
   <a href="https://goreportcard.com/report/github.com/gojek/heimdall"><img src="https://goreportcard.com/badge/github.com/gojek/heimdall"></img></a>
-  <a href="https://golangci.com"><img src="https://golangci.com/badges/github.com/gojek/heimdall.svg"></img></a>
   <a href="https://coveralls.io/github/gojek/heimdall?branch=master"><img src="https://coveralls.io/repos/github/gojek/heimdall/badge.svg?branch=master"></img></a>
 </p>
 
@@ -61,7 +60,7 @@ if err != nil{
 }
 
 // Heimdall returns the standard *http.Response object
-body, err := ioutil.ReadAll(res.Body)
+body, err := io.ReadAll(res.Body)
 fmt.Println(string(body))
 ```
 
@@ -79,7 +78,7 @@ if err != nil {
 	panic(err)
 }
 
-body, err := ioutil.ReadAll(res.Body)
+body, err := io.ReadAll(res.Body)
 fmt.Println(string(body))
 ```
 
@@ -118,7 +117,7 @@ You can use the `hystrix.NewClient` function to create a client wrapped in a hys
 The fallback function will trigger when your code returns an error, or whenever it is unable to complete based on a variety of [health checks](https://github.com/Netflix/Hystrix/wiki/How-it-Works).
 
 **How your fallback function should look like**
-you should pass in a function whose signature looks like following
+you should pass in a function whose signature looks like the following
 
 ```go
 func(err error) error {
@@ -133,8 +132,8 @@ func(err error) error {
 ```go
 // Create a new fallback function
 fallbackFn := func(err error) error {
-    _, err := http.Post("post_to_channel_two")
-    return err
+    _, postErr := http.Post("http://post_to_channel_two")
+    return postErr 
 }
 
 timeout := 10 * time.Millisecond
@@ -149,7 +148,7 @@ client := hystrix.NewClient(
 	hystrix.WithSleepWindow(10),
 	hystrix.WithRequestVolumeThreshold(10),
 	hystrix.WithFallbackFunc(fallbackFn),
-})
+)
 
 // The rest is the same as the previous example
 ```
@@ -160,7 +159,7 @@ In the above example, the `fallbackFunc` is a function which posts to channel tw
 
 ```go
 // First set a backoff mechanism. Constant backoff increases the backoff at a constant rate
-backoffInterval := 2 * time.Millisecond
+backoffInterval := 500 * time.Millisecond
 // Define a maximum jitter interval. It must be more than 1*time.Millisecond
 maximumJitterInterval := 5 * time.Millisecond
 
@@ -170,7 +169,7 @@ backoff := heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval)
 retrier := heimdall.NewRetrier(backoff)
 
 timeout := 1000 * time.Millisecond
-// Create a new client, sets the retry mechanism, and the number of times you would like to retry
+// Create a new client, set the retry mechanism, and the number of times you would like to retry
 client := httpclient.NewClient(
 	httpclient.WithHTTPTimeout(timeout),
 	httpclient.WithRetrier(retrier),
@@ -179,23 +178,23 @@ client := httpclient.NewClient(
 
 // The rest is the same as the first example
 ```
-Or create client with exponential backoff
+Or create a client with exponential backoff
 
 ```go
-// First set a backoff mechanism. Exponential Backoff increases the backoff at a exponential rate
+// First set a backoff mechanism. Exponential backoff increases the backoff at an exponential rate
 
-initalTimeout := 2*time.Millisecond            // Inital timeout
-maxTimeout := 9*time.Millisecond               // Max time out
-exponentFactor := 2                            // Multiplier
-maximumJitterInterval := 2*time.Millisecond    // Max jitter interval. It must be more than 1*time.Millisecond
+initialTimeout := 2 * time.Millisecond         // Initial timeout
+maxTimeout := 9 * time.Millisecond             // Max timeout
+exponentFactor := float64(2)                 // Multiplier
+maximumJitterInterval := 2 * time.Millisecond  // Max jitter interval. It must be more than 1 * time.Millisecond
 
-backoff := heimdall.NewExponentialBackoff(initalTimeout, maxTimeout, exponentFactor, maximumJitterInterval)
+backoff := heimdall.NewExponentialBackoff(initialTimeout, maxTimeout, exponentFactor, maximumJitterInterval)
 
 // Create a new retry mechanism with the backoff
 retrier := heimdall.NewRetrier(backoff)
 
 timeout := 1000 * time.Millisecond
-// Create a new client, sets the retry mechanism, and the number of times you would like to retry
+// Create a new client, set the retry mechanism, and the number of times you would like to retry
 client := httpclient.NewClient(
 	httpclient.WithHTTPTimeout(timeout),
 	httpclient.WithRetrier(retrier),
@@ -205,7 +204,7 @@ client := httpclient.NewClient(
 // The rest is the same as the first example
 ```
 
-This will create an HTTP client which will retry every `500` milliseconds incase the request fails. The library also comes with an [Exponential Backoff](https://pkg.go.dev/github.com/gojek/heimdall#NewExponentialBackoff)
+This will create an HTTP client which will retry every `500` milliseconds in case the request fails. The library also comes with an [Exponential Backoff](https://pkg.go.dev/github.com/gojek/heimdall/v7#NewExponentialBackoff).
 
 ### Custom retry mechanisms
 
@@ -241,7 +240,7 @@ backoff := &linearBackoff{100}
 retrier := heimdall.NewRetrier(backoff)
 
 timeout := 1000 * time.Millisecond
-// Create a new client, sets the retry mechanism, and the number of times you would like to retry
+// Create a new client, set the retry mechanism, and the number of times you would like to retry
 client := httpclient.NewClient(
 	httpclient.WithHTTPTimeout(timeout),
 	httpclient.WithRetrier(retrier),
@@ -253,7 +252,7 @@ client := httpclient.NewClient(
 
 Heimdall also allows you to simply pass a function that returns the retry timeout. This can be used to create the client, like:
 ```go
-linearRetrier := NewRetrierFunc(func(retry int) time.Duration {
+linearRetrier := heimdall.NewRetrierFunc(func(retry int) time.Duration {
 	if retry <= 0 {
 		return 0 * time.Millisecond
 	}
@@ -272,7 +271,7 @@ client := httpclient.NewClient(
 
 Heimdall supports custom HTTP clients. This is useful if you are using a client imported from another library and/or wish to implement custom logging, cookies, headers etc for each request that you make with your client.
 
-Under the hood, the `httpClient` struct now accepts `Doer`, which is the standard interface implemented by HTTP clients (including the standard library's `net/*http.Client`)
+Under the hood, the `Client` struct now accepts `Doer`, which is the standard interface implemented by HTTP clients (including the standard library's `net/*http.Client`)
 
 Let's say we wish to add authorization headers to all our requests.
 
@@ -280,7 +279,7 @@ We can define our client `myHTTPClient`
 
 ```go
 type myHTTPClient struct {
-	client http.Client
+	client *http.Client
 }
 
 func (c *myHTTPClient) Do(request *http.Request) (*http.Response, error) {
@@ -296,8 +295,8 @@ Now, each sent request will have the `Authorization` header to use HTTP basic au
 This can be done for the hystrix client as well
 
 ```go
-client := httpclient.NewClient(
-	httpclient.WithHTTPClient(&myHTTPClient{
+client := hystrix.NewClient(
+	hystrix.WithHTTPClient(&myHTTPClient{
 		client: http.Client{Timeout: 25 * time.Millisecond},
 	}),
 )
@@ -309,12 +308,12 @@ client := httpclient.NewClient(
 
 To add a plugin to an existing client, use the `AddPlugin` method of the client. 
 
-An example, with the [request logger plugin](/plugins/request_logger.go):
+An example, with the [request logger plugin](plugins/request_logger.go):
 
 ```go
 // import "github.com/gojek/heimdall/v7/plugins"
 
-client := heimdall.NewHTTPClient(timeout)
+client := httpclient.NewClient(httpclient.WithHTTPTimeout(timeout))
 requestLogger := plugins.NewRequestLogger(nil, nil)
 client.AddPlugin(requestLogger)
 // use the client as before
@@ -329,14 +328,14 @@ if err != nil {
 // to STDOUT
 ```
 
-A plugin is an interface whose methods get called during key events in a requests lifecycle:
+A plugin is an interface whose methods get called during key events in a request's lifecycle:
 
 - `OnRequestStart` is called just before the request is made
 - `OnRequestEnd` is called once the request has successfully executed
-- `OnError` is called is the request failed
+- `OnError` is called if the request fails
 
-Each method is called with the request object as an argument, with `OnRequestEnd`, and `OnError` additionally being called with the response and error instances respectively.
-For a simple example on how to write plugins, look at the [request logger plugin](/plugins/request_logger.go).
+Each method is called with the request object as an argument, with `OnRequestEnd` and `OnError` additionally being called with the response and error instances, respectively.
+For a simple example on how to write plugins, look at the [request logger plugin](plugins/request_logger.go).
 
 ## Documentation
 
@@ -355,25 +354,25 @@ Yes, you can. Heimdall implements the standard [HTTP Do](https://golang.org/pkg/
 If you are making a large number of HTTP requests, or if you make requests among multiple distributed nodes, and wish to make your systems more fault tolerant, then Heimdall was made for you.
 
 Heimdall makes use of [multiple mechanisms](https://medium.com/@sohamkamani/how-to-handle-microservice-communication-at-scale-a6fb0ee0ed7) to make HTTP requests more fault tolerant:
-1. Retries - If a request fails, Heimdall retries behind the scenes, and returns the result if one of the retries are successful.
+1. Retries - If a request fails, Heimdall retries behind the scenes, and returns the result if one of the retries is successful.
 2. Circuit breaking - If Heimdall detects that too many of your requests are failing, or that the number of requests sent are above a configured threshold, then it "opens the circuit" for a short period of time, which prevents any more requests from being made. _This gives your downstream systems time to recover._
 
 ---
 
 **So does this mean that I shouldn't use Heimdall for small scale applications?**
 
-Although Heimdall was made keeping large scale systems in mind, it's interface is simple enough to be used for any type of systems. In fact, we use it for our pet projects as well. Even if you don't require retries or circuit breaking features, the [simpler HTTP client](https://github.com/gojek/heimdall#making-a-simple-get-request) provides sensible defaults with a simpler interface, and can be upgraded easily should the need arise.
+Although Heimdall was made keeping large scale systems in mind, its interface is simple enough to be used for any type of system. In fact, we use it for our pet projects as well. Even if you don't require retries or circuit breaking features, the [simpler HTTP client](https://github.com/gojek/heimdall#making-a-simple-get-request) provides sensible defaults with a simpler interface, and can be upgraded easily should the need arise.
 
 ---
 
 **Can I contribute to make Heimdall better?**
 
-[Please do!](https://github.com/gojek/heimdall/blob/master/CONTRIBUTING.md) We are looking for any kind of contribution to improve Heimdalls core funtionality and documentation. When in doubt, make a PR!
+[Please do!](https://github.com/gojek/heimdall/blob/master/CONTRIBUTING.md) We are looking for any kind of contribution to improve Heimdall's core functionality and documentation. When in doubt, make a PR!
 
 ## License
 
 ```
-Copyright 2018-2020, GO-JEK Tech (http://gojek.tech)
+Copyright 2018-2026, Gojek Tech (http://gojek.tech)
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
