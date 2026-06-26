@@ -5,11 +5,9 @@ import (
 	"slices"
 	"time"
 
-	metricCollector "github.com/afex/hystrix-go/hystrix/metric_collector"
-	"github.com/afex/hystrix-go/plugins"
-	"github.com/gojek/heimdall/v7"
-	"github.com/gojek/heimdall/v7/httpclient"
-	"github.com/gojek/heimdall/v7/internal"
+	"github.com/gojek/heimdall/v8"
+	"github.com/gojek/heimdall/v8/httpclient"
+	"github.com/gojek/heimdall/v8/internal"
 )
 
 // Option represents the hystrix client options
@@ -51,7 +49,7 @@ func WithRequestVolumeThreshold(requestVolumeThreshold int) Option {
 }
 
 // WithSleepWindow sets hystrix sleep window
-func WithSleepWindow(sleepWindow int) Option {
+func WithSleepWindow(sleepWindow time.Duration) Option {
 	return func(c *Client) {
 		c.sleepWindow = sleepWindow
 	}
@@ -101,23 +99,6 @@ func WithHTTPClient(client heimdall.Doer) Option {
 		opt := httpclient.WithHTTPClient(client)
 		opt(c.client)
 	}
-}
-
-// WithStatsDCollector exports hystrix metrics to a statsD backend
-//
-// Deprecated: hystrix plugin should only be registered once before any hystrix command is executed.
-// Register plugins.InitializeStatsdCollector directly to continue using the functionality
-func WithStatsDCollector(addr, prefix string) Option {
-	collector, err := plugins.InitializeStatsdCollector(&plugins.StatsdCollectorConfig{
-		StatsdAddr: addr,
-		Prefix:     prefix,
-	})
-	if err != nil {
-		panic(err)
-	}
-	metricCollector.Registry.Register(collector.NewStatsdCollector)
-
-	return func(_ *Client) {}
 }
 
 // WithRetryableStatusCodes sets status codes to be retried

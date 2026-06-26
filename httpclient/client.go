@@ -2,14 +2,14 @@ package httpclient
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"slices"
 	"time"
 
-	"github.com/gojek/heimdall/v7"
-	"github.com/gojek/heimdall/v7/internal"
-	"github.com/pkg/errors"
+	"github.com/gojek/heimdall/v8"
+	"github.com/gojek/heimdall/v8/internal"
 )
 
 // Client is the http client implementation
@@ -58,7 +58,7 @@ func (c *Client) Get(url string, headers http.Header) (*http.Response, error) {
 	var response *http.Response
 	request, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return response, errors.Wrap(err, "GET - request creation failed")
+		return response, fmt.Errorf("GET - request creation failed: %w", err)
 	}
 
 	request.Header = headers
@@ -71,7 +71,7 @@ func (c *Client) Post(url string, body io.Reader, headers http.Header) (*http.Re
 	var response *http.Response
 	request, err := http.NewRequest(http.MethodPost, url, body)
 	if err != nil {
-		return response, errors.Wrap(err, "POST - request creation failed")
+		return response, fmt.Errorf("POST - request creation failed: %w", err)
 	}
 
 	request.Header = headers
@@ -84,7 +84,7 @@ func (c *Client) Put(url string, body io.Reader, headers http.Header) (*http.Res
 	var response *http.Response
 	request, err := http.NewRequest(http.MethodPut, url, body)
 	if err != nil {
-		return response, errors.Wrap(err, "PUT - request creation failed")
+		return response, fmt.Errorf("PUT - request creation failed: %w", err)
 	}
 
 	request.Header = headers
@@ -97,7 +97,7 @@ func (c *Client) Patch(url string, body io.Reader, headers http.Header) (*http.R
 	var response *http.Response
 	request, err := http.NewRequest(http.MethodPatch, url, body)
 	if err != nil {
-		return response, errors.Wrap(err, "PATCH - request creation failed")
+		return response, fmt.Errorf("PATCH - request creation failed: %w", err)
 	}
 
 	request.Header = headers
@@ -110,7 +110,7 @@ func (c *Client) Delete(url string, headers http.Header) (*http.Response, error)
 	var response *http.Response
 	request, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
-		return response, errors.Wrap(err, "DELETE - request creation failed")
+		return response, fmt.Errorf("DELETE - request creation failed: %w", err)
 	}
 
 	request.Header = headers

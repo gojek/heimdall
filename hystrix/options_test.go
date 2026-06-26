@@ -18,7 +18,7 @@ func TestOptionsAreSet(t *testing.T) {
 		WithHystrixTimeout(1100),
 		WithMaxConcurrentRequests(10),
 		WithErrorPercentThreshold(30),
-		WithSleepWindow(5),
+		WithSleepWindow(5*time.Millisecond),
 		WithRequestVolumeThreshold(5),
 		WithRetryableStatusCodes(400, 200, 424),
 	)
@@ -27,7 +27,7 @@ func TestOptionsAreSet(t *testing.T) {
 	assert.Equal(t, time.Duration(1100), c.hystrixTimeout)
 	assert.Equal(t, 10, c.maxConcurrentRequests)
 	assert.Equal(t, 30, c.errorPercentThreshold)
-	assert.Equal(t, 5, c.sleepWindow)
+	assert.Equal(t, 5*time.Millisecond, c.sleepWindow)
 	assert.Equal(t, 5, c.requestVolumeThreshold)
 	assert.Equal(t, []int{200, 400, 424}, c.retryableCodes)
 }
@@ -41,7 +41,7 @@ func TestOptionsHaveDefaults(t *testing.T) {
 	assert.Equal(t, 30*time.Second, c.hystrixTimeout)
 	assert.Equal(t, 100, c.maxConcurrentRequests)
 	assert.Equal(t, 25, c.errorPercentThreshold)
-	assert.Equal(t, 10, c.sleepWindow)
+	assert.Equal(t, 10*time.Millisecond, c.sleepWindow)
 	assert.Equal(t, 10, c.requestVolumeThreshold)
 }
 

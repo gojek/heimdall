@@ -8,7 +8,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/gojek/heimdall/v7"
+	"github.com/gojek/heimdall/v8"
 )
 
 type ctxKey string

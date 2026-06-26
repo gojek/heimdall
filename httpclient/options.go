@@ -4,8 +4,8 @@ import (
 	"slices"
 	"time"
 
-	"github.com/gojek/heimdall/v7"
-	"github.com/gojek/heimdall/v7/internal"
+	"github.com/gojek/heimdall/v8"
+	"github.com/gojek/heimdall/v8/internal"
 )
 
 // Option represents the client options

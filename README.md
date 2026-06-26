@@ -32,7 +32,7 @@ All HTTP methods are exposed as a fluent interface.
 
 ## Installation
 ```
-go get -u github.com/gojek/heimdall/v7
+go get -u github.com/gojek/heimdall/v8
 ```
 
 ## Usage
@@ -42,7 +42,7 @@ go get -u github.com/gojek/heimdall/v7
 This package can be used by adding the following import statement to your `.go` files.
 
 ```go
-import "github.com/gojek/heimdall/v7/httpclient" 
+import "github.com/gojek/heimdall/v8/httpclient"
 ```
 
 ### Making a simple `GET` request
@@ -87,7 +87,7 @@ fmt.Println(string(body))
 To import hystrix package of heimdall.
 
 ```go
-import "github.com/gojek/heimdall/v7/hystrix"
+import "github.com/gojek/heimdall/v8/hystrix"
 ```
 
 You can use the `hystrix.NewClient` function to create a client wrapped in a hystrix-like circuit breaker:
@@ -139,10 +139,10 @@ timeout := 10 * time.Millisecond
 client := hystrix.NewClient(
 	hystrix.WithHTTPTimeout(timeout),
 	hystrix.WithCommandName("MyCommand"),
-	hystrix.WithHystrixTimeout(1100 * time.Millisecond),
+	hystrix.WithHystrixTimeout(1100*time.Millisecond),
 	hystrix.WithMaxConcurrentRequests(100),
 	hystrix.WithErrorPercentThreshold(20),
-	hystrix.WithSleepWindow(10),
+	hystrix.WithSleepWindow(10*time.Millisecond),
 	hystrix.WithRequestVolumeThreshold(10),
 	hystrix.WithFallbackFunc(fallbackFn),
 )
@@ -201,7 +201,7 @@ client := httpclient.NewClient(
 // The rest is the same as the first example
 ```
 
-This will create an HTTP client which will retry every `500` milliseconds in case the request fails. The library also comes with an [Exponential Backoff](https://pkg.go.dev/github.com/gojek/heimdall/v7#NewExponentialBackoff).
+This will create an HTTP client which will retry every `500` milliseconds in case the request fails. The library also comes with an [Exponential Backoff](https://pkg.go.dev/github.com/gojek/heimdall/v8#NewExponentialBackoff).
 
 ### Custom retry mechanisms
 
@@ -308,7 +308,7 @@ To add a plugin to an existing client, use the `AddPlugin` method of the client.
 An example, with the [request logger plugin](plugins/request_logger.go):
 
 ```go
-// import "github.com/gojek/heimdall/v7/plugins"
+// import "github.com/gojek/heimdall/v8/plugins"
 
 client := httpclient.NewClient(httpclient.WithHTTPTimeout(timeout))
 requestLogger := plugins.NewRequestLogger(nil, nil)
@@ -336,7 +336,7 @@ For a simple example on how to write plugins, look at the [request logger plugin
 
 ## Documentation
 
-Further documentation can be found on [pkg.go.dev](https://pkg.go.dev/github.com/gojek/heimdall/v7)
+Further documentation can be found on [pkg.go.dev](https://pkg.go.dev/github.com/gojek/heimdall/v8)
 
 ## FAQ
 

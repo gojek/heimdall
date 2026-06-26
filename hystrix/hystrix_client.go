@@ -2,17 +2,17 @@ package hystrix
 
 import (
 	"context"
-	goerrors "errors"
+	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"slices"
 	"time"
 
-	"github.com/afex/hystrix-go/hystrix"
-	"github.com/gojek/heimdall/v7"
-	"github.com/gojek/heimdall/v7/httpclient"
-	"github.com/gojek/heimdall/v7/internal"
-	"github.com/pkg/errors"
+	"github.com/gojek/heimdall/v8"
+	"github.com/gojek/heimdall/v8/httpclient"
+	"github.com/gojek/heimdall/v8/internal"
+	"github.com/gojek/hystrix-go/hystrix"
 )
 
 type fallbackFunc func(error) error
@@ -26,7 +26,7 @@ type Client struct {
 	hystrixCommandName     string
 	maxConcurrentRequests  int
 	requestVolumeThreshold int
-	sleepWindow            int
+	sleepWindow            time.Duration
 	errorPercentThreshold  int
 	fallbackFunc           func(ctx context.Context, err error) error
 
@@ -41,7 +41,7 @@ const (
 	defaultHystrixTimeout         = 30 * time.Second
 	defaultMaxConcurrentRequests  = 100
 	defaultErrorPercentThreshold  = 25
-	defaultSleepWindow            = 10
+	defaultSleepWindow            = 10 * time.Millisecond
 	defaultRequestVolumeThreshold = 10
 
 	maxUint = ^uint(0)
@@ -49,7 +49,7 @@ const (
 )
 
 var _ heimdall.Client = (*Client)(nil)
-var errRetryableCode = goerrors.New("server returned status code to retry")
+var errRetryableCode = errors.New("server returned status code to retry")
 
 // NewClient returns a new instance of hystrix Client
 func NewClient(opts ...Option) *Client {
@@ -72,7 +72,7 @@ func NewClient(opts ...Option) *Client {
 		Timeout:                durationToInt(client.hystrixTimeout, time.Millisecond),
 		MaxConcurrentRequests:  client.maxConcurrentRequests,
 		RequestVolumeThreshold: client.requestVolumeThreshold,
-		SleepWindow:            client.sleepWindow,
+		SleepWindow:            durationToInt(client.sleepWindow, time.Millisecond),
 		ErrorPercentThreshold:  client.errorPercentThreshold,
 	})
 
@@ -96,7 +96,7 @@ func (hhc *Client) Get(url string, headers http.Header) (*http.Response, error) 
 	var response *http.Response
 	request, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return response, errors.Wrap(err, "GET - request creation failed")
+		return response, fmt.Errorf("GET %s - request creation failed: %w", hhc.hystrixCommandName, err)
 	}
 
 	request.Header = headers
@@ -109,7 +109,7 @@ func (hhc *Client) Post(url string, body io.Reader, headers http.Header) (*http.
 	var response *http.Response
 	request, err := http.NewRequest(http.MethodPost, url, body)
 	if err != nil {
-		return response, errors.Wrap(err, "POST - request creation failed")
+		return response, fmt.Errorf("POST %s - request creation failed: %w", hhc.hystrixCommandName, err)
 	}
 
 	request.Header = headers
@@ -122,7 +122,7 @@ func (hhc *Client) Put(url string, body io.Reader, headers http.Header) (*http.R
 	var response *http.Response
 	request, err := http.NewRequest(http.MethodPut, url, body)
 	if err != nil {
-		return response, errors.Wrap(err, "PUT - request creation failed")
+		return response, fmt.Errorf("PUT %s - request creation failed: %w", hhc.hystrixCommandName, err)
 	}
 
 	request.Header = headers
@@ -135,7 +135,7 @@ func (hhc *Client) Patch(url string, body io.Reader, headers http.Header) (*http
 	var response *http.Response
 	request, err := http.NewRequest(http.MethodPatch, url, body)
 	if err != nil {
-		return response, errors.Wrap(err, "PATCH - request creation failed")
+		return response, fmt.Errorf("PATCH %s - request creation failed: %w", hhc.hystrixCommandName, err)
 	}
 
 	request.Header = headers
@@ -148,7 +148,7 @@ func (hhc *Client) Delete(url string, headers http.Header) (*http.Response, erro
 	var response *http.Response
 	request, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
-		return response, errors.Wrap(err, "DELETE - request creation failed")
+		return response, fmt.Errorf("DELETE %s - request creation failed: %w", hhc.hystrixCommandName, err)
 	}
 
 	request.Header = headers
