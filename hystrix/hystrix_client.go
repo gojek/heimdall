@@ -9,8 +9,6 @@ import (
 	"time"
 
 	"github.com/afex/hystrix-go/hystrix"
-	metricCollector "github.com/afex/hystrix-go/hystrix/metric_collector"
-	"github.com/afex/hystrix-go/plugins"
 	"github.com/gojek/heimdall/v7"
 	"github.com/gojek/heimdall/v7/httpclient"
 	"github.com/gojek/heimdall/v7/internal"
@@ -36,8 +34,6 @@ type Client struct {
 	retryCount       int
 	retryableCodes   []int
 	retryErrorBudget *internal.ErrorBudget
-
-	statsD *plugins.StatsdCollectorConfig
 }
 
 const (
@@ -70,15 +66,6 @@ func NewClient(opts ...Option) *Client {
 
 	for _, opt := range opts {
 		opt(&client)
-	}
-
-	if client.statsD != nil {
-		c, err := plugins.InitializeStatsdCollector(client.statsD)
-		if err != nil {
-			panic(err)
-		}
-
-		metricCollector.Registry.Register(c.NewStatsdCollector)
 	}
 
 	hystrix.ConfigureCommand(client.hystrixCommandName, hystrix.CommandConfig{

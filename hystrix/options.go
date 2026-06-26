@@ -5,6 +5,7 @@ import (
 	"slices"
 	"time"
 
+	metricCollector "github.com/afex/hystrix-go/hystrix/metric_collector"
 	"github.com/afex/hystrix-go/plugins"
 	"github.com/gojek/heimdall/v7"
 	"github.com/gojek/heimdall/v7/httpclient"
@@ -103,10 +104,20 @@ func WithHTTPClient(client heimdall.Doer) Option {
 }
 
 // WithStatsDCollector exports hystrix metrics to a statsD backend
+//
+// Deprecated: hystrix plugin should only be registered once before any hystrix command is executed.
+// Register plugins.InitializeStatsdCollector directly to continue using the functionality
 func WithStatsDCollector(addr, prefix string) Option {
-	return func(c *Client) {
-		c.statsD = &plugins.StatsdCollectorConfig{StatsdAddr: addr, Prefix: prefix}
+	collector, err := plugins.InitializeStatsdCollector(&plugins.StatsdCollectorConfig{
+		StatsdAddr: addr,
+		Prefix:     prefix,
+	})
+	if err != nil {
+		panic(err)
 	}
+	metricCollector.Registry.Register(collector.NewStatsdCollector)
+
+	return func(_ *Client) {}
 }
 
 // WithRetryableStatusCodes sets status codes to be retried
