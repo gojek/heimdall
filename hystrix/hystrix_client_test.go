@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/afex/hystrix-go/hystrix"
-	"github.com/gojek/heimdall/v7"
+	"github.com/gojek/heimdall/v8"
+	"github.com/gojek/hystrix-go/hystrix"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -35,7 +35,7 @@ func TestHystrixHTTPClientDoSuccess(t *testing.T) {
 		WithHystrixTimeout(10*time.Millisecond),
 		WithMaxConcurrentRequests(100),
 		WithErrorPercentThreshold(10),
-		WithSleepWindow(100),
+		WithSleepWindow(100*time.Millisecond),
 		WithRequestVolumeThreshold(20),
 	)
 
@@ -74,7 +74,7 @@ func TestHystrixHTTPClientGetSuccess(t *testing.T) {
 		WithHystrixTimeout(10*time.Millisecond),
 		WithMaxConcurrentRequests(100),
 		WithErrorPercentThreshold(10),
-		WithSleepWindow(100),
+		WithSleepWindow(100*time.Millisecond),
 		WithRequestVolumeThreshold(10),
 	)
 
@@ -110,7 +110,7 @@ func TestHystrixHTTPClientPostSuccess(t *testing.T) {
 		WithHystrixTimeout(10*time.Millisecond),
 		WithMaxConcurrentRequests(100),
 		WithErrorPercentThreshold(10),
-		WithSleepWindow(100),
+		WithSleepWindow(100*time.Millisecond),
 		WithRequestVolumeThreshold(10),
 	)
 
@@ -155,7 +155,7 @@ func TestHystrixHTTPClientDeleteSuccess(t *testing.T) {
 		WithHystrixTimeout(10*time.Millisecond),
 		WithMaxConcurrentRequests(100),
 		WithErrorPercentThreshold(10),
-		WithSleepWindow(100),
+		WithSleepWindow(100*time.Millisecond),
 		WithRequestVolumeThreshold(10),
 	)
 
@@ -191,7 +191,7 @@ func TestHystrixHTTPClientPutSuccess(t *testing.T) {
 		WithHystrixTimeout(10*time.Millisecond),
 		WithMaxConcurrentRequests(100),
 		WithErrorPercentThreshold(10),
-		WithSleepWindow(100),
+		WithSleepWindow(100*time.Millisecond),
 		WithRequestVolumeThreshold(10),
 	)
 
@@ -236,7 +236,7 @@ func TestHystrixHTTPClientPatchSuccess(t *testing.T) {
 		WithHystrixTimeout(10*time.Millisecond),
 		WithMaxConcurrentRequests(100),
 		WithErrorPercentThreshold(10),
-		WithSleepWindow(100),
+		WithSleepWindow(100*time.Millisecond),
 		WithRequestVolumeThreshold(10),
 	)
 
@@ -284,7 +284,7 @@ func TestHystrixHTTPClientRetriesGetOnFailure(t *testing.T) {
 		WithHystrixTimeout(10*time.Millisecond),
 		WithMaxConcurrentRequests(100),
 		WithErrorPercentThreshold(10),
-		WithSleepWindow(100),
+		WithSleepWindow(100*time.Millisecond),
 		WithRequestVolumeThreshold(10),
 		WithRetryCount(3),
 		WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval))),
@@ -309,7 +309,7 @@ func TestHystrixHTTPClientRetriesGetOnFailure5xx(t *testing.T) {
 		WithHystrixTimeout(10*time.Millisecond),
 		WithMaxConcurrentRequests(100),
 		WithErrorPercentThreshold(10),
-		WithSleepWindow(100),
+		WithSleepWindow(100*time.Millisecond),
 		WithRequestVolumeThreshold(10),
 		WithRetryCount(3),
 		WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval))),
@@ -347,7 +347,7 @@ func TestHystrixHTTPClientRetriesWithBudgetGetOnFailure5xx(t *testing.T) {
 		WithHystrixTimeout(100*time.Millisecond),
 		WithMaxConcurrentRequests(100),
 		WithErrorPercentThreshold(25),
-		WithSleepWindow(100),
+		WithSleepWindow(100*time.Millisecond),
 		WithRequestVolumeThreshold(100),
 		WithRetryCount(4),
 		WithRetryErrorBudgetToken(100, 0.1),
@@ -396,7 +396,7 @@ func BenchmarkHystrixHTTPClientRetriesGetOnFailure(b *testing.B) {
 		WithHystrixTimeout(10*time.Millisecond),
 		WithMaxConcurrentRequests(100),
 		WithErrorPercentThreshold(10),
-		WithSleepWindow(100),
+		WithSleepWindow(100*time.Millisecond),
 		WithRequestVolumeThreshold(10),
 		WithRetryCount(3),
 		WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval))),
@@ -428,7 +428,7 @@ func TestHystrixHTTPClientRetriesPostOnFailure(t *testing.T) {
 		WithHystrixTimeout(10*time.Millisecond),
 		WithMaxConcurrentRequests(100),
 		WithErrorPercentThreshold(10),
-		WithSleepWindow(100),
+		WithSleepWindow(100*time.Millisecond),
 		WithRequestVolumeThreshold(20),
 		WithRetryCount(3),
 		WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval))),
@@ -463,7 +463,7 @@ func TestHystrixHTTPClientRetriesPostOnTimeout(t *testing.T) {
 		WithHystrixTimeout(time.Millisecond),
 		WithMaxConcurrentRequests(100),
 		WithErrorPercentThreshold(10),
-		WithSleepWindow(100),
+		WithSleepWindow(100*time.Millisecond),
 		WithRequestVolumeThreshold(20),
 		WithRetryCount(3),
 		WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval))),
@@ -496,7 +496,7 @@ func BenchmarkHystrixHTTPClientRetriesPostOnFailure(b *testing.B) {
 		WithHystrixTimeout(10*time.Millisecond),
 		WithMaxConcurrentRequests(100),
 		WithErrorPercentThreshold(10),
-		WithSleepWindow(100),
+		WithSleepWindow(100*time.Millisecond),
 		WithRequestVolumeThreshold(10),
 		WithRetryCount(3),
 		WithRetrier(heimdall.NewRetrier(heimdall.NewConstantBackoff(backoffInterval, maximumJitterInterval))),
@@ -524,7 +524,7 @@ func TestHystrixHTTPClientReturnsFallbackFailureWithoutFallBackFunction(t *testi
 		WithHystrixTimeout(time.Second),
 		WithMaxConcurrentRequests(100),
 		WithErrorPercentThreshold(10),
-		WithSleepWindow(100),
+		WithSleepWindow(100*time.Millisecond),
 		WithRequestVolumeThreshold(10),
 	)
 
@@ -541,7 +541,7 @@ func TestHystrixHTTPClientReturnsFallbackFailureWithAFallBackFunctionWhichReturn
 		WithHystrixTimeout(10*time.Millisecond),
 		WithMaxConcurrentRequests(100),
 		WithErrorPercentThreshold(10),
-		WithSleepWindow(100),
+		WithSleepWindow(100*time.Millisecond),
 		WithRequestVolumeThreshold(10),
 		WithFallbackFunc(func(err error) error {
 			// do something in the fallback function
@@ -564,7 +564,7 @@ func TestHystrixHTTPClientReturnsHTTPFailureWithANilFallBackFunction(t *testing.
 		WithHystrixTimeout(10*time.Millisecond),
 		WithMaxConcurrentRequests(100),
 		WithErrorPercentThreshold(10),
-		WithSleepWindow(100),
+		WithSleepWindow(100*time.Millisecond),
 		WithRequestVolumeThreshold(10),
 		WithFallbackFunc(nil),
 	)
@@ -586,7 +586,7 @@ func TestFallBackFunctionIsCalledWithHystrixHTTPClient(t *testing.T) {
 		WithHystrixTimeout(10*time.Millisecond),
 		WithMaxConcurrentRequests(100),
 		WithErrorPercentThreshold(10),
-		WithSleepWindow(100),
+		WithSleepWindow(100*time.Millisecond),
 		WithRequestVolumeThreshold(10),
 		WithFallbackCtxFunc(func(ctx context.Context, err error) error {
 			called = true
@@ -609,7 +609,7 @@ func TestHystrixHTTPClientReturnsFallbackFailureWithAFallBackFunctionWhichReturn
 		WithHystrixTimeout(10*time.Millisecond),
 		WithMaxConcurrentRequests(100),
 		WithErrorPercentThreshold(10),
-		WithSleepWindow(100),
+		WithSleepWindow(100*time.Millisecond),
 		WithRequestVolumeThreshold(10),
 		WithFallbackCtxFunc(func(ctx context.Context, err error) error {
 			// do something in the fallback function
@@ -630,7 +630,7 @@ func TestCustomHystrixHTTPClientDoSuccess(t *testing.T) {
 		WithHystrixTimeout(10*time.Millisecond),
 		WithMaxConcurrentRequests(100),
 		WithErrorPercentThreshold(10),
-		WithSleepWindow(100),
+		WithSleepWindow(100*time.Millisecond),
 		WithRequestVolumeThreshold(10),
 		WithHTTPClient(&myHTTPClient{
 			client: http.Client{Timeout: 25 * time.Millisecond}}),
@@ -718,8 +718,8 @@ func TestHystrixHTTPClientDoContextCancelled(t *testing.T) {
 	require.Nil(t, response)
 	time.Sleep(time.Second)
 	m := r.GetMetrics(cmdName)
-	assert.Equal(t, float64(1), m.ContextCanceled)
-	assert.Equal(t, float64(1), m.Attempts)
+	assert.Equal(t, int64(1), m.ContextCanceled)
+	assert.Equal(t, int64(1), m.Attempts)
 	assert.Zero(t, m.Errors)
 	assert.Zero(t, m.Successes)
 	assert.Zero(t, m.Failures)

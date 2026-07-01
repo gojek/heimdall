@@ -6,10 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gojek/heimdall/v7"
-	"github.com/gojek/heimdall/v7/httpclient"
-	"github.com/gojek/heimdall/v7/hystrix"
-	"github.com/pkg/errors"
+	"github.com/gojek/heimdall/v8"
+	"github.com/gojek/heimdall/v8/httpclient"
+	"github.com/gojek/heimdall/v8/hystrix"
 )
 
 const (
@@ -29,14 +28,14 @@ func httpClientUsage() error {
 
 	response, err := httpClient.Get(baseURL, headers)
 	if err != nil {
-		return errors.Wrap(err, "failed to make a request to server")
+		return fmt.Errorf("failed to make a request to server: %w", err)
 	}
 
 	defer response.Body.Close()
 
 	respBody, err := io.ReadAll(response.Body)
 	if err != nil {
-		return errors.Wrap(err, "failed to read response body")
+		return fmt.Errorf("failed to read response body: %w", err)
 	}
 
 	fmt.Printf("Response: %s", string(respBody))
@@ -51,20 +50,20 @@ func hystrixClientUsage() error {
 		hystrix.WithHystrixTimeout(1100*time.Millisecond),
 		hystrix.WithMaxConcurrentRequests(100),
 		hystrix.WithErrorPercentThreshold(25),
-		hystrix.WithSleepWindow(10),
+		hystrix.WithSleepWindow(500*time.Millisecond),
 		hystrix.WithRequestVolumeThreshold(10),
 	)
 	headers := http.Header{}
 	response, err := hystrixClient.Get(baseURL, headers)
 	if err != nil {
-		return errors.Wrap(err, "failed to make a request to server")
+		return fmt.Errorf("failed to make a request to server: %w", err)
 	}
 
 	defer response.Body.Close()
 
 	respBody, err := io.ReadAll(response.Body)
 	if err != nil {
-		return errors.Wrap(err, "failed to read response body")
+		return fmt.Errorf("failed to read response body: %w", err)
 	}
 
 	fmt.Printf("Response: %s", string(respBody))
@@ -96,14 +95,14 @@ func customHTTPClientUsage() error {
 
 	response, err := httpClient.Get(baseURL, headers)
 	if err != nil {
-		return errors.Wrap(err, "failed to make a request to server")
+		return fmt.Errorf("failed to make a request to server: %w", err)
 	}
 
 	defer response.Body.Close()
 
 	respBody, err := io.ReadAll(response.Body)
 	if err != nil {
-		return errors.Wrap(err, "failed to read response body")
+		return fmt.Errorf("failed to read response body: %w", err)
 	}
 
 	fmt.Printf("Response: %s", string(respBody))
@@ -119,7 +118,7 @@ func customHystrixClientUsage() error {
 		hystrix.WithHystrixTimeout(1100*time.Millisecond),
 		hystrix.WithMaxConcurrentRequests(100),
 		hystrix.WithErrorPercentThreshold(25),
-		hystrix.WithSleepWindow(10),
+		hystrix.WithSleepWindow(500*time.Millisecond),
 		hystrix.WithRequestVolumeThreshold(10),
 		hystrix.WithHTTPClient(&myHTTPClient{
 			// replace with custom HTTP client
@@ -130,14 +129,14 @@ func customHystrixClientUsage() error {
 	headers := http.Header{}
 	response, err := hystrixClient.Get(baseURL, headers)
 	if err != nil {
-		return errors.Wrap(err, "failed to make a request to server")
+		return fmt.Errorf("failed to make a request to server: %w", err)
 	}
 
 	defer response.Body.Close()
 
 	respBody, err := io.ReadAll(response.Body)
 	if err != nil {
-		return errors.Wrap(err, "failed to read response body")
+		return fmt.Errorf("failed to read response body: %w", err)
 	}
 
 	fmt.Printf("Response: %s", string(respBody))

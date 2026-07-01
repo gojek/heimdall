@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	metricCollector "github.com/afex/hystrix-go/hystrix/metric_collector"
+	metricCollector "github.com/gojek/hystrix-go/hystrix/metric_collector"
 )
 
 type simpleMetricCollector struct {
