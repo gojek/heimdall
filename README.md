@@ -142,7 +142,7 @@ client := hystrix.NewClient(
 	hystrix.WithHystrixTimeout(1100*time.Millisecond),
 	hystrix.WithMaxConcurrentRequests(100),
 	hystrix.WithErrorPercentThreshold(20),
-	hystrix.WithSleepWindow(10*time.Millisecond),
+	hystrix.WithSleepWindow(500*time.Millisecond),
 	hystrix.WithRequestVolumeThreshold(10),
 	hystrix.WithFallbackFunc(fallbackFn),
 )

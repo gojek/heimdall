@@ -50,7 +50,7 @@ func hystrixClientUsage() error {
 		hystrix.WithHystrixTimeout(1100*time.Millisecond),
 		hystrix.WithMaxConcurrentRequests(100),
 		hystrix.WithErrorPercentThreshold(25),
-		hystrix.WithSleepWindow(10*time.Millisecond),
+		hystrix.WithSleepWindow(500*time.Millisecond),
 		hystrix.WithRequestVolumeThreshold(10),
 	)
 	headers := http.Header{}
@@ -118,7 +118,7 @@ func customHystrixClientUsage() error {
 		hystrix.WithHystrixTimeout(1100*time.Millisecond),
 		hystrix.WithMaxConcurrentRequests(100),
 		hystrix.WithErrorPercentThreshold(25),
-		hystrix.WithSleepWindow(10*time.Millisecond),
+		hystrix.WithSleepWindow(500*time.Millisecond),
 		hystrix.WithRequestVolumeThreshold(10),
 		hystrix.WithHTTPClient(&myHTTPClient{
 			// replace with custom HTTP client

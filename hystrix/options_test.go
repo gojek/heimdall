@@ -41,7 +41,7 @@ func TestOptionsHaveDefaults(t *testing.T) {
 	assert.Equal(t, 30*time.Second, c.hystrixTimeout)
 	assert.Equal(t, 100, c.maxConcurrentRequests)
 	assert.Equal(t, 25, c.errorPercentThreshold)
-	assert.Equal(t, 10*time.Millisecond, c.sleepWindow)
+	assert.Equal(t, 500*time.Millisecond, c.sleepWindow)
 	assert.Equal(t, 10, c.requestVolumeThreshold)
 }
 

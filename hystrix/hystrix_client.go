@@ -41,7 +41,7 @@ const (
 	defaultHystrixTimeout         = 30 * time.Second
 	defaultMaxConcurrentRequests  = 100
 	defaultErrorPercentThreshold  = 25
-	defaultSleepWindow            = 10 * time.Millisecond
+	defaultSleepWindow            = 500 * time.Millisecond
 	defaultRequestVolumeThreshold = 10
 
 	maxUint = ^uint(0)
