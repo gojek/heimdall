@@ -154,12 +154,13 @@ func (c *Client) Do(request *http.Request) (*http.Response, error) {
 				break
 			}
 
-			request, err = internal.CloneRequest(request, reqGetBody) // Clone the request to reset the body for retry
+			clonedRequest, err := internal.CloneRequest(request, reqGetBody)
 			if err != nil {
 				errs = append(errs, err)
 				c.reportError(request, err)
 				break
 			}
+			request = clonedRequest
 		}
 
 		c.reportRequestStart(request)

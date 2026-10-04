@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/gojek/heimdall/v8"
+	"github.com/gojek/heimdall/v8/plugins"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -549,6 +550,113 @@ func TestPluginErrorMethodCalled(t *testing.T) {
 	err, ok := mockPlugin.Calls[1].Arguments[1].(error)
 	require.True(t, ok)
 	assert.Contains(t, err.Error(), "unsupported protocol scheme")
+}
+
+func TestHTTPClientRetryBodyErrorReportsRequest(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		name          string
+		failedClone   int
+		transportFail bool
+	}{
+		{name: "first retry after transport error", failedClone: 1, transportFail: true},
+		{name: "later retry after transport error", failedClone: 2, transportFail: true},
+		{name: "first retry after server error", failedClone: 1},
+		{name: "later retry after server error", failedClone: 2},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			bodyErr := errors.New("cannot reopen request body")
+			transportErr := errors.New("transport failed")
+			body := &closeTrackingBody{Reader: strings.NewReader("payload")}
+			ctx := t.Context()
+			req, err := http.NewRequestWithContext(ctx, http.MethodPost, "http://example.com/upload", body)
+			require.NoError(t, err)
+			req.Header.Set("X-Request-ID", "retry-body-error")
+			cloneCalls := 0
+			req.GetBody = func() (io.ReadCloser, error) {
+				cloneCalls++
+				if cloneCalls == tc.failedClone {
+					return nil, bodyErr
+				}
+				return io.NopCloser(strings.NewReader("payload")), nil
+			}
+
+			var lastRequest *http.Request
+			doCalls := 0
+			client := NewClient(
+				WithRetryCount(3),
+				WithHTTPClient(httpDoerFunc(func(request *http.Request) (*http.Response, error) {
+					lastRequest = request
+					doCalls++
+					payload, err := io.ReadAll(request.Body)
+					require.NoError(t, err)
+					assert.Equal(t, "payload", string(payload))
+					require.NoError(t, request.Body.Close())
+					if tc.transportFail {
+						return nil, transportErr
+					}
+					return &http.Response{
+						StatusCode: http.StatusServiceUnavailable,
+						Body:       io.NopCloser(strings.NewReader("unavailable")),
+					}, nil
+				})),
+			)
+			mockPlugin := &MockPlugin{}
+			mockPlugin.On("OnRequestStart", mock.Anything)
+			mockPlugin.On("OnRequestEnd", mock.Anything, mock.Anything)
+			mockPlugin.On("OnError", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
+				pluginRequest, ok := args.Get(0).(*http.Request)
+				assert.True(t, ok)
+				assert.Same(t, lastRequest, pluginRequest)
+				if assert.NotNil(t, pluginRequest) {
+					assert.Equal(t, req.URL.String(), pluginRequest.URL.String())
+					assert.Equal(t, "retry-body-error", pluginRequest.Header.Get("X-Request-ID"))
+					assert.Equal(t, ctx.Done(), pluginRequest.Context().Done())
+				}
+			})
+			client.AddPlugin(mockPlugin)
+			var errorLog bytes.Buffer
+			client.AddPlugin(plugins.NewRequestLogger(io.Discard, &errorLog))
+
+			var resultErr error
+			require.NotPanics(t, func() {
+				_, resultErr = client.Do(req)
+			})
+			require.ErrorIs(t, resultErr, bodyErr)
+			if tc.transportFail {
+				assert.ErrorIs(t, resultErr, transportErr)
+			}
+			assert.Equal(t, tc.failedClone, doCalls)
+			assert.Equal(t, tc.failedClone, cloneCalls)
+			assert.True(t, body.closed)
+			mockPlugin.AssertCalled(t, "OnError", lastRequest, bodyErr)
+			mockPlugin.AssertNumberOfCalls(t, "OnRequestStart", doCalls)
+			assert.Contains(t, errorLog.String(), req.URL.String())
+			assert.Contains(t, errorLog.String(), bodyErr.Error())
+			if tc.failedClone > 1 {
+				assert.NotSame(t, req, lastRequest)
+			}
+		})
+	}
+}
+
+type httpDoerFunc func(*http.Request) (*http.Response, error)
+
+func (f httpDoerFunc) Do(request *http.Request) (*http.Response, error) {
+	return f(request)
+}
+
+type closeTrackingBody struct {
+	io.Reader
+	closed bool
+}
+
+func (b *closeTrackingBody) Close() error {
+	b.closed = true
+	return nil
 }
 
 type myHTTPClient struct {
